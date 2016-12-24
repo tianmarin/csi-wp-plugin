@@ -30,7 +30,8 @@ System & Instance Diagrams
 [Shortcode 1] Display a single system Diagram:
 **Input**:
 
-* System ID
+* System ID (default: none)
+* Group Similar Instances (default: false)
 
 * Hosts information :hostname, OS, IP
 * Instance information: type, technical name
