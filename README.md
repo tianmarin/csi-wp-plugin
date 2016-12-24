@@ -1,4 +1,5 @@
-# IT Admin - Wordpress Plugin
+# Continuos Improvement - Wordpress Plugin
+This Wordpress Plugin is a personal effort to automate and showcase information as a Continuous Improvements & Innovation direction.
 
 ## Features
 Multisite (network) activation
@@ -6,8 +7,14 @@ Multisite (network) activation
 ## Modules
 ### System Landscape
 #### Features
-Automated 
-Version History and Changes
+Automated extraction of information from SAP Solution Manager LMDB
+Version History
+System & Instance Diagram
+#### Shortcodes
+##### [Shortcode 1]
+[Shortcode 1] Display a single system Diagram featuring:
+* Hosts information (hostname, OS, IP)
+* Instance information (type, technical name)
 ### CMP (Correction or Maintenance Plan)
 #### Features
 Graphs of percentage
