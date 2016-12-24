@@ -16,6 +16,7 @@ This Wordpress Plugin is a personal effort to automate and showcase business inf
 * Shortcodes
 * Page Templates fully integrated and customer-url-related
 * Google Analytics full integration
+* Wordpress TinyMCE integration
 
 ## Modules
 ### System Landscape
@@ -26,7 +27,10 @@ System & Instance Diagrams
 #### Options
 #### Shortcodes
 ##### [Shortcode 1]
-[Shortcode 1] Display a single system Diagram featuring:
+[Shortcode 1] Display a single system Diagram:
+**Input**:
+
+* System ID
 
 * Hosts information :hostname, OS, IP
 * Instance information: type, technical name
@@ -72,12 +76,14 @@ Customer (default: none)
 ##### [Shortcode 2]
 [Shortcode 2] Display a task list related to a Plan showing
 **Inputs**:
-Plan (default: none)
+
+* Plan (default: none)
 
 ##### [Shortcode 3]
 [Shortcode 3] Display a pie chart of executed, ongoing and planned plans
 **Inputs**:
-Customer (default: none)
+
+* Customer (default: none)
 
 ### EWA & Actions Dashboard
 #### Features
@@ -87,28 +93,33 @@ Result history Dashboard
 ##### [Shortcode 1]
 [Shortcode 1] Display a Single System Panel with EWA alerts and related actions
 **Inputs**:
-System ID
-Number of past weeks (default 8)
-Show Graph (default active)
+
+* System ID
+* Number of past weeks (default 8)
+* Show Graph (default active)
 
 ### Change Calendar
 #### Features
 * ICAL public url
 * ICAL privated url (shows more detail, require user and password [¿Oauth?])
 * Hash protection and renewal politics
+
 #### Page Templates
 * Calendar administration
 * Calendar Hash renewal
 * Calendar usage stats
+
 #### Options
 * Public & Private Security hash complexity
 * Public & Private Security hash date expiration
 * Public & Private Security hash 
+
 ## BP Calendar
 * ICAL Publication
 * Active Timeline visualization
 * Repeat events
 * Each Site/customer has its own BP backend editor. From Specific shortcodes you can display all, some, none, but you should only edit and manage calendars from customer site.
+### Features
 ### Options
 
 
