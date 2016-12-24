@@ -7,6 +7,7 @@ This Wordpress Plugin is a personal effort to automate and showcase information 
   1. [System Landscape](#system-landscape)
   2. [Correction or Mantenance Plan](#correction-and-maintenance-plan)
 
+
 ## Features
 Multisite (network) activation
 Shortcodes
@@ -21,8 +22,9 @@ System & Instance Diagram
 #### Shortcodes
 ##### [Shortcode 1]
 [Shortcode 1] Display a single system Diagram featuring:
-* Hosts information (hostname, OS, IP)
-* Instance information (type, technical name)
+* Hosts information :hostname, OS, IP
+* Instance information: type, technical name
+
 ##### [Shortcode 2]
 [Shortcode 2] Display Bar|Pie graphs of products and versions
 Inputs:
@@ -30,21 +32,25 @@ Inputs:
 * Customer (default: all)
 * Landscape (default: all)
 * Asset (default: all)
+
 ##### [Shortcode 3]
 [Shortcode 3] Display a group list of systems of a landscape
 Inputs:
 * Customer (default: all)
 * Landscape (default: all)
 * System Exclude (default: none)
+
 ##### [Shortcode 4]
 [Shortcode 4] Display a group list of landscape of a customer
 Inputs:
 * Customer (default: all)
 * Landscape Exclude (default: none)
+
 ### CMP (Correction or Maintenance Plan)
 #### Page Templates
 * CMP Editor
 * CMP Calendar
+
 #### Features
 Graphs of percentage
 History of Activity
@@ -54,14 +60,17 @@ Wordpress users asignation and measurement
 [Shortcode 1] Display a group list of plans related to a customer
 Inputs:
 * Customer (default: none)
+
 ##### [Shortcode 2]
 [Shortcode 2] Display a task list related to a Plan
 Inputs:
 * Plan (default: none)
+
 ##### [Shortcode 3]
 [Shortcode 3] Display a pie chart of executed, ongoing and planned plans
 Inputs:
 * Customer (default: none)
+
 ### EWA & Actions Dashboard
 #### Features
 Automated extraction of information from SAP Solutoin Manager Early Watch for Solution Report
@@ -73,6 +82,7 @@ Inputs:
 * System ID
 * Number of past weeks (default 8)
 * Show Graph (default active)
+
 ### Change Calendar
 ### Features
 ICAL public url
@@ -82,6 +92,7 @@ Hash protection and renewal politics
 * Calendar administration
 * Calendar Hash reneal
 * Calendar ussage
+
 ## BP Calendar
 ICAL Publication
 Active Timeline per Customer
