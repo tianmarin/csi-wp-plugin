@@ -1,17 +1,21 @@
 # Continuos Improvement - Wordpress Plugin
-This Wordpress Plugin is a personal effort to automate and showcase information as a Continuous Improvements & Innovation direction.
+This Wordpress Plugin is a personal effort to automate and showcase business information.
 
 ## Table of Contents
 1. [Features](#features)
 2. [Modules](#modules)
   1. [System Landscape](#system-landscape)
-  2. [Correction or Mantenance Plan](#correction-and-maintenance-plan)
+  2. [Correction or Mantenance Plan](#cmp-correction-and-maintenance-plan)
+	3. [EWA & Actions Dashboard](#ewa-actions-dashboard]
+	4. [Change Calendar](#change-calendar)
+	5. [BP Calendar](#bp-calendar)
 
 
 ## Features
-Multisite (network) activation
-Shortcodes
-Page Templates fully integrated and customer-url-related
+* Multisite (network) activation
+* Shortcodes
+* Page Templates fully integrated and customer-url-related
+* Google Analytics full integration
 
 ## Modules
 ### System Landscape
@@ -19,15 +23,18 @@ Page Templates fully integrated and customer-url-related
 Automated extraction of information from SAP Solution Manager LMDB
 Version History
 System & Instance Diagram
+#### Options
 #### Shortcodes
 ##### [Shortcode 1]
 [Shortcode 1] Display a single system Diagram featuring:
+
 * Hosts information :hostname, OS, IP
 * Instance information: type, technical name
 
 ##### [Shortcode 2]
 [Shortcode 2] Display Bar|Pie graphs of products and versions
 Inputs:
+
 * Grahp Type (default: pie)
 * Customer (default: all)
 * Landscape (default: all)
@@ -36,6 +43,7 @@ Inputs:
 ##### [Shortcode 3]
 [Shortcode 3] Display a group list of systems of a landscape
 Inputs:
+
 * Customer (default: all)
 * Landscape (default: all)
 * System Exclude (default: none)
@@ -43,6 +51,7 @@ Inputs:
 ##### [Shortcode 4]
 [Shortcode 4] Display a group list of landscape of a customer
 Inputs:
+
 * Customer (default: all)
 * Landscape Exclude (default: none)
 
@@ -55,20 +64,25 @@ Inputs:
 Graphs of percentage
 History of Activity
 Wordpress users asignation and measurement
+### Options
+
 #### Shortcodes
 ##### [Shortcode 1]
 [Shortcode 1] Display a group list of plans related to a customer
 Inputs:
+
 * Customer (default: none)
 
 ##### [Shortcode 2]
 [Shortcode 2] Display a task list related to a Plan
 Inputs:
+
 * Plan (default: none)
 
 ##### [Shortcode 3]
 [Shortcode 3] Display a pie chart of executed, ongoing and planned plans
 Inputs:
+
 * Customer (default: none)
 
 ### EWA & Actions Dashboard
@@ -79,23 +93,27 @@ Result history Dashboard
 ##### [Shortcode 1]
 [Shortcode 1] Display a Single System Panel with EWA alerts and related actions
 Inputs:
+
 * System ID
 * Number of past weeks (default 8)
 * Show Graph (default active)
 
 ### Change Calendar
-### Features
-ICAL public url
-ICAL privated url (shows more detail, require user and password [¿Oauth?])
-Hash protection and renewal politics
+#### Features
+* ICAL public url
+* ICAL privated url (shows more detail, require user and password [¿Oauth?])
+* Hash protection and renewal politics
 #### Page Templates
 * Calendar administration
-* Calendar Hash reneal
-* Calendar ussage
-
+* Calendar Hash renewal
+* Calendar usage stats
+#### Options
+* Public & Private Security hash complexity
+* Public & Private Security hash date expiration
+* Public & Private Security hash 
 ## BP Calendar
-ICAL Publication
-Active Timeline per Customer
+* ICAL Publication
+* Active Timeline per Customer
 
 
 
