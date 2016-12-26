@@ -5,7 +5,7 @@ This Wordpress Plugin is a personal effort to automate and showcase business inf
 1. [Features](#features)
 2. [Modules](#modules)
   1. [System Landscape](#system-landscape)
-  2. [Correction or Mantenance Plan](#cmp-correction-and-maintenance-plan)
+  2. [Correction or Maintenance Plan](#cmp-correction-and-maintenance-plan)
   3. [EWA & Actions Dashboard](#ewa--actions-dashboard]
   4. [Change Calendar](#change-calendar)
   5. [BP Calendar](#bp-calendar)
@@ -83,10 +83,14 @@ This Wordpress Plugin is a personal effort to automate and showcase business inf
 * CMP Calendar
 
 #### Features
-Graphs of percentage
-History of Activity
-Wordpress users asignation and measurement
+
+* Graphs of percentage
+* History of Activity
+* Wordpress users asignation and measurement
+
 ### Options
+
+* Third-Party assignation (with URL)
 
 #### Shortcodes
 ##### [Shortcode 1] Customer Plans
