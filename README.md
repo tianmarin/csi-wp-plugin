@@ -9,6 +9,7 @@ This Wordpress Plugin is a personal effort to automate and showcase business inf
   3. [EWA & Actions Dashboard](#ewa--actions-dashboard]
   4. [Change Calendar](#change-calendar)
   5. [BP Calendar](#bp-calendar)
+  6. [Project Management](#project-management)
 
 
 ## Features
@@ -183,15 +184,18 @@ Every Week SAP Solution Manager generates the Early Watch for Solution Report. T
 
 
 
+### Project Management
+#### Features
 
-## Classes
-Customer
-Landscape
+* Project Request automation to every user
+* Multi-Project Dashboard
+* PM Roles for PMO edition
 
+#### Page Templates
 
+* Project Request (mobile view)
 
+#### Shortcodes
 
-# Third Party Elements
-## Bootstrap
-## Font-Awesome
-## AmCharts
+* Multi-customer Dashboard
+* Customer Multi-Project Dashboard
