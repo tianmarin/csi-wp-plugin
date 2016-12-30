@@ -47,7 +47,7 @@ public function __construct(){
 								last_modified_date date null,
 								alert_message tinytext not null,
 								action_party_id tinyint(2) unsigned null,
-								action_id varchar(50) null
+								action_id varchar(50) null,
 								UNIQUE KEY id (id)
 							) $charset_collate;";
 	$this->db_fields	= array(
@@ -269,6 +269,162 @@ public function __construct(){
 	);
 	
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
+	add_shortcode( 'csi_ewa_system_panel',				 		array( $this , 'shortcode_system_panel'		));
+}
+public function shortcode_system_panel($atts){
+	global $wpdb;
+	global $novis_csi_vars;
+	$output		='';
+	$system		= isset($atts['system']) && is_numeric($atts['system']) ? $atts['system'] : null;
+	$weeks		= isset($atts['weeks']) && is_numeric($atts['weeks']) ? $atts['weeks'] : 8;
+	$graph		= isset($atts['weeks']) && true == $atts['weeks'] ? true : false;
+	
+	if ( $system > 0 ){
+		//Obtener información del Sistema
+		global $NOVIS_CSI_ALERT_PRIORITY_CLASS;
+		global $NOVIS_CSI_ACTION_PARTY;
+		$output.='<div class="col-xs-12 col-sm-12 col-md-6">';
+		$output.='<header>';
+			$output.='<h3>CRP <small>CRM Productivo</small></h3>';
+		
+		$output.='</header>';
+
+		$sql="SELECT
+				id as id,
+				issued_date as date,
+				COUNT( IF( alert_priority_id = 1, 1, NULL ) ) as critical,
+				COUNT( IF( alert_priority_id = 2, 1, NULL ) ) as warning
+			FROM $this->tbl_name
+			WHERE system_id=$system
+			GROUP BY issued_date
+			LIMIT $weeks
+			";		
+		if ( $graph ) {
+			$dates = self::get_sql($sql);
+			$dataProvider = array();
+			foreach ( $dates as $date ){
+				$date_data = array(
+					'date'		=>$date['date'],
+					'warning'	=>$date['warning'],
+					'critical'	=>$date['critical'],
+				);
+				array_push($dataProvider, $date_data);
+			}
+			wp_register_script(
+				'amcharts',
+				CSI_PLUGIN_URL.'/external/amcharts/amcharts/amcharts.js' ,
+				array('jquery'),
+				'3.2'
+			);
+		//	wp_enqueue_script('amcharts');
+			//-----------------------------------------------------
+			wp_register_script(
+				'amcharts-serial',
+				CSI_PLUGIN_URL.'/external/amcharts/amcharts/serial.js' ,
+				array('amcharts'),
+				'3.2'
+			);
+		//	wp_enqueue_script('amcharts-serial');
+			//-----------------------------------------------------
+			wp_register_script(
+				'amcharts-responsive',
+				CSI_PLUGIN_URL.'/external/amcharts/amcharts/plugins/responsive/responsive.min.js' ,
+				array('amcharts'),
+				'3.2'
+			);
+			wp_register_script(
+				'csi_WPCLIENT',
+				CSI_PLUGIN_URL.'/js/client-min.js' ,
+				array('jquery','amcharts','amcharts-serial','amcharts-responsive'),
+				'1.0'
+			);
+			wp_enqueue_script('csi_WPCLIENT');
+			wp_localize_script(
+				'csi_WPCLIENT',
+				'csiWPCLIENT_'.'ewa_system_graph_'.$system,
+				array(
+					'ppost'							=> $this->plugin_post,
+					'ajaxurl'						=> admin_url( 'admin-ajax.php' ),
+					'ewa_system_graph_'.$system	=> json_encode($dataProvider),
+				)
+			);
+			$output.='<section>';
+				$output.='<div id="ewa_system_graph_'.$system.'" class="csi_ewa_system_panel" style="height:300px;"></div>';
+			$output.='</section>';
+		}
+		$output.='<section>';
+		$dates = self::get_sql($sql);
+		foreach ( $dates as $date ){
+			$beauty_date=date_create($date['date']);
+			$beauty_date = date_format($beauty_date,"M d");
+			$output.='<div class="panel panel-default container-fluid">
+						<div class="panel-heading row">
+							<div class="col-xs-3 text-center"><i class="fa fa-calendar"></i> '.$beauty_date.'</div>
+							<div class="col-xs-3 text-center text-danger"><i class="fa fa-exclamation-circle"></i> '.$date['critical'].'</div>
+							<div class="col-xs-3 text-center text-warning"><i class="fa fa-exclamation-triangle"></i> '.$date['warning'].'</div>
+							<div class="col-xs-3 text-center">
+								<a class="btn btn-default btn-sm" role="button" data-toggle="collapse" href="#ewa_system_graph_'.$system.'_'.$date['date'].'" aria-expanded="false" aria-controls="collapseExample">
+									<i class="fa fa-plus"></i> Ver más
+								</a>
+							</div>
+						</div><!-- panel-heading -->';
+//			$output.=$date;
+			$output.='<ul class="list-group row collapse" id="ewa_system_graph_'.$system.'_'.$date['date'].'">';
+			$sql="SELECT
+					a.id as alert_id,
+					a.alert_message as message,
+					b.css_class as class,
+					b.icon as priority_icon,
+					c.short_name as party_name,
+					c.url as party_url,
+					c.icon as party_icon,
+					a.action_id as action
+					FROM
+						(($this->tbl_name as a
+						LEFT JOIN $NOVIS_CSI_ALERT_PRIORITY_CLASS->tbl_name as b ON a.alert_priority_id = b.id)
+						LEFT JOIN $NOVIS_CSI_ACTION_PARTY->tbl_name as c ON a.action_party_id = c.id)
+					WHERE
+						a.system_id=$system
+						AND a.issued_date='".$date['date']."'
+				";
+			$alerts = self::get_sql($sql);
+			foreach ( $alerts as $alert){
+				$output.='<li class="list-group-item list-group-item-'.$alert['class'].'">
+							<h5 class="list-group-item-heading"><i class="fa fa-'.$alert['priority_icon'].'"></i> '.$alert['message'].'</h5>
+							<div class="row">';
+				if ( '' != $alert['action'] ){
+					$output.='<p class="text-muted text-justify col-xs-8">El análisis y resolución de este mensaje de error, están siendo tratados en <em>'.$alert['party_name'].'</em></p>';
+					$url = str_replace ( '[TICKET]', $alert['action'], $alert['party_url'] );
+					$output.='<div class="col-xs-4 text-center">';
+					$output.='<div class="btn-group" role="group" aria-label="...">';
+					$output.='<a href="'.$url.'" class="btn btn-'.$alert['class'].' btn-sm"><i class="fa fa-'.$alert['party_icon'].' fa-fw"></i> '.$alert['action'].'</a>';
+					$output.='<a href="#" class="btn btn-default btn-sm"><i class="fa fa-edit fa-fw"></i></a>';
+					$output.='</div>';
+					$output.='</div>';
+				}else{
+					$output.='<p class="text-muted text-justify col-xs-8">El análisis y resolución de este mensaje de error <strong>NO</strong> están siendo tratados.</p>';
+					$output.='<div class="col-xs-4 text-center">';
+					$output.='<div class="btn-group" role="group" aria-label="...">';
+					$output.='<a href="#" class="btn btn-default btn-sm"><i class="fa fa-edit fa-fw"></i></a>';
+					$output.='</div>';
+					$output.='</div>';
+				}
+				$output.='</div></li>';
+			}
+			$output.='</ul>';
+			$output.='</div>';
+		}
+		$output.="</section>";
+		$output.="</div>";
+	}else{
+		$output.='<div class="well">';
+				$output.='<p class="h3"><i class="fa fa-exclamation-circle fa-sm text-danger"></i> Error</p>';
+				$output.='<p>Ha ocurrido un error, o probablemente no est&aacute;s usando de modo correcto el <code>shortcode</code>.</p>';
+				$output.='<p><code>[csi_ewa_system_panel system=<kbd>id-del-sistema</kbd> weeks=<kbd>numero-de-semanas-previas</kbd> graph=<kbd>true|false</kbd></code></p>';
+				$output.='<a href="'.get_site_option('ics_shortcode_help_url','#').'" class="btn btn-sm btn-primary">Aprender m&aacute;s</a>';
+		$output.='</div>';
+	}
+	return $output;
 }
 //END OF CLASS	
 }

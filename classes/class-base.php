@@ -25,7 +25,6 @@ abstract class NOVIS_CSI_CLASS{
 * @author Cristian Marin
 */
 public function db_install(){
-	self::write_log("ghola");
 	$current_db_version = get_option( $this->tbl_name."_db_version");
 	if( $current_db_version == false || $current_db_version != $this->db_version ){
 //	if( true ){
@@ -96,15 +95,15 @@ public function register_submenu_page() {
 */
 public function bluid_submenu_page(){
 	wp_register_script(
-		'aa_WPADMIN',
-		plugins_url( '../js/admin-min.js' ,  __FILE__ ),
+		'ics_WPADMIN',
+		CSI_PLUGIN_URL.'/js/admin-min.js' ,
 		array('jquery'),
 		'1.0'
 	);
-	wp_enqueue_script('aa_WPADMIN');
+	wp_enqueue_script('ics_WPADMIN');
 	wp_localize_script(
-		'aa_WPADMIN',
-		'aaWPADMIN',
+		'ics_WPADMIN',
+		'icsWPADMIN',
 		array(
 			'ppost'		=> $this->plugin_post,
 			'ajaxurl'	=> admin_url( 'admin-ajax.php' ),

@@ -25,6 +25,7 @@ global $novis_csi_vars;
 
 //define( 'CSI_PLUGIN_DIR', WP_PLUGIN_DIR."/CSI-wp-plugin/");
 define( 'CSI_PLUGIN_DIR', dirname( __FILE__ ) );
+define( 'CSI_PLUGIN_URL', plugins_url( '' ,  __FILE__ ) );
 
 $novis_csi_vars = array(
 //Plugin Conf. Variables

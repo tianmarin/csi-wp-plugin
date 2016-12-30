@@ -1,7 +1,7 @@
-/*global aaWPADMIN*/
+/*global icsWPADMIN*/
 jQuery(document).ready(function($){
-var ppost=aaWPADMIN.ppost;
-var ajaxurl=aaWPADMIN.ajaxurl;
+var ppost=icsWPADMIN.ppost;
+var ajaxurl=icsWPADMIN.ajaxurl;
 
 window.console.log(ppost);
 window.console.log(ajaxurl);
