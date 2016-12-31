@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') or die("No script kiddies please!");
 
-class NOVIS_CSI_ALERT_PRIORITY_CLASS extends NOVIS_CSI_CLASS{
+class NOVIS_CSI_PROJECT_URGENCY_CLASS extends NOVIS_CSI_CLASS{
 
 /**
 * __construct
@@ -16,11 +16,11 @@ public function __construct(){
 	global $wpdb;
 	global $novis_csi_vars;
 	//como se definió en novis_csi_vars
-	$this->class_name	= 'alert_priority';
+	$this->class_name	= 'project_urgency';
 	//Nombre singular para títulos, mensajes a usuario, etc.
-	$this->name_single	= 'Prioridad de Alerta';
+	$this->name_single	= 'Urgencia de Solicitud de Proyecto';
 	//Nombre plural para títulos, mensajes a usuario, etc.
-	$this->name_plural	= 'Prioridades de Alerta';
+	$this->name_plural	= 'Urgencias de Solicitud de Proyecto';
 	//Identificador de menú padre
 	$this->parent_slug	= $novis_csi_vars['network_menu_slug'];
 	//Identificador de submenú de la clase
@@ -40,11 +40,10 @@ public function __construct(){
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." (
 								id tinyint(2) unsigned not null auto_increment,
-								short_name varchar(15) not null,
-								icon varchar(50) null,
+								short_name varchar(50) not null,
+								code varchar(20) not null,
 								css_class varchar(100) null,
 								hex_color varchar(6) null,
-								
 								UNIQUE KEY id (id)
 							) $charset_collate;";
 	$this->db_fields	= array(
@@ -116,13 +115,13 @@ public function __construct(){
 			'backend_wp_in_table'		=>true,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>true,
-			'data_required'				=>true,
+			'data_required'				=>false,
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>30,
+			'data_validation_maxchar'	=>50,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'Nombre corto para identificar el tipo de Sistema.<br/>Tama&ntilde;o m&aacute;ximo: 30 caracteres.',
+			'form_help_text'			=>'Nombre Corto.<br/>Tama&ntilde;o m&aacute;ximo: 50 caracteres.',
 			'form_input_size'			=>false,
 			'form_label'				=>'Nombre Corto',
 			'form_options'				=>false,
@@ -130,29 +129,29 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
 		),
-		'icon' => array(
+		'code' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>true,
+			'backend_wp_sp_table'		=>true,		//Show as <code></code>
 			'backend_wp_table_lead'		=>false,
-			'data_required'				=>false,
+			'data_required'				=>true,
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxchar'	=>30,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'Nombre del icono a ser desplegado.<br/>Los nombres de iconos son parte de <a href="http://fontawesome.io/icons" target="_blank">FontAwesome</a> el nombre del icono debe ser sin el c&oacute;digo: <code>fa-</code>.',
+			'form_help_text'			=>'C&oacute;digo.<br/>Tama&ntilde;o m&aacute;ximo: 20 caracteres.',
 			'form_input_size'			=>false,
-			'form_label'				=>'Icono',
+			'form_label'				=>'C&oacute;digo',
 			'form_options'				=>false,
-			'form_placeholder'			=>'Nombre del icono',
+			'form_placeholder'			=>'C&oacute;digo',
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
 		),
 		'css_class' => array(
 			'type'						=>'text',
-			'backend_wp_in_table'		=>false,	//It should be
-			'backend_wp_sp_table'		=>false,	//It should be
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>false,
 			'data_validation'			=>false,
@@ -170,8 +169,8 @@ public function __construct(){
 		),
 		'hex_color' => array(
 			'type'						=>'hex',
-			'backend_wp_in_table'		=>false,	//It should be
-			'backend_wp_sp_table'		=>false,	//It should be
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>false,
 			'data_validation'			=>false,
@@ -191,50 +190,17 @@ public function __construct(){
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this, 'db_install_data'				));
 
-//	if ( !is_multisite() ) {
-//		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
-//	}else{
-//		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
-//	}
+	if ( !is_multisite() ) {
+		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
+	}else{
+		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
+	}
 //	add_action( 'wp_ajax_search_system_users', 					array( $this , 'search_system_users'		));
 //	add_action( 'wp_ajax_fe_system_list',						array( $this , 'fe_system_list'				));
 //	add_action( 'wp_ajax_fe_system_info',						array( $this , 'fe_system_info'				));
 //	add_action( 'wp_ajax_fe_quick_system_info',					array( $this , 'fe_quick_system_info'		));
 //	add_action( 'wp_ajax_fe_system_show_form',					array( $this , 'fe_system_show_form'		));
 //	add_action( 'wp_ajax_fe_create_system',						array( $this , 'fe_create_system'			));
-}
-protected function backend_wp_sp_table_icon($icon,$element){
-	$style=self::get_single($element['id'])['css_class'];
-	$style=($style!='')?'text-'.$style:'';
-	$output='<i class="fa fa-'.$element['icon'].' fa-fw fa-lg '.$style.'"></i>';	
-	return $output;
-}
-protected function form_special_form_hex_color($array){
-	$output='';
-	$output.='<div class="input-group">';
-		$output.='<div class="input-group-addon" id="basic-addon2">#</div>';
-		$output.='<input
-					type="text"
-					class="form-control"
-					id="'.$array['id'].'"
-					name="'.$array['id'].'"
-					'.$array['form_placeholder'].'
-					'.$array['data_validation'].'
-					'.$array['data_validation_min'].'
-					'.$array['data_validation_max'].'
-					'.$array['data_validation_maxchar'].'
-					'.$array['data_required'].'
-					'.$array['value'].'
-					data-target="#hex-color"
-					data-function="hex-color"
-					/>';
-		$space='';
-		for($i=0;$i<20;$i++){
-			$space.='&nbsp;';
-		}
-		$output.='<div class="input-group-addon" id="hex-color">'.$space.'</div>';
-	$output.='</div>';
-	return $output;
 }
 protected function backend_wp_sp_table_code($code){
 	return '<code>'.$code.'</code>';
@@ -247,8 +213,8 @@ public function db_install_data(){
 			$this->tbl_name,
 			array(
 				'id'			=> 1,
-				'short_name'	=> 'Critical',
-				'icon'			=> 'exclamation-circle',
+				'short_name'	=> 'Alta',
+				'code'			=> 'high',
 				'css_class'		=> 'danger',
 				'hex_color'		=> 'a94442',
 			) 
@@ -257,9 +223,19 @@ public function db_install_data(){
 			$this->tbl_name,
 			array(
 				'id'			=> 2,
-				'short_name'	=> 'Warning',
-				'icon'			=> 'exclamation-triangle',
+				'short_name'	=> 'Media',
+				'code'			=> 'medium',
 				'css_class'		=> 'warning',
+				'hex_color'		=> '8a6d3b',
+			) 
+		);
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'id'			=> 3,
+				'short_name'	=> 'Baja',
+				'code'			=> 'low',
+				'css_class'		=> 'info',
 				'hex_color'		=> '8a6d3b',
 			) 
 		);
@@ -269,6 +245,6 @@ public function db_install_data(){
 //END OF CLASS	
 }
 
-global $NOVIS_CSI_ALERT_PRIORITY;
-$NOVIS_CSI_ALERT_PRIORITY =new NOVIS_CSI_ALERT_PRIORITY_CLASS();
+global $NOVIS_CSI_PROJECT_URGENCY;
+$NOVIS_CSI_PROJECT_URGENCY =new NOVIS_CSI_PROJECT_URGENCY_CLASS();
 ?>

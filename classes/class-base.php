@@ -25,16 +25,16 @@ abstract class NOVIS_CSI_CLASS{
 * @author Cristian Marin
 */
 public function db_install(){
-	self::write_log("ghola");
 	$current_db_version = get_option( $this->tbl_name."_db_version");
 	if( $current_db_version == false || $current_db_version != $this->db_version ){
 //	if( true ){
 		//Registrar y notificar 'UPGRADE' exitoso
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		dbDelta($this->crt_tbl_sql);
+		$delta = dbDelta($this->crt_tbl_sql);
 //		echo $sql;
+		self::write_log($delta);
 		update_option( $this->tbl_name."_db_version" , $this->db_version );
-		self::write_log($this->tbl_name."_db_version"." =  ".$this->db_version );
+//		self::write_log($this->tbl_name."_db_version"." =  ".$this->db_version );
 //		add_action( 'admin_notices', array( $this, 'db_install_success')  );
 //		do_action(array( $this, 'db_install_success'));
 
@@ -96,15 +96,15 @@ public function register_submenu_page() {
 */
 public function bluid_submenu_page(){
 	wp_register_script(
-		'aa_WPADMIN',
-		plugins_url( '../js/admin-min.js' ,  __FILE__ ),
+		'ics_WPADMIN',
+		CSI_PLUGIN_URL.'/js/admin-min.js' ,
 		array('jquery'),
 		'1.0'
 	);
-	wp_enqueue_script('aa_WPADMIN');
+	wp_enqueue_script('ics_WPADMIN');
 	wp_localize_script(
-		'aa_WPADMIN',
-		'aaWPADMIN',
+		'ics_WPADMIN',
+		'icsWPADMIN',
 		array(
 			'ppost'		=> $this->plugin_post,
 			'ajaxurl'	=> admin_url( 'admin-ajax.php' ),
@@ -826,7 +826,7 @@ protected function show_form(
 									class="form-control"
 									id="'.$id.'"
 									name="'.$id.'"
-									'.$required.'
+									'.$data_required.'
 									">';
 						$output.='<option value="0" disabled>Seleccionar</option>';
 						foreach($field['options'] as $sel_key => $sel_opt){

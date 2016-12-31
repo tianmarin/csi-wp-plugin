@@ -1,0 +1,1 @@
+jQuery(document).ready(function($){var o=aaWPADMIN.ppost,n=aaWPADMIN.ajaxurl,a=aaWPADMIN.php_script;void 0!==typeof a?a():window.console.log(a),window.console.log(o),window.console.log(n),window.console.log($),window.console.log(AmCharts)});
