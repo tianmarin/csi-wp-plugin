@@ -50,6 +50,47 @@ CREATE TABLE `action_party` (
 	PRIMARY KEY (`id`)
 );
 
+CREATE TABLE `project_status` (
+	`id` tinyint(2) NOT NULL,
+	`short_name` varchar(50) NOT NULL,
+	`code` varchar(20) NOT NULL UNIQUE,
+	`css_class` varchar(100),
+	`hex_color` varchar(6),
+	PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `project_urgency` (
+	`id` tinyint(2) NOT NULL,
+	`short_name` varchar(50) NOT NULL,
+	`code` varchar(20) NOT NULL UNIQUE,
+	`css_class` varchar(100),
+	`hex_color` varchar(6),
+	PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `project` (
+	`id` bigint(20) NOT NULL,
+	`customer_id` bigint NOT NULL,
+	`short_name` varchar(100) NOT NULL,
+	`description` TEXT NOT NULL,
+	`requested_user_id` bigint(20) NOT NULL,
+	`requested_time` TIME NOT NULL,
+	`requested_start_date` DATE,
+	`requested_end_date` DATE,
+	`requested_urgency_id` tinyint(2) NOT NULL,
+	`status_id` tinyint(2) NOT NULL,
+	`planned_start_date` DATE,
+	`planned_end_date` DATE,
+	`percentage` tinyint(1) DEFAULT '0',
+	`last_modified_user_id` bigint(20),
+	`last_modified_time` DATE,
+	`doc_link` varchar(255),
+	`task_link` varchar(255),
+	`last_modified_date` DATE,
+	`requested_date` DATE NOT NULL,
+	PRIMARY KEY (`id`)
+);
+
 ALTER TABLE `landscape` ADD CONSTRAINT `landscape_fk0` FOREIGN KEY (`customer_id`) REFERENCES `customer`(`id`);
 
 ALTER TABLE `system` ADD CONSTRAINT `system_fk0` FOREIGN KEY (`landscape_id`) REFERENCES `landscape`(`id`);
@@ -59,3 +100,9 @@ ALTER TABLE `alert` ADD CONSTRAINT `alert_fk0` FOREIGN KEY (`system_id`) REFEREN
 ALTER TABLE `alert` ADD CONSTRAINT `alert_fk1` FOREIGN KEY (`alert_priority_id`) REFERENCES `alert_priority`(`id`);
 
 ALTER TABLE `alert` ADD CONSTRAINT `alert_fk2` FOREIGN KEY (`action_party_id`) REFERENCES `action_party`(`id`);
+
+ALTER TABLE `project` ADD CONSTRAINT `project_fk0` FOREIGN KEY (`customer_id`) REFERENCES `customer`(`id`);
+
+ALTER TABLE `project` ADD CONSTRAINT `project_fk1` FOREIGN KEY (`requested_urgency_id`) REFERENCES `project_urgency`(`id`);
+
+ALTER TABLE `project` ADD CONSTRAINT `project_fk2` FOREIGN KEY (`status_id`) REFERENCES `project_status`(`id`);

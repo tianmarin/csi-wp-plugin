@@ -1,22 +1,34 @@
-#Project MAnagement
+# Project Management
+
+## Page Templates
+
+### Project Request (mobile view)
+### Customer dashboard (mobile view)
+
+## Shortcodes
+
+* Multi-customer Dashboard
+* Customer Multi-Project Dashboard
 
 ## Classes
 ### Project
 
-* Customer ID: 
-* Name
+* Project ID
+* Customer ID -- (por ahora NO)
+* Customer Name
+* Project Name
 * Description
-* Requester ID
+* Requested User ID --
 * Requested Date
 * Requested Time
 * Requested Start Date
 * Requested End Date
-* Urgency
-* Status
+* Requested Urgency --
+* Status --
 * Planned Start Date
 * Planned End Date
 * Percentage
-* Last Modif. User ID
+* Last Modif. User ID --
 * Last Modif. Date
 * Last Modif. Time
 * Documentation Link
@@ -24,11 +36,19 @@
 
 
 ### Project Status
-(rejected, planned, executing, cancelled, finished, PMO revision)
+(PMO revision,rejected, planned, executing, cancelled, finished)
 
 
 * ID
 * Code
 * Name
+* Class
+* Color
+
+### Project Urgency
+
+* ID
+* code
+* Short Name
 * Class
 * Color

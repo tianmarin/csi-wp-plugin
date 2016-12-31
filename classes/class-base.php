@@ -30,10 +30,11 @@ public function db_install(){
 //	if( true ){
 		//Registrar y notificar 'UPGRADE' exitoso
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		dbDelta($this->crt_tbl_sql);
+		$delta = dbDelta($this->crt_tbl_sql);
 //		echo $sql;
+		self::write_log($delta);
 		update_option( $this->tbl_name."_db_version" , $this->db_version );
-		self::write_log($this->tbl_name."_db_version"." =  ".$this->db_version );
+//		self::write_log($this->tbl_name."_db_version"." =  ".$this->db_version );
 //		add_action( 'admin_notices', array( $this, 'db_install_success')  );
 //		do_action(array( $this, 'db_install_success'));
 
@@ -825,7 +826,7 @@ protected function show_form(
 									class="form-control"
 									id="'.$id.'"
 									name="'.$id.'"
-									'.$required.'
+									'.$data_required.'
 									">';
 						$output.='<option value="0" disabled>Seleccionar</option>';
 						foreach($field['options'] as $sel_key => $sel_opt){

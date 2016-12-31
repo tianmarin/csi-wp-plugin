@@ -281,7 +281,7 @@ public function shortcode_system_panel($atts){
 	
 	if ( $system > 0 ){
 		//Obtener información del Sistema
-		global $NOVIS_CSI_ALERT_PRIORITY_CLASS;
+		global $NOVIS_CSI_ALERT_PRIORITY;
 		global $NOVIS_CSI_ACTION_PARTY;
 		$output.='<div class="col-xs-12 col-sm-12 col-md-6">';
 		$output.='<header>';
@@ -381,7 +381,7 @@ public function shortcode_system_panel($atts){
 					a.action_id as action
 					FROM
 						(($this->tbl_name as a
-						LEFT JOIN $NOVIS_CSI_ALERT_PRIORITY_CLASS->tbl_name as b ON a.alert_priority_id = b.id)
+						LEFT JOIN $NOVIS_CSI_ALERT_PRIORITY->tbl_name as b ON a.alert_priority_id = b.id)
 						LEFT JOIN $NOVIS_CSI_ACTION_PARTY->tbl_name as c ON a.action_party_id = c.id)
 					WHERE
 						a.system_id=$system

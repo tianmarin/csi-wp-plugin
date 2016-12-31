@@ -38,19 +38,35 @@ $novis_csi_vars = array(
 	'action_party'			."_tbl_name"	=> $wpdb->prefix		.'z_csi_'	.'action_party',
 	'alert_priority'		."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'alert_priority',
 	'alert'					."_tbl_name"	=> $wpdb->prefix		.'z_csi_'	.'alert',
+// PROJECT MANAGEMENT
+	'project_urgency'		."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'project_urgency',
+	'project_status'		."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'project_status',
+	'project'				."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'project',
+
+
 //	'customer'				."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'customer',
 //Menu Slugs
+
 	'main'					."_menu_slug"	=> 'csi_'		.'main',
 	'network'				."_menu_slug"	=> 'csi_'		.'network',
 	'action_party'			."_menu_slug"	=> 'csi_'		.'action_party',
 	'alert_priority'		."_menu_slug"	=> 'csi_'		.'alert_priority',
 	'alert'					."_menu_slug"	=> 'csi_'		.'alert',
+// PROJECT MANAGEMENT
+	'project_status'		."_menu_slug"	=> 'csi_'		.'project_status',
+	'project_urgency'		."_menu_slug"	=> 'csi_'		.'project_urgency',
+	'project'				."_menu_slug"	=> 'csi_'		.'project',
+
 //Menu Capabilities
 	'main'					."_menu_cap"		=> 'manage_options',
 	'network'				."_menu_cap"		=> 'manage_options',
 	'action_party'			."_menu_cap"		=> 'manage_options',
 	'alert_priority'		."_menu_cap"		=> 'manage_options',
 	'alert'					."_menu_cap"		=> 'manage_options',
+// PROJECT MANAGEMENT
+	'project_status'		."_menu_cap"		=> 'manage_options',
+	'project_urgency'		."_menu_cap"		=> 'manage_options',
+	'project'				."_menu_cap"		=> 'manage_options',
 );
 
 
@@ -142,5 +158,10 @@ require_once(CSI_PLUGIN_DIR."/classes/class-base.php");
 require_once(CSI_PLUGIN_DIR."/classes/alerts/class-action-party.php");
 require_once(CSI_PLUGIN_DIR."/classes/alerts/class-alert-priority.php");
 require_once(CSI_PLUGIN_DIR."/classes/alerts/class-alert.php");
+
+
+require_once(CSI_PLUGIN_DIR."/classes/project/class-project-status.php");
+require_once(CSI_PLUGIN_DIR."/classes/project/class-project-urgency.php");
+require_once(CSI_PLUGIN_DIR."/classes/project/class-project.php");
 
 ?>
