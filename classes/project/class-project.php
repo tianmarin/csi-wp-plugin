@@ -498,6 +498,12 @@ public function __construct(){
 		),
 	);
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
+	//in a new blog creation, create the db for new blog
+	//Applies only for non-network classes
+	if( true != $this->network_class ){
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install_data'			));
+	}
 	if ( !is_multisite() ) {
 		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
 	}else{

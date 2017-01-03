@@ -279,6 +279,11 @@ public function __construct(){
 	);
 	
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
+	//in a new blog creation, create the db for new blog
+	//Applies only for non-network classes
+	if( true != $this->network_class ){
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
+	}
 	add_shortcode( 'csi_ewa_system_panel',				 		array( $this , 'shortcode_system_panel'		));
 }
 public function shortcode_system_panel($atts){

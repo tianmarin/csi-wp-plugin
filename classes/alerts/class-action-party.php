@@ -198,7 +198,14 @@ public function __construct(){
 		),
 	);
 	
+	//on plugin activation, create database
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
+	//in a new blog creation, create the db for new blog
+	//Applies only for non-network classes
+	if( true != $this->network_class ){
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
+	}
+	//create admin_menu for NON Network Classes)
 	add_action( 'admin_menu',		 							array( $this , "register_submenu_page"		));
 //	add_action( 'wp_ajax_search_system_users', 					array( $this , 'search_system_users'		));
 //	add_action( 'wp_ajax_fe_system_list',						array( $this , 'fe_system_list'				));
