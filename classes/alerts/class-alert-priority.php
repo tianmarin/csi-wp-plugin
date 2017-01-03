@@ -29,16 +29,24 @@ public function __construct(){
 	$this->plugin_post	= $novis_csi_vars['plugin_post'];
 	//Permisos de usuario a nivel de backend WordPRess
 	$this->capability	= $novis_csi_vars[$this->class_name.'_menu_cap'];
+	//Network Activated Class
+	$this->network_class= $novis_csi_vars[$this->class_name.'_network_class'];
+	//Plugintable_prefix
+	$this->table_prefix=$novis_csi_vars['table_prefix'];
 	//Tabla de la clase
-	$this->tbl_name		= $novis_csi_vars[$this->class_name.'_tbl_name'];
+	if( true == $this->network_class ){
+		$this->tbl_name = $wpdb->base_prefix	.$this->table_prefix	.$this->class_name;
+	}else{
+		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
+	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.1';
+	$this->db_version	= '0.5.2';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." (
+	$this->crt_tbl_sql_wt	="(
 								id tinyint(2) unsigned not null auto_increment,
 								short_name varchar(15) not null,
 								icon varchar(50) null,
@@ -47,6 +55,8 @@ public function __construct(){
 								
 								UNIQUE KEY id (id)
 							) $charset_collate;";
+	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
+	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
 		/*	
 		type					: Tipo de Dato para validacion
@@ -162,7 +172,7 @@ public function __construct(){
 			'form_disabled'				=>false,
 			'form_help_text'			=>'Estilo de Prioridad (<code>danger</code>, <code>warning</code>).<br/>Tama&ntilde;o m&aacute;ximo: 30 caracteres.',
 			'form_input_size'			=>false,
-			'form_label'				=>'Icono',
+			'form_label'				=>'Estilo CSS',
 			'form_options'				=>false,
 			'form_placeholder'			=>'Estilo CSS',
 			'form_special_form'			=>false,
@@ -191,11 +201,11 @@ public function __construct(){
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this, 'db_install_data'				));
 
-//	if ( !is_multisite() ) {
-//		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
-//	}else{
-//		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
-//	}
+	if ( !is_multisite() ) {
+		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
+	}else{
+		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
+	}
 //	add_action( 'wp_ajax_search_system_users', 					array( $this , 'search_system_users'		));
 //	add_action( 'wp_ajax_fe_system_list',						array( $this , 'fe_system_list'				));
 //	add_action( 'wp_ajax_fe_system_info',						array( $this , 'fe_system_info'				));

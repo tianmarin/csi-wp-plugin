@@ -2,18 +2,21 @@
 defined('ABSPATH') or die("No script kiddies please!");
 
 abstract class NOVIS_CSI_CLASS{
-	public 			$class_name;	//como se definió en novis_csi_vars
-	protected 		$name_single;	//Nombre singular para títulos, mensajes a usuario, etc.
-	protected 		$name_plural;	//Nombre plural para títulos, mensajes a usuario, etc.
-	protected 		$parent_slug;	//Identificador de menú padre
-	protected 		$menu_slug;		//Identificador de submenú de la clase
-	protected 		$plugin_post;	//Utilizado para validaciones (deprecated)
-	protected 		$p_post;		//Utilizado para validaciones
-	protected 		$capability;	//Permisos de usuario a nivel de backend WordPRess
-	public	 		$tbl_name;		//Tabla de la clase
-	protected 		$db_version;	//Versión de DB (para registro y actualización automática)
-	protected 		$crt_tbl_sql;	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	protected 		$db_fields;		//Registro de columnas de la tabla utilizado para validaciones y visualización de formatos
+	public 			$class_name;		//como se definió en novis_csi_vars
+	protected 		$name_single;		//Nombre singular para títulos, mensajes a usuario, etc.
+	protected 		$name_plural;		//Nombre plural para títulos, mensajes a usuario, etc.
+	protected 		$parent_slug;		//Identificador de menú padre
+	protected 		$menu_slug;			//Identificador de submenú de la clase
+	protected 		$plugin_post;		//Utilizado para validaciones (deprecated)
+	protected 		$p_post;			//Utilizado para validaciones
+	protected 		$capability;		//Permisos de usuario a nivel de backend WordPRess
+	public	 		$tbl_name;			//Tabla de la clase
+	protected 		$tbl_prefix;		//Tabla de la clase
+	public	 		$network_class;		//Network activated class flag (for multisite installations)
+	protected 		$db_version;		//Versión de DB (para registro y actualización automática)
+	protected 		$crt_tbl_sql;		//Sentencia SQL de creación (y ajuste) de la tabla de la clase
+	protected 		$crt_tbl_sql_wt;	//Sentencia SQL de creación (y ajuste) sin el nombre de la tabla
+	protected 		$db_fields;			//Registro de columnas de la tabla utilizado para validaciones y visualización de formatos
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
 /**
 * Create or update the Class DB Table structure
@@ -25,34 +28,47 @@ abstract class NOVIS_CSI_CLASS{
 * @author Cristian Marin
 */
 public function db_install(){
-	$current_db_version = get_option( $this->tbl_name."_db_version");
-	if( $current_db_version == false || $current_db_version != $this->db_version ){
-//	if( true ){
-		//Registrar y notificar 'UPGRADE' exitoso
-		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-		$delta = dbDelta($this->crt_tbl_sql);
-//		echo $sql;
-		self::write_log($delta);
-		update_option( $this->tbl_name."_db_version" , $this->db_version );
-//		self::write_log($this->tbl_name."_db_version"." =  ".$this->db_version );
-//		add_action( 'admin_notices', array( $this, 'db_install_success')  );
-//		do_action(array( $this, 'db_install_success'));
+	global $wpdb;
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	
+	if ( is_multisite() && FALSE == $this->network_class ) {
+		// Get all blogs in the network and create or update the table on each one
+		$args = array(
+			'network_id'	=> $wpdb->siteid,
+			'public'    	=> null,
+			'archived'  	=> null,
+			'mature'    	=> null,
+			'spam'      	=> null,
+			'deleted'   	=> null,
+			'limit'     	=> 200,
+			'offset'    	=> 1,
+		); 
+		$sites = wp_get_sites($args);
+		foreach ( $sites as $i => $site ) {
+			if ( true == switch_to_blog( $site['blog_id'] ) ) {
+				$this->tbl_name = $wpdb->prefix	.$this->table_prefix.$this->class_name;
+				$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 
-	}else{
-//		add_action( 'admin_notices', array( $this, 'db_install_error')  );
-//		do_action(array( $this, 'db_install_error'));
-		//registrar que no fue necesario actualizar nada
-//PHP Warning:  Illegal offset type in /Users/cristian/Dropbox/Developer/Development/WP_PLUGINS/wp-includes/plugin.php on line 457
-//PHP Warning:  Illegal offset type in isset or empty in /Users/cristian/Dropbox/Developer/Development/WP_PLUGINS/wp-includes/plugin.php on line 468
-
+				$current_db_version = get_option( $this->tbl_name."_db_version");
+				if( $current_db_version == false || $current_db_version != $this->db_version ){
+					$delta = dbDelta($this->crt_tbl_sql);
+					self::write_log($delta);
+					update_option( $this->tbl_name."_db_version" , $this->db_version );
+				}
+				restore_current_blog();				
+			}else{
+				self::write_log('No hay blog con el ID: '.$site['blog_id']);
+			}
+		}
+    } else {
+		$current_db_version = get_option( $this->tbl_name."_db_version");
+		if( $current_db_version == false || $current_db_version != $this->db_version ){
+			$delta = dbDelta($this->crt_tbl_sql);
+			self::write_log($delta);
+			update_option( $this->tbl_name."_db_version" , $this->db_version );
+		}
 	}
 	return true;
-}
-public function db_install_success() {
-	echo '<div class="alert alert-success notice notice-success is-dismissible" role="alert"> Tabla'.$this->tbl_name.' creada exitosamente</div>';
-}
-public function db_install_error() {
-	echo '<div class="alert alert-danger notice notice-error is-dismissible" role="alert"> Error al crear tabla'.$this->tbl_name.'</div>';
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
 /**
@@ -95,6 +111,14 @@ public function register_submenu_page() {
 * @author Cristian Marin
 */
 public function bluid_submenu_page(){
+	wp_register_style(
+		"ics_admin_style",
+		CSI_PLUGIN_URL.'/css/admin.css' ,
+		null,
+		"1.0",
+		"all"
+		);
+	wp_enqueue_style("ics_admin_style" );
 	wp_register_script(
 		'ics_WPADMIN',
 		CSI_PLUGIN_URL.'/js/admin-min.js' ,
@@ -869,6 +893,13 @@ protected function write_log($log){
 		error_log( $log );
 	}
 }
+
+protected function validate_date($date, $format = 'Y-m-d'){
+	$d = DateTime::createFromFormat($format, $date);
+	return $d && $d->format($format) == $date;
+}
+
+
 //END OF CLASS	
 }
 ?>
