@@ -514,67 +514,141 @@ protected function backend_wp_sp_table_short_name($text,$element){
 public function shortcode_project_panel($atts){
 	global $wpdb;
 	global $novis_csi_vars;
+	define('DAYS_PER_MONTH', 30);
+	define('DURATION', 6);
+	$error		= false;
+	$err_msg	='';
 	$output		='';
 	$customer	= isset($atts['customer']) && is_numeric($atts['customer']) ? $atts['customer'] : 'all';
-	$weeks		= isset($atts['weeks']) && is_numeric($atts['weeks']) ? $atts['weeks'] : 8;
-	$graph		= isset($atts['weeks']) && true == $atts['weeks'] ? true : false;
-	
-	$sql = "SELECT * FROM ".$this->tbl_name;
-	$projects = self::get_sql($sql);
-	wp_register_script(
-		'bootstrap',
-		CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
-		array('jquery'),
-		'3.3.7'
-	);
-	wp_enqueue_script('bootstrap');
-	$MONTH = 100/6;
-	$output.='
+	//duration validation
+	if ( isset ( $atts['duration'] )){
+		if ( is_numeric($atts['duration']) && $atts['duration'] > 1 && $atts['duration'] <= 12 ){
+			$duration = $atts['duration'];
+		}else{
+			$err_msg .=" La duraci&oacute;n debe estar definida entre 1 & 12.";
+			$error = true;
+		}
+	}else{
+		$duration = DURATION;
+	}
+	//start_date validation
+	if ( isset( $atts['start_date'] ) ){
+		if ( self::validate_date( $atts['start_date'] ) ){
+			$tl_start_date = DateTime::createFromFormat('Y-m-d', $atts['start_date']);
+			self::write_log($atts['start_date']);
+		}else{
+			$err_msg .=" La fecha de inicio debe ser válida y estar en el formato YYYY-MM-DD.";
+			$error = true;
+		}
+	}else{
+		$tl_start_date = new DateTime();
+		$tl_start_date->modify('-1 month');
+	}
+	if ( false == $error ){
+		//register and enqueue bootstrap javascript
+		wp_register_script(
+			'bootstrap',
+			CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
+			array('jquery'),
+			'3.3.7'
+		);
+		wp_enqueue_script('bootstrap');
+		$start_month_name	= $tl_start_date->format('F');
+		$year				= $tl_start_date->format('Y');
+		$month				= $tl_start_date->format('m');
+		$day				= $tl_start_date->format('d');
+		$tl_end_date		= DateTime::createFromFormat('Y-m-d', $year.'-'.intval($month+$duration-1).'-28');
+		$month_width		= 100 / $duration;
+		//Print months header
+		$output.='<h2>Proyectos en curso</h2>';
+		$output.='
 		<div class="row">
 			<div class="hidden-xs col-md-2">&nbsp;</div>
 			<div class="col-xs-12 col-md-10">
-				<div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Enero</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Febrero</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Marzo</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Abril</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Mayo</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Junio</div>
+				<div>';
+		for ( $i = 0 ; $i < $duration ; $i++ ){
+			$date = DateTime::createFromFormat('Y-m-d', $year.'-'.intval($month+$i).'-01');
+			$date_header_long=$date->format('F').'<br/><small class="text-muted">'.$date->format('Y').'</small>';
+			$date_header_short=$date->format('M').'<br/><small class="text-muted">'.$date->format('Y').'</small>';
+			$output.='<div class="month text-center hidden-xs" style="float:left;width:'.$month_width.'%;outline-left:solid thin black;">'.$date_header_long.'</div>';
+			$output.='<div class="month text-center visible-xs" style="float:left;width:'.$month_width.'%;outline-left:solid thin black;">'.$date_header_short.'</div>';
+		}//end for $i counter
+		$output.='
 				</div>
 			</div>
 		</div>';
-	foreach ( $projects as $project){
-		$UNO = (15)/30*$MONTH;
-		$TRES= (30-23)/30*$MONTH+$MONTH;
-		$DOS = 100-($UNO + $TRES);
-		$output.='
-		<div class="row">
-			<div class="col-xs-12 col-md-2 text-center">
-				<div class="btn-group btn-group-sm">
-					<a type="button" class="text-muted dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-						<span class="fa fa-cog fa-fw"></span>'.$project['short_name'].'
-					</a>
-					<ul class="dropdown-menu">
-						<li><a href="#" title="Ver los documentos del proyecto '.$project['short_name'].'"><i class="fa fa-tasks fa-fw" aria-hidden="true"></i> Tareas</a></li>
-						<li><a href="#" title="Ver las tareas del proyecto '.$project['short_name'].'"><i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i> Documentos</a></li>
-					</ul>
-				</div>
-				
-			</div>
-			<div class="col-xs-12 col-md-10">
-				<div>
-					<div class="month text-center" style="float:left;width:'.$UNO.'%;">&nbsp;</div>
-					<div class="month text-center" style="float:left;width:'.$DOS.'%;">
-						<div class="progress">
-							<div class="progress-bar" role="progressbar" aria-valuenow="'.$project['percentage'].'" aria-valuemin="0" aria-valuemax="100" style="width: '.$project['percentage'].'%;">
-								<span>'.$project['percentage'].'%</span>
-							</div>
+		//PROJECTS Timelines
+		$sql = "SELECT * FROM ".$this->tbl_name;
+		$projects = self::get_sql($sql);
+		$MONTH = 100/$duration;
+		foreach ( $projects as $project){
+			if ( self::validate_date( $project['planned_start_date'] ) && self::validate_date( $project['planned_end_date'] ) ){
+				$planned_start_date	= DateTime::createFromFormat('Y-m-d', $project['planned_start_date']);
+				$planned_end_date	= DateTime::createFromFormat('Y-m-d', $project['planned_end_date']);
+				if( $tl_start_date < $planned_start_date){
+					$month_diff = new DateTime;
+					$month_diff = date_diff ( $planned_start_date,$tl_start_date);
+					//add months
+					$proj_prev = floatval ( intval( $month_diff->format('%m') ) * $month_width );
+					//add days
+					$proj_prev = $proj_prev + intval( $planned_start_date->format('d') ) / DAYS_PER_MONTH * $month_width;
+				}else{
+					$proj_prev = 0;
+				}
+				if( $tl_end_date > $planned_end_date){
+					$month_diff = new DateTime;
+					$month_diff = date_diff ( $planned_end_date,$tl_end_date);
+					//add months
+					$proj_post = floatval ( intval( $month_diff->format('%m') ) * $month_width );
+					//add days
+					$proj_post = $proj_post + $month_width / ( DAYS_PER_MONTH / intval( $planned_end_date->format('d') ) );
+					//self::write_log( $month_width / ( DAYS_PER_MONTH / intval( $planned_end_date->format('d') ) ) );
+				}else{
+					$proj_post=0;
+				}
+				$proj_width = 100 - ($proj_prev + $proj_post);
+				//self::write_log($proj_prev.' - '.$proj_width.' - '.$proj_post);
+				$output.='
+				<div class="row">
+					<div class="col-xs-12 col-md-2 text-center">
+						<div class="btn-group btn-group-sm">
+							<a type="button" class="text-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<span class="fa fa-cog fa-fw"></span>'.$project['short_name'].'
+							</a>
+							<ul class="dropdown-menu">
+								<li><a href="#" title="Ver los documentos del proyecto '.$project['short_name'].'"><i class="fa fa-tasks fa-fw" aria-hidden="true"></i> Tareas</a></li>
+								<li><a href="#" title="Ver las tareas del proyecto '.$project['short_name'].'"><i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i> Documentos</a></li>
+							</ul>
 						</div>
 					</div>
-					<div class="month text-center" style="float:left;width:'.$TRES.'%;">&nbsp;</div>
-				</div>
-			</div>
-		</div>';
+					<div class="col-xs-12 col-md-10">
+						<div>
+							<div class="month text-center" style="float:left;width:'.$proj_prev.'%;">&nbsp;</div>
+							<div class="month text-center" style="float:left;width:'.$proj_width.'%;">
+								<div class="progress progress-striped active">
+									<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="'.$project['percentage'].'" aria-valuemin="0" aria-valuemax="100" style="width: '.$project['percentage'].'%;">
+										<span>'.$project['percentage'].'%</span>
+									</div>
+								</div>
+							</div>
+							<div class="month text-center" style="float:left;width:'.$proj_post.'%;">&nbsp;</div>
+						</div>
+					</div>
+				</div>';
+			}else{
+				//No se muestra el proyecto, ya que no tiene fechas valida planificadas
+			}
+		}
+		
+	}else{
+		$output.='<div class="well">';
+			$output.='<p class="h3"><i class="fa fa-exclamation-circle fa-sm text-danger"></i> Error</p>';
+			$output.='<p>Ha ocurrido un error, o probablemente no est&aacute;s usando de modo correcto el <code>shortcode</code>.</p>';
+			$output.='<p><code>[csi_project_list_panel duration=<kbd>meses</kbd> start_date=<kbd>yyyy-mm-dd</kbd></code></p>';
+			$output.='<p class=""text-muted">'.$err_msg.'</p>';
+			$output.='<a href="'.get_site_option('ics_shortcode_help_url','#').'" class="btn btn-sm btn-primary">Aprender m&aacute;s</a>';
+		$output.='</div>';
+
 	}
 	return $output;	
 }
@@ -583,4 +657,91 @@ public function shortcode_project_panel($atts){
 
 global $NOVIS_CSI_PROJECT;
 $NOVIS_CSI_PROJECT =new NOVIS_CSI_PROJECT_CLASS();
+
+	$output='
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h3><i class="fa fa-check"></i>Proyectos</h3>
+		</div>
+	<div class="panel-body">
+		<div id="DataTables_Table_0_wrapper" class="dataTables_wrapper form-inline" role="grid">
+			<div class="row">
+				<div class="col-lg-6"></div>
+				<div class="col-lg-6"></div>
+			</div>
+			
+			<table class="table bootstrap-datatable datatable small-font dataTable" id="DataTables_Table_0">
+				<thead>
+					<tr role="row">
+						<th class="sorting_asc" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Task: activate to sort column descending" style="width: 156px;">
+							Task
+						</th>
+						<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Progress: activate to sort column ascending" style="width: 88px;">
+							Progress
+						</th>
+					</tr>
+				</thead>
+				<tbody role="alert" aria-live="polite" aria-relevant="all">
+					<tr class="odd">
+						<td class=" sorting_1">A/B Tests</td>
+						<td class=" ">
+							<div class="progress thin">
+								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" style="width: 73%">
+									<span class="sr-only">73% Complete (success)</span>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr class="even">
+						<td class=" sorting_1">App Development</td>
+						<td class=" ">
+							<div class="progress thin">
+								<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100" style="width: 95%">
+									<span class="sr-only">95% Complete (success)</span>
+								</div>
+							</div>
+						</td>
+					</tr>
+					<tr class="odd">
+						<td class=" sorting_1">Growth Hacking</td>
+						<td class=" ">
+							<div class="progress thin">
+							  	<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="11" aria-valuemin="0" aria-valuemax="100" style="width: 11%">
+							    	<span class="sr-only">11% Complete (success)</span>
+							  	</div>
+							</div>
+						</td>
+					</tr>
+					<tr class="even">
+						<td class=" sorting_1">Hire Developers</td>
+						<td class=" ">
+							<div class="progress thin">
+							  	<div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="27" aria-valuemin="0" aria-valuemax="100" style="width: 27%">
+							    	<span class="sr-only">27% Complete (success)</span>
+							  	</div>
+							</div>
+						</td>
+					</tr>
+					<tr class="odd">
+						<td class=" sorting_1">SEO Optimisation</td>
+						<td class=" ">
+							<div class="progress thin">
+							  	<div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" style="width: 73%">
+							    	<span class="sr-only">73% Complete (success)</span>
+							  	</div>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<div class="row">
+				<div class="col-lg-12"></div>
+				<div class="col-lg-12 center"></div>
+			</div>
+		</div>
+	</div>
+</div>
+	';
+
+
 ?>

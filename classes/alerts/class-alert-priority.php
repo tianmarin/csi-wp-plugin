@@ -170,7 +170,7 @@ public function __construct(){
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>100,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'Estilo de Prioridad (<code>danger</code>, <code>warning</code>).<br/>Tama&ntilde;o m&aacute;ximo: 30 caracteres.',
+			'form_help_text'			=>'Estilo CSS (<code>danger</code>, <code>warning</code>).<br/>Tama&ntilde;o m&aacute;ximo: 30 caracteres.',
 			'form_input_size'			=>false,
 			'form_label'				=>'Estilo CSS',
 			'form_options'				=>false,
@@ -216,7 +216,7 @@ public function __construct(){
 protected function backend_wp_sp_table_icon($icon,$element){
 	$style=self::get_single($element['id'])['css_class'];
 	$style=($style!='')?'text-'.$style:'';
-	$output='<i class="fa fa-'.$element['icon'].' fa-fw fa-lg '.$style.'"></i>';	
+	$output='<i class="fa fa-'.$icon.' fa-fw fa-lg '.$style.'"></i>';	
 	return $output;
 }
 protected function form_special_form_hex_color($array){
@@ -245,9 +245,6 @@ protected function form_special_form_hex_color($array){
 		$output.='<div class="input-group-addon" id="hex-color">'.$space.'</div>';
 	$output.='</div>';
 	return $output;
-}
-protected function backend_wp_sp_table_code($code){
-	return '<code>'.$code.'</code>';
 }
 public function db_install_data(){
 	global $wpdb;
