@@ -1,0 +1,96 @@
+@import '../external/fontawesome/less/font-awesome.less';
+@import '../external/animate.less/less/animate.less';
+.csi-shortcode{
+	@import '../external/bootstrap/less/bootstrap.less';
+	.csi-project-panel{
+		padding-top: 50px;
+		position: relative;
+		.timeline-header{
+			position: absolute;
+			top: 0px;
+			height: 100%;
+			padding: 0;
+			div{
+				float: left;
+				height: 100%;
+			}
+			.month{
+				float: left;
+				height: 100%;
+				border-left: thin dashed rgba(0,0,0,0.25);
+				&:nth-child(1),
+				&:nth-child(2){
+					border:none;
+				}
+				&:nth-child(4n+1),
+				&:nth-child(4n+2){
+					background-color: rgba(255,255,255,0.1);
+				}
+				&:nth-child(4n+3),
+				&:nth-child(4n+4){
+					background-color: rgba(0,0,0,0.05);
+				}
+			}
+		}
+		.customer{
+			.customer-name{
+				margin-top: 10px;
+			}
+		}
+		.project{
+			.project-options{
+				div{
+					display: block;
+					white-space: nowrap;
+					text-overflow: ellipsis;
+					float: left;
+				}
+			}
+			.project-timeline{
+				& > div{
+					float: left;
+					.progress{
+						margin-bottom: 5px;
+						border:thin solid #AAA;
+						&.non_end{
+							border-right: none;
+						}
+						&.non_start{
+							border-left: none;						
+						}
+					}
+				}
+			}
+		}
+	}
+}
+.csi-project-request-welcome{
+	min-height: 100vh;
+	background-color: #263238;
+	background: url(../img/bg/template-project-request-bg.jpg) no-repeat center center fixed; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	.csi-project-request-welcome-buttons{
+		padding-bottom: 30vh;
+		.csi-project-request-button{
+			@delay:1s;
+			-moz-animation-delay: @delay;
+			-webkit-animation-delay: @delay;
+			animation-delay: @delay;
+			&.btn-success{
+				@delay:1.2s;
+				-moz-animation-delay: @delay;
+				-webkit-animation-delay: @delay;
+				animation-delay: @delay;
+			}
+		}		
+	}
+}
+#project_request_form{
+	min-height: 100vh;
+}
+#user-project-request-status{
+	min-height: 100vh;
+}

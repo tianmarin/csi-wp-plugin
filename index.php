@@ -29,41 +29,46 @@ define( 'CSI_PLUGIN_URL', plugins_url( '' ,  __FILE__ ) );
 
 $novis_csi_vars = array(
 //Plugin Conf. Variables
-	'DEBUG'								=> TRUE,
-	'plugin_option_name'				=> 'csi_options',							//Plugin Option (Wordpress default) name
-	'plugin_post'						=> 'Y21hcmlu',								//(base64_encode(cmarin) security 'from' request
-	'plugin_shortcode'					=> 'aa',									//used by plugin association in shortcodes
-	
-// ALERTS
-	'action_party'			."_tbl_name"	=> $wpdb->prefix		.'z_csi_'	.'action_party',
-	'alert_priority'		."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'alert_priority',
-	'alert'					."_tbl_name"	=> $wpdb->prefix		.'z_csi_'	.'alert',
-// PROJECT MANAGEMENT
-	'project_urgency'		."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'project_urgency',
-	'project_status'		."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'project_status',
-	'project'				."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'project',
+	'DEBUG'										=> TRUE,
+	'plugin_option_name'						=> 'csi_options',							//Plugin Option (Wordpress default) name
+	'plugin_post'								=> 'Y21hcmlu',								//(base64_encode(cmarin) security 'from' request
+	'plugin_shortcode'							=> 'aa',									//used by plugin association in shortcodes
+	'table_prefix'								=>'z_csi_',
+//DATABASE TABLES
+	'customer'				."_network_class"	=> TRUE,
+	##Alert Module
+	'action_party'			."_network_class"	=> FALSE,
+	'alert_priority'		."_network_class"	=> TRUE,
+	'alert'					."_network_class"	=> FALSE,
+	##Project Management Module
+	'project_urgency'		."_network_class"	=> TRUE,
+	'project_status'		."_network_class"	=> TRUE,
+	'project'				."_network_class"	=> TRUE,
 
 
 //	'customer'				."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'customer',
-//Menu Slugs
-
+//MENU SLUGS
 	'main'					."_menu_slug"	=> 'csi_'		.'main',
 	'network'				."_menu_slug"	=> 'csi_'		.'network',
+	'customer'				."_menu_slug"	=> 'csi_'		.'customer',
+	##Alert Module
 	'action_party'			."_menu_slug"	=> 'csi_'		.'action_party',
 	'alert_priority'		."_menu_slug"	=> 'csi_'		.'alert_priority',
 	'alert'					."_menu_slug"	=> 'csi_'		.'alert',
-// PROJECT MANAGEMENT
+	##Project Management Module
 	'project_status'		."_menu_slug"	=> 'csi_'		.'project_status',
 	'project_urgency'		."_menu_slug"	=> 'csi_'		.'project_urgency',
 	'project'				."_menu_slug"	=> 'csi_'		.'project',
 
-//Menu Capabilities
+//MENU CAPABILITIES
 	'main'					."_menu_cap"		=> 'manage_options',
 	'network'				."_menu_cap"		=> 'manage_options',
+	'customer'				."_menu_cap"		=> 'manage_options',
+	##Alert Module
 	'action_party'			."_menu_cap"		=> 'manage_options',
-	'alert_priority'		."_menu_cap"		=> 'manage_options',
+	'alert_priority'		."_menu_cap"		=> is_multisite()?'manage_network':'manage_options',
 	'alert'					."_menu_cap"		=> 'manage_options',
-// PROJECT MANAGEMENT
+	##Project Management Module
 	'project_status'		."_menu_cap"		=> 'manage_options',
 	'project_urgency'		."_menu_cap"		=> 'manage_options',
 	'project'				."_menu_cap"		=> 'manage_options',
@@ -153,6 +158,7 @@ require_once(CSI_PLUGIN_DIR."/classes/class-base.php");
 
 # Extended Classes
 ## Cross Module Classes
+require_once(CSI_PLUGIN_DIR."/classes/customer/class-customer.php");
 ## Landscape Module Classes
 ## Alert Module Classes
 require_once(CSI_PLUGIN_DIR."/classes/alerts/class-action-party.php");
@@ -164,4 +170,6 @@ require_once(CSI_PLUGIN_DIR."/classes/project/class-project-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/project/class-project-urgency.php");
 require_once(CSI_PLUGIN_DIR."/classes/project/class-project.php");
 
+##External Classes
+require_once(CSI_PLUGIN_DIR."/pagetemplater.php");
 ?>

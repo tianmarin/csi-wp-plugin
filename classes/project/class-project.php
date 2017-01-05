@@ -29,16 +29,24 @@ public function __construct(){
 	$this->plugin_post	= $novis_csi_vars['plugin_post'];
 	//Permisos de usuario a nivel de backend WordPRess
 	$this->capability	= $novis_csi_vars[$this->class_name.'_menu_cap'];
+	//Network Activated Class
+	$this->network_class= $novis_csi_vars[$this->class_name.'_network_class'];
+	//Plugintable_prefix
+	$this->table_prefix=$novis_csi_vars['table_prefix'];
 	//Tabla de la clase
-	$this->tbl_name		= $novis_csi_vars[$this->class_name.'_tbl_name'];
+	if( true == $this->network_class ){
+		$this->tbl_name = $wpdb->base_prefix	.$this->table_prefix	.$this->class_name;
+	}else{
+		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
+	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.2';
+	$this->db_version	= '0.5.2';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." (
+	$this->crt_tbl_sql_wt	="(
 								id bigint(20) unsigned not null auto_increment,
 								customer_id bigint unsigned not null,
 								customer_name varchar(50) not null,
@@ -61,6 +69,8 @@ public function __construct(){
 								task_link varchar(255) null,
 								UNIQUE KEY id (id)
 							) $charset_collate;";
+	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
+	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
 		/*	
 		type					: Tipo de Dato para validacion
@@ -145,7 +155,7 @@ public function __construct(){
 			'form_show_field'			=>false,
 		),
 		'customer_name' => array(
-			'type'						=>'text',
+			'type'						=>'select',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>true,
@@ -158,9 +168,9 @@ public function __construct(){
 			'form_help_text'			=>'En el caso que el cliente no esté registrado, indicar el nombre del cliente para el cual se solicita el Proyecto.<br/>Tama&ntilde;o m&aacute;ximo: 50 caracteres.',
 			'form_input_size'			=>false,
 			'form_label'				=>'Nombre de Cliente',
-			'form_options'				=>false,
+			'form_options'				=>array(),
 			'form_placeholder'			=>'Nombre de Cliente',
-			'form_special_form'			=>false,
+			'form_special_form'			=>true,
 			'form_show_field'			=>true,
 		),
 		'short_name' => array(
@@ -218,7 +228,7 @@ public function __construct(){
 			'form_options'				=>false,
 			'form_placeholder'			=>"Solicitante.",
 			'form_special_form'			=>true,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
 		'requested_date' => array(
 			'type'						=>'date',
@@ -332,7 +342,7 @@ public function __construct(){
 			'form_options'				=>array(),
 			'form_placeholder'			=>"Status del Proyecto",
 			'form_special_form'			=>true,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
 		'planned_start_date' => array(
 			'type'						=>'date',
@@ -467,7 +477,7 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
 		),
-		'trak_link' => array(
+		'task_link' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
@@ -488,6 +498,12 @@ public function __construct(){
 		),
 	);
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
+	//in a new blog creation, create the db for new blog
+	//Applies only for non-network classes
+	if( true != $this->network_class ){
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install_data'			));
+	}
 	if ( !is_multisite() ) {
 		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
 	}else{
@@ -504,68 +520,228 @@ protected function backend_wp_sp_table_short_name($text,$element){
 public function shortcode_project_panel($atts){
 	global $wpdb;
 	global $novis_csi_vars;
-	$output		='';
-	$customer	= isset($atts['customer']) && is_numeric($atts['customer']) ? $atts['customer'] : 'all';
-	$weeks		= isset($atts['weeks']) && is_numeric($atts['weeks']) ? $atts['weeks'] : 8;
-	$graph		= isset($atts['weeks']) && true == $atts['weeks'] ? true : false;
-	
-	$sql = "SELECT * FROM ".$this->tbl_name;
-	$projects = self::get_sql($sql);
-	wp_register_script(
-		'bootstrap',
-		CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
-		array('jquery'),
-		'3.3.7'
-	);
-	wp_enqueue_script('bootstrap');
-	$MONTH = 100/6;
-	$output.='
-		<div class="row">
-			<div class="hidden-xs col-md-2">&nbsp;</div>
-			<div class="col-xs-12 col-md-10">
-				<div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Enero</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Febrero</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Marzo</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Abril</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Mayo</div>
-					<div class="month text-center" style="float:left;width:'.$MONTH.'%;outline-left:solid thin black;">Junio</div>
-				</div>
-			</div>
-		</div>';
-	foreach ( $projects as $project){
-		$UNO = (15)/30*$MONTH;
-		$TRES= (30-23)/30*$MONTH+$MONTH;
-		$DOS = 100-($UNO + $TRES);
+	define('DAYS_PER_MONTH', 30);
+	define('DURATION', 6);
+	$error		= false;
+	$err_msg	='';
+	//wrap plugins shortcodes
+	$output		='<div class="csi-shortcode">';
+	if ( isset($atts['customer']) ){
+		if( is_numeric($atts['customer']) ){
+			$customer =$atts['customer']; 
+		}else{
+			$customer_list = explode(',', $atts['customer']);
+			if( count($customer_list)>1 ){
+				if ( is_multisite() ){
+					foreach($customer_list as $i => $customer){
+						if ( !is_numeric($customer) ){
+							unset($customer_list[$i]);
+						}
+					}
+					$customer = $customer_list;
+				}else{
+					$customer=false;
+				}
+			}elseif( 'all' == $atts['customer']){
+				$customer = false;
+			}elseif( 'current' == $atts['customer']){
+				if( is_multisite() ){
+					$customer = get_current_blog_id();
+				}else{
+					$customer=false;
+				}
+			}else{
+				$error=true;
+			}
+		}
+	}else{
+		if( is_multisite() ){
+			$customer = get_current_blog_id();
+		}else{
+			$customer=false;
+		}
+	}
+	if ( isset ( $atts['silent'] ) && $atts['silent'] == 'yes'){
+		$silent=true;
+	}else{
+		$silent=false;
+	}
+	//duration validation
+	if ( isset ( $atts['duration'] )){
+		if ( is_numeric($atts['duration']) && $atts['duration'] > 1 && $atts['duration'] <= 12 ){
+			$duration = $atts['duration'];
+		}else{
+			$err_msg .=" La duraci&oacute;n debe estar definida entre 1 & 12.";
+			$error = true;
+		}
+	}else{
+		$duration = DURATION;
+	}
+	//start_date validation
+	if ( isset( $atts['start_date'] ) ){
+		if ( self::validate_date( $atts['start_date'] ) ){
+			$date = explode('-', $atts['start_date']);
+			$date=array($date[0],$date[1],'01');
+			$tl_start_date = DateTime::createFromFormat('Y-m-d', implode('-',$date));
+		}else{
+			$err_msg .=" La fecha de inicio debe ser válida y estar en el formato YYYY-MM-DD.";
+			$error = true;
+		}
+	}else{
+		$tl_start_date = new DateTime();
+		$tl_start_date->modify('-1 month');
+	}
+	if ( false == $error ){
+		wp_register_script(
+			'bootstrap',
+			CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
+			array('jquery'),
+			'3.3.7'
+		);
+		wp_enqueue_script('bootstrap');
+		wp_register_style(
+			"csi_client_style",
+			CSI_PLUGIN_URL.'/css/client.css' ,
+			null,
+			"1.0",
+			"all"
+		);
+		wp_enqueue_style("csi_client_style" );
+		//register and enqueue bootstrap javascript
+		$start_month_name	= $tl_start_date->format('F');
+		$year				= $tl_start_date->format('Y');
+		$month				= $tl_start_date->format('m');
+		$day				= $tl_start_date->format('d');
+		$tl_end_date		= DateTime::createFromFormat('Y-m-d', $year.'-'.intval($month+$duration-1).'-28');
+		$month_width		= 100 / $duration;
+		//Print months header
+		$style= $silent ? ' style="color:#FFF" ' : "";
+		$output.='<h2 '.$style.'>Proyectos en curso</h2>';
 		$output.='
-		<div class="row">
-			<div class="col-xs-12 col-md-2 text-center">
-				<div class="btn-group btn-group-sm">
-					<a type="button" class="text-muted dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-						<span class="fa fa-cog fa-fw"></span>'.$project['short_name'].'
-					</a>
-					<ul class="dropdown-menu">
-						<li><a href="#" title="Ver los documentos del proyecto '.$project['short_name'].'"><i class="fa fa-tasks fa-fw" aria-hidden="true"></i> Tareas</a></li>
-						<li><a href="#" title="Ver las tareas del proyecto '.$project['short_name'].'"><i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i> Documentos</a></li>
-					</ul>
-				</div>
-				
-			</div>
-			<div class="col-xs-12 col-md-10">
-				<div>
-					<div class="month text-center" style="float:left;width:'.$UNO.'%;">&nbsp;</div>
-					<div class="month text-center" style="float:left;width:'.$DOS.'%;">
-						<div class="progress">
-							<div class="progress-bar" role="progressbar" aria-valuenow="'.$project['percentage'].'" aria-valuemin="0" aria-valuemax="100" style="width: '.$project['percentage'].'%;">
-								<span>'.$project['percentage'].'%</span>
+		<div class="csi-project-panel">
+		';
+		if ( !$silent ){
+//			$output.='
+//			<div class="hidden-xs col-md-2">&nbsp;</div>';
+		}
+		$output.='<div class="col-xs-12 timeline-header">';
+		for ( $i = 0 ; $i < $duration ; $i++ ){
+			$date = DateTime::createFromFormat('Y-m-d', $year.'-'.intval($month+$i).'-01');
+			$date_header_long='<span '.$style.'>'.$date->format('F').'<br/><small class="text-muted">'.$date->format('Y').'</small></span>';
+			$date_header_short='<span '.$style.'>'.$date->format('M').'<br/><small class="text-muted">'.$date->format('Y').'</small></span>';
+			$output.='<div class="month text-center hidden-xs" style="width:'.$month_width.'%;">'.$date_header_long.'</div>';
+			$output.='<div class="month text-center visible-xs" style="width:'.$month_width.'%;">'.$date_header_short.'</div>';
+		}//end for $i counter
+		$output.='</div>';##timeline-header
+		if ( false == $customer ){
+			$sql = "SELECT * FROM ".$this->tbl_name." ORDER BY customer_id DESC";		
+		}else{
+			if ( 'array' == gettype($customer) ){
+				$sql = "SELECT * FROM ".$this->tbl_name;
+				$sql.=" WHERE customer_id=".implode(" OR customer_id=", $customer);
+				$sql.=" ORDER BY customer_id";
+			}else{
+				$sql = "SELECT * FROM ".$this->tbl_name;
+				$sql.=" WHERE customer_id=$customer ORDER BY customer_id DESC";
+			}
+		}
+		//PROJECTS Timelines
+		$customer_id=null;
+		$projects = self::get_sql($sql);
+		$MONTH = 100/$duration;
+		foreach ( $projects as $project){
+			if ( self::validate_date( $project['planned_start_date'] ) && self::validate_date( $project['planned_end_date'] ) ){
+				if(!$silent){
+					if( is_multisite() ){
+						if ( $customer_id != $project['customer_id']){
+							$customer_id = $project['customer_id'];
+							if (0 == $customer_id){
+								$output.='<div class="col-xs-12 customer"><p class="lead text-center" '.$style.'>Clientes fuera de Operaci&oacute;n</p></div>';							
+							}else{
+								$blog_details = get_blog_details($customer_id);
+								$output.='<div class="col-xs-12 customer"><div class="lead text-center">'.$blog_details->blogname.'</div></div>';						
+							}
+						}
+						
+					}
+					
+				}
+				$planned_start_date	= DateTime::createFromFormat('Y-m-d', $project['planned_start_date']);
+				$planned_end_date	= DateTime::createFromFormat('Y-m-d', $project['planned_end_date']);
+				if( $tl_start_date < $planned_start_date){
+					$month_diff = new DateTime;
+					$month_diff = date_diff ( $planned_start_date,$tl_start_date);
+					//add months
+					$proj_prev = floatval ( intval( $month_diff->format('%m') ) * $month_width );
+//					self::write_log($month_diff);
+					//add days
+					$proj_prev = $proj_prev + intval( $month_diff->format('%d') ) / DAYS_PER_MONTH * $month_width;
+				}else{
+					$proj_prev = 0;
+				}
+				if( $tl_end_date > $planned_end_date){
+					$month_diff = new DateTime;
+					$month_diff = date_diff ( $planned_end_date,$tl_end_date);
+					//add months
+					$proj_post = floatval ( intval( $month_diff->format('%m') ) * $month_width );
+					//add days
+					$proj_post = $proj_post + $month_width / ( DAYS_PER_MONTH / intval( $planned_end_date->format('d') ) );
+					//self::write_log( $month_width / ( DAYS_PER_MONTH / intval( $planned_end_date->format('d') ) ) );
+				}else{
+					$proj_post=0;
+				}
+				$proj_width = 100 - ($proj_prev + $proj_post);
+				//self::write_log($proj_prev.' - '.$proj_width.' - '.$proj_post);
+				$output.='
+				<div class="row project">';
+				if ( !$silent ){
+					$output.='
+					<div class="col-xs-12 text-left project-options">
+						<div class="month text-center" style=";width:'.$proj_prev.'%;">&nbsp;</div>
+						<div class="btn-group btn-group-sm" style=";width:'.$proj_width.'%;">
+							<a type="button" class="text-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<span class="fa fa-cog fa-fw"></span>'.$project['short_name'].'
+							</a>
+							<ul class="dropdown-menu">
+								<li><a href="#" title="Ver los documentos del proyecto '.$project['short_name'].'"><i class="fa fa-tasks fa-fw" aria-hidden="true"></i> Tareas</a></li>
+								<li><a href="#" title="Ver las tareas del proyecto '.$project['short_name'].'"><i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i> Documentos</a></li>
+							</ul>
+						</div>
+						<div class="month" style="width:'.$proj_post.'%;">'.$short_name.'</div>
+					</div>';
+				}
+				$short_name= true==$silent  ? '<small style="color:#FFF;white-space: nowrap;text-overflow: ellipsis;display: block;overflow: hidden;">&nbsp;'.$project['short_name'].'</small>':'&nbsp;';
+				$start_class= (0 == $proj_prev) ? ' non_start ' : '';
+				$end_class= (0 == $proj_post) ? ' non_end ' : '';
+				$output.='
+					<div class="col-xs-12 project-timeline">
+						<div class="month text-center" style="width:'.$proj_prev.'%;">&nbsp;</div>
+						<div class="month text-center" style="width:'.$proj_width.'%;">
+							<div class="progress '.$start_class.$end_class.'">
+								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="'.$project['percentage'].'" aria-valuemin="0" aria-valuemax="100" style="width: '.$project['percentage'].'%;">
+									<span>'.$project['percentage'].'%</span>
+								</div>
 							</div>
 						</div>
+						<div class="month" style="width:'.$proj_post.'%;">'.$short_name.'</div>
 					</div>
-					<div class="month text-center" style="float:left;width:'.$TRES.'%;">&nbsp;</div>
-				</div>
-			</div>
-		</div>';
+				</div>';
+			}else{
+				//No se muestra el proyecto, ya que no tiene fechas valida planificadas
+			}
+		}
+		$output.="</div>";
+	}else{
+		$output.='<div class="well">';
+			$output.='<p class="h3"><i class="fa fa-exclamation-circle fa-sm text-danger"></i> Error</p>';
+			$output.='<p>Ha ocurrido un error, o probablemente no est&aacute;s usando de modo correcto el <code>shortcode</code>.</p>';
+			$output.='<p><code>[csi_project_list_panel duration=<kbd>meses</kbd> start_date=<kbd>yyyy-mm-dd</kbd></code></p>';
+			$output.='<p class=""text-muted">'.$err_msg.'</p>';
+			$output.='<a href="'.get_site_option('ics_shortcode_help_url','#').'" class="btn btn-sm btn-primary">Aprender m&aacute;s</a>';
+		$output.='</div>';
+
 	}
+	$output.='</div>';#wrap plugin shortcode csi-shortcode
 	return $output;	
 }
 //END OF CLASS	
