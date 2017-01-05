@@ -170,4 +170,6 @@ require_once(CSI_PLUGIN_DIR."/classes/project/class-project-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/project/class-project-urgency.php");
 require_once(CSI_PLUGIN_DIR."/classes/project/class-project.php");
 
+##External Classes
+require_once(CSI_PLUGIN_DIR."/pagetemplater.php");
 ?>

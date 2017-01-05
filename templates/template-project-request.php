@@ -17,7 +17,7 @@
 <html id="ie8" <?php language_attributes(); ?>>
 <![endif]-->
 <!--[if !(IE 6) | !(IE 7) | !(IE 8)  ]><!-->
-<html <?php language_attributes(); ?>>
+<html <?php language_attributes(); ?> manifest="<?php _e(CSI_PLUGIN_URL.'/templates/manifest-project-request.manifest');?>">
 <!--<![endif]-->
 
 <head>
@@ -35,10 +35,11 @@
 		echo '<meta name="apple-mobile-web-app-status-bar-style" content="black">';
 	}
 	?>
-	<meta name="apple-mobile-web-app-title" content="NOVIS Project Request">
+	<meta name="apple-mobile-web-app-title" content="Project Request">
 	<?php add_action( 'wp_head', 'address_mobile_address_bar' ); ?>
-	<link rel="shortcut icon" href="<?php _e(plugins_url( 'img/aa_logo.png' , __FILE__ ));?>">
-	<link rel="apple-touch-icon" sizes="192x192" href="<?php _e(plugins_url( 'img/aa_logo.png' , __FILE__ ));?>">
+	<link rel="shortcut icon" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/project-request/project-request-icon@180x180.png');?>">
+	<link rel="apple-touch-icon" sizes="180x180" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/project-request/project-request-icon@180x180.png');?>">
+	<link rel="apple-touch-startup-image" href="<?php _e(CSI_PLUGIN_URL.'/img/splash/project-request-splash.png');?>">
 	<title><?php
 		/*
 		 * Print the <title> tag based on what is being viewed.
@@ -74,25 +75,12 @@
 			array('amcharts'),
 			'3.2'
 		);
+		//------------------------------------------
 		wp_register_script(
 			'csi_WPCLIENT',
 			CSI_PLUGIN_URL.'/js/client-min.js' ,
-			array('jquery','jquery-ui-datepicker','amcharts','amcharts-serial','amcharts-responsive'),
-			'1.0'
-		);
-		wp_register_style(
-			"csi_client_style",
-			CSI_PLUGIN_URL.'/css/client.css' ,
-			null,
-			"1.0",
-			"all"
-		);
-		wp_enqueue_style("csi_client_style" );
-		wp_register_script(
-			'csi_WPCLIENT',
-			CSI_PLUGIN_URL.'/js/client-min.js' ,
-			array('jquery','amcharts','amcharts-serial','amcharts-responsive'),
-			'1.0'
+			array('jquery-ui-datepicker','amcharts-serial','amcharts-responsive'),
+			'2.0'
 		);
 		wp_enqueue_script('csi_WPCLIENT');
 		wp_localize_script(
@@ -103,9 +91,33 @@
 				'ajaxurl'						=> admin_url( 'admin-ajax.php' ),
 			)
 		);
-
-//	add_action('init', 'aa_head_cleanup');
-//	function aa_head_cleanup() {
+		//------------------------------------------
+		wp_register_style(
+			"bootstrap",
+			CSI_PLUGIN_URL.'/external/bootstrap/dist/css/bootstrap.min.css' ,
+			null,
+			"1.0",
+			"all"
+		);
+		wp_enqueue_style("bootstrap" );
+		//------------------------------------------
+		wp_register_style(
+			"jquery-ui-bootstrap",
+			CSI_PLUGIN_URL.'/external/jquery-ui-bootstrap/css/custom-theme/jquery-ui-1.10.0.custom.css' ,
+			null,
+			"1.0",
+			"all"
+		);
+		wp_enqueue_style("jquery-ui-bootstrap" );
+		//------------------------------------------
+		wp_register_style(
+			"csi_client_style",
+			CSI_PLUGIN_URL.'/css/client.css' ,
+			null,
+			"1.0",
+			"all"
+		);
+		wp_enqueue_style("csi_client_style" );
 		remove_action( 'wp_head', 'feed_links_extra', 3 );                      // Category Feeds
 		remove_action( 'wp_head', 'feed_links', 2 );                            // Post and Comment Feeds
 		remove_action( 'wp_head', 'rsd_link' );                                 // EditURI link
@@ -121,11 +133,9 @@
 //		remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
 //		remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
 //		remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
-//		wp_dequeue_script('page_volver_arriba');
 
 		add_filter('show_admin_bar', '__return_false');							//remove the admin_bar fucntion
 		remove_action('wp_head', '_admin_bar_bump_cb');							//remove the admin_bar style (html: padding)
-//		echo do_shortcode("[abap_analyzer]");
 		
 	wp_head();
 	?>
@@ -134,19 +144,9 @@
 	<!--[if lt IE 9]>
 	<script src="<?php echo get_template_directory_uri(); ?>/js/html5.js" type="text/javascript"></script>
 	<![endif]-->
-	<style>
-		.welcome{
-			min-height: 100vh;
-			background: url(<?php echo CSI_PLUGIN_URL.'/img/bg/template-project-request-bg.jpg';?>) no-repeat center center fixed; 
-			-webkit-background-size: cover;
-			-moz-background-size: cover;
-			-o-background-size: cover;
-			background-size: cover;
-		}
-	</style>
 </head>
 <body>
-	<div class="container-fluid welcome" style="background-color: #263238">
+	<div class="container-fluid csi-project-request-welcome">
 		<div class="row">
 			<div class="col-xs-12">
 				<?php
@@ -158,16 +158,80 @@
 			<div style="color:#FFF" class="col-xs-12 col-md-8 col-md-offset-2">
 				<h2>&iquest;Quieres solicitar un nuevo proyecto?</h2>
 				<p class="lead text-justify">Antes de solicitar un nuevo proyecto, hay cierta informaci&oacute;n que requerimos. Como puedes ver, tenemos muchos proyectos en marcha :P</p>
-				<p class="text-center">
-					<a class="btn btn-danger btn-lg" href="#project_request_form" role="button">Comenzar</a>
-				</p>
+			</div>
+			<div class="col-xs-12 csi-project-request-welcome-buttons">
+				<div class="col-xs-6 text-center">
+					<a class="btn btn-danger csi-project-request-button animated flipInX" href="#user-project-request-status" role="button">Ver mis solicitudes</a>
+				</div>
+				<div class="col-xs-6 text-center">
+					<a class="btn btn-success csi-project-request-button animated flipInX" href="#project_request_form" role="button">Nueva solicitud</a>
+				</div>
 			</div>
 		</div>
-	</div>
+	</div><!-- .csi-project-request-welcome -->
+	<div class="container-fluid" id="user-project-request-status">
+		<?php
+			$user_id = get_current_user_id();
+			$user_name = get_userdata($user_id);
+			if ( $user_name ){
+				$user_name = ' de '.$user_name->display_name;
+			}else{
+				$user_name = '';
+			}
+		?>
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h4><i class="fa fa-check"></i> Status de Solicitudes <?php _e($user_name);?></h4>
+			</div>
+			<div class="panel-body">
+				A continuación puedes ver el estado de las Solicitudes de Proyecto que has creado.
+			</div>
+			<table class="table table-condensed table-striped">
+				<thead>
+					<tr>
+						<th class="text-center"><i class="fa fa-hashtag"></i></th>
+						<?php
+							if ( is_multisite() ){
+								_e('<th class="text-center">Cliente</th>');
+							}
+						?>
+						<th class="text-center">Nombre de Proyecto</th>
+						<th class="text-center">Fecha de Solicitud</th>
+						<th class="text-center">Status de Solicitud</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						global $NOVIS_CSI_PROJECT;
+						global $NOVIS_CSI_PROJECT_STATUS;
+						$sql = "SELECT * FROM ".$NOVIS_CSI_PROJECT->tbl_name." ORDER BY requested_date, customer_id ASC";
+						$projects = $NOVIS_CSI_PROJECT->get_sql($sql);
+						foreach ( $projects as $project ){
+							echo '<tr>';
+								echo '<td class="text-center">'.$project['id'].'</td>';
+							if ( is_multisite() ){
+								if ( 0 == $project['customer_id'] ){
+									echo '<td class="text-left">...</td>';								
+								}else{
+									$customer_name = get_blog_details($project['customer_id'])->blogname;
+									echo '<td class="text-left">'.$customer_name.'</td>';
+								}
+							}
+								echo '<td class="text-left">'.$project['short_name'].'</td>';
+								echo '<td class="text-center">'.$project['requested_date'].'</td>';
+								$status = $NOVIS_CSI_PROJECT_STATUS->get_single($project['status_id']);
+								echo '<td class=" text-center '.$status['css_class'].'"><span class="text-'.$status['css_class'].'">'.$status['short_name'].'</span></td>';
+							echo '</tr>';
+						}
+					?>
+				</tbody>
+			</table>
+		</div>
+	</div><!-- #user-project-request-status -->
 	<div class="container" id="project_request_form">
 		<div class="">
 			<div class="page-header">
-				<h3>Solicitar nuevo Proyecto <small>(<a href="#">Aprender m&aacute;s</a>)</small></h3>
+				<h3>Solicitar nuevo Proyecto <a href="http://intranetmx.noviscorp.com/novis/proyectos/project-management/" target="_blank"><span class="label label-danger">Aprender m&aacute;s</span></a></h3>
 			</div>
 			<form class="form-horizontal" action="?page=csi_project" method="post" id="csi_project">
 				<input type="hidden" name="Y21hcmlu[action]" value="add">
@@ -202,7 +266,7 @@
 									}
 								}
 							?>
-							<option value="0">No es un cliente actual</option>
+							<option value="0">No es un cliente en operaci&oacute;n</option>
 						</select>
 						<p class="help-block">En el caso que el cliente no esté registrado, indicar en el <label for="Y21hcmlu[short_name]">Nombre del Proyecto</label> indicar el nombre del cliente para el cual se solicita el Proyecto.</p>
 					</div>
@@ -239,16 +303,30 @@
 				<div class="form-group " name="Y21hcmlu[planned_start_date]">
 					<label for="Y21hcmlu[planned_start_date]" class="col-sm-2 control-label">Fecha de Inicio</label>
 					<div class="col-sm-10">
-						<input type="date" class="form-control" id="Y21hcmlu[planned_start_date]" name="Y21hcmlu[planned_start_date]" placeholder="Fecha real de inicio del Proyecto.">
+						<div class="input-group">
+							<input type="date" class="form-control" id="Y21hcmlu[planned_start_date]" name="Y21hcmlu[planned_start_date]" placeholder="Fecha real de inicio del Proyecto." readonly>
+							<div class="input-group-addon">
+								<label for="Y21hcmlu[planned_start_date]">
+									<i class="fa fa-calendar" aria-hidden="true"></i>
+								</label>
+							</div>
+						</div>
 						<p class="help-block">Indicar la fecha estimada de inicio del proyecto.</p>
 						<p class="help-block">Recuerda que estas fechas serán evaluadas acorde al <a href="http://intranetmx.noviscorp.com/novis/proyectos/ongoing-projects/">Capacity Planning</a> de la sub-direcci&oacute;n de Proyectos..</p>
 					</div>
 				</div>
 				<div class="form-group " name="Y21hcmlu[planned_end_date]">
-					<label for="Y21hcmlu[planned_end_date]" class="col-sm-2 control-label">Fecha de fin.</label>
+					<label for="Y21hcmlu[planned_end_date]" class="col-sm-2 control-label">Fecha de Salida en Vivo</label>
 					<div class="col-sm-10">
-						<input type="date" class="form-control" id="Y21hcmlu[planned_end_date]" name="Y21hcmlu[planned_end_date]" placeholder="Fecha real de fin del Proyecto.">
-						<p class="help-block">Indica la fecha de finalización del proyecto.</p>
+						<div class="input-group">
+							<input type="date" class="form-control" id="Y21hcmlu[planned_end_date]" name="Y21hcmlu[planned_end_date]" placeholder="Fecha real de fin del Proyecto." readonly>
+							<div class="input-group-addon">
+								<label for="Y21hcmlu[planned_end_date]">
+									<i class="fa fa-calendar" aria-hidden="true"></i>
+								</label>
+							</div>
+						</div>
+						<p class="help-block">Indica la fecha de GoLive del proyecto.</p>
 						<p class="help-block">En caso que el GoLive no coincida con la fecha de fin del proyecto, es importante indicar este detalle en la <label for="Y21hcmlu[description]">Descripción del Proyecto</label>.</p>
 					</div>
 				</div>
@@ -260,7 +338,7 @@
 				</div>
 			</form>
 		</div>
-	</div>
+	</div><!-- #project_request_form -->
     <?php wp_footer(); ?>
 </body>
 </html>

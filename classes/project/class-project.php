@@ -155,7 +155,7 @@ public function __construct(){
 			'form_show_field'			=>false,
 		),
 		'customer_name' => array(
-			'type'						=>'text',
+			'type'						=>'select',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>true,
@@ -168,9 +168,9 @@ public function __construct(){
 			'form_help_text'			=>'En el caso que el cliente no esté registrado, indicar el nombre del cliente para el cual se solicita el Proyecto.<br/>Tama&ntilde;o m&aacute;ximo: 50 caracteres.',
 			'form_input_size'			=>false,
 			'form_label'				=>'Nombre de Cliente',
-			'form_options'				=>false,
+			'form_options'				=>array(),
 			'form_placeholder'			=>'Nombre de Cliente',
-			'form_special_form'			=>false,
+			'form_special_form'			=>true,
 			'form_show_field'			=>true,
 		),
 		'short_name' => array(
@@ -228,7 +228,7 @@ public function __construct(){
 			'form_options'				=>false,
 			'form_placeholder'			=>"Solicitante.",
 			'form_special_form'			=>true,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
 		'requested_date' => array(
 			'type'						=>'date',
@@ -342,7 +342,7 @@ public function __construct(){
 			'form_options'				=>array(),
 			'form_placeholder'			=>"Status del Proyecto",
 			'form_special_form'			=>true,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
 		'planned_start_date' => array(
 			'type'						=>'date',
@@ -477,7 +477,7 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
 		),
-		'trak_link' => array(
+		'task_link' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
@@ -524,8 +524,48 @@ public function shortcode_project_panel($atts){
 	define('DURATION', 6);
 	$error		= false;
 	$err_msg	='';
-	$output		='';
-	$customer	= isset($atts['customer']) && is_numeric($atts['customer']) ? $atts['customer'] : 'all';
+	//wrap plugins shortcodes
+	$output		='<div class="csi-shortcode">';
+	if ( isset($atts['customer']) ){
+		if( is_numeric($atts['customer']) ){
+			$customer =$atts['customer']; 
+		}else{
+			$customer_list = explode(',', $atts['customer']);
+			if( count($customer_list)>1 ){
+				if ( is_multisite() ){
+					foreach($customer_list as $i => $customer){
+						if ( !is_numeric($customer) ){
+							unset($customer_list[$i]);
+						}
+					}
+					$customer = $customer_list;
+				}else{
+					$customer=false;
+				}
+			}elseif( 'all' == $atts['customer']){
+				$customer = false;
+			}elseif( 'current' == $atts['customer']){
+				if( is_multisite() ){
+					$customer = get_current_blog_id();
+				}else{
+					$customer=false;
+				}
+			}else{
+				$error=true;
+			}
+		}
+	}else{
+		if( is_multisite() ){
+			$customer = get_current_blog_id();
+		}else{
+			$customer=false;
+		}
+	}
+	if ( isset ( $atts['silent'] ) && $atts['silent'] == 'yes'){
+		$silent=true;
+	}else{
+		$silent=false;
+	}
 	//duration validation
 	if ( isset ( $atts['duration'] )){
 		if ( is_numeric($atts['duration']) && $atts['duration'] > 1 && $atts['duration'] <= 12 ){
@@ -540,8 +580,9 @@ public function shortcode_project_panel($atts){
 	//start_date validation
 	if ( isset( $atts['start_date'] ) ){
 		if ( self::validate_date( $atts['start_date'] ) ){
-			$tl_start_date = DateTime::createFromFormat('Y-m-d', $atts['start_date']);
-			self::write_log($atts['start_date']);
+			$date = explode('-', $atts['start_date']);
+			$date=array($date[0],$date[1],'01');
+			$tl_start_date = DateTime::createFromFormat('Y-m-d', implode('-',$date));
 		}else{
 			$err_msg .=" La fecha de inicio debe ser válida y estar en el formato YYYY-MM-DD.";
 			$error = true;
@@ -551,7 +592,6 @@ public function shortcode_project_panel($atts){
 		$tl_start_date->modify('-1 month');
 	}
 	if ( false == $error ){
-		//register and enqueue bootstrap javascript
 		wp_register_script(
 			'bootstrap',
 			CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
@@ -559,6 +599,15 @@ public function shortcode_project_panel($atts){
 			'3.3.7'
 		);
 		wp_enqueue_script('bootstrap');
+		wp_register_style(
+			"csi_client_style",
+			CSI_PLUGIN_URL.'/css/client.css' ,
+			null,
+			"1.0",
+			"all"
+		);
+		wp_enqueue_style("csi_client_style" );
+		//register and enqueue bootstrap javascript
 		$start_month_name	= $tl_start_date->format('F');
 		$year				= $tl_start_date->format('Y');
 		$month				= $tl_start_date->format('m');
@@ -566,29 +615,57 @@ public function shortcode_project_panel($atts){
 		$tl_end_date		= DateTime::createFromFormat('Y-m-d', $year.'-'.intval($month+$duration-1).'-28');
 		$month_width		= 100 / $duration;
 		//Print months header
-		$output.='<h2>Proyectos en curso</h2>';
+		$style= $silent ? ' style="color:#FFF" ' : "";
+		$output.='<h2 '.$style.'>Proyectos en curso</h2>';
 		$output.='
-		<div class="row">
-			<div class="hidden-xs col-md-2">&nbsp;</div>
-			<div class="col-xs-12 col-md-10">
-				<div>';
+		<div class="csi-project-panel">
+		';
+		if ( !$silent ){
+//			$output.='
+//			<div class="hidden-xs col-md-2">&nbsp;</div>';
+		}
+		$output.='<div class="col-xs-12 timeline-header">';
 		for ( $i = 0 ; $i < $duration ; $i++ ){
 			$date = DateTime::createFromFormat('Y-m-d', $year.'-'.intval($month+$i).'-01');
-			$date_header_long=$date->format('F').'<br/><small class="text-muted">'.$date->format('Y').'</small>';
-			$date_header_short=$date->format('M').'<br/><small class="text-muted">'.$date->format('Y').'</small>';
-			$output.='<div class="month text-center hidden-xs" style="float:left;width:'.$month_width.'%;outline-left:solid thin black;">'.$date_header_long.'</div>';
-			$output.='<div class="month text-center visible-xs" style="float:left;width:'.$month_width.'%;outline-left:solid thin black;">'.$date_header_short.'</div>';
+			$date_header_long='<span '.$style.'>'.$date->format('F').'<br/><small class="text-muted">'.$date->format('Y').'</small></span>';
+			$date_header_short='<span '.$style.'>'.$date->format('M').'<br/><small class="text-muted">'.$date->format('Y').'</small></span>';
+			$output.='<div class="month text-center hidden-xs" style="width:'.$month_width.'%;">'.$date_header_long.'</div>';
+			$output.='<div class="month text-center visible-xs" style="width:'.$month_width.'%;">'.$date_header_short.'</div>';
 		}//end for $i counter
-		$output.='
-				</div>
-			</div>
-		</div>';
+		$output.='</div>';##timeline-header
+		if ( false == $customer ){
+			$sql = "SELECT * FROM ".$this->tbl_name." ORDER BY customer_id DESC";		
+		}else{
+			if ( 'array' == gettype($customer) ){
+				$sql = "SELECT * FROM ".$this->tbl_name;
+				$sql.=" WHERE customer_id=".implode(" OR customer_id=", $customer);
+				$sql.=" ORDER BY customer_id";
+			}else{
+				$sql = "SELECT * FROM ".$this->tbl_name;
+				$sql.=" WHERE customer_id=$customer ORDER BY customer_id DESC";
+			}
+		}
 		//PROJECTS Timelines
-		$sql = "SELECT * FROM ".$this->tbl_name;
+		$customer_id=null;
 		$projects = self::get_sql($sql);
 		$MONTH = 100/$duration;
 		foreach ( $projects as $project){
 			if ( self::validate_date( $project['planned_start_date'] ) && self::validate_date( $project['planned_end_date'] ) ){
+				if(!$silent){
+					if( is_multisite() ){
+						if ( $customer_id != $project['customer_id']){
+							$customer_id = $project['customer_id'];
+							if (0 == $customer_id){
+								$output.='<div class="col-xs-12 customer"><p class="lead text-center" '.$style.'>Clientes fuera de Operaci&oacute;n</p></div>';							
+							}else{
+								$blog_details = get_blog_details($customer_id);
+								$output.='<div class="col-xs-12 customer"><div class="lead text-center">'.$blog_details->blogname.'</div></div>';						
+							}
+						}
+						
+					}
+					
+				}
 				$planned_start_date	= DateTime::createFromFormat('Y-m-d', $project['planned_start_date']);
 				$planned_end_date	= DateTime::createFromFormat('Y-m-d', $project['planned_end_date']);
 				if( $tl_start_date < $planned_start_date){
@@ -596,8 +673,9 @@ public function shortcode_project_panel($atts){
 					$month_diff = date_diff ( $planned_start_date,$tl_start_date);
 					//add months
 					$proj_prev = floatval ( intval( $month_diff->format('%m') ) * $month_width );
+//					self::write_log($month_diff);
 					//add days
-					$proj_prev = $proj_prev + intval( $planned_start_date->format('d') ) / DAYS_PER_MONTH * $month_width;
+					$proj_prev = $proj_prev + intval( $month_diff->format('%d') ) / DAYS_PER_MONTH * $month_width;
 				}else{
 					$proj_prev = 0;
 				}
@@ -615,10 +693,13 @@ public function shortcode_project_panel($atts){
 				$proj_width = 100 - ($proj_prev + $proj_post);
 				//self::write_log($proj_prev.' - '.$proj_width.' - '.$proj_post);
 				$output.='
-				<div class="row">
-					<div class="col-xs-12 col-md-2 text-center">
-						<div class="btn-group btn-group-sm">
-							<a type="button" class="text-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				<div class="row project">';
+				if ( !$silent ){
+					$output.='
+					<div class="col-xs-12 text-left project-options">
+						<div class="month text-center" style=";width:'.$proj_prev.'%;">&nbsp;</div>
+						<div class="btn-group btn-group-sm" style=";width:'.$proj_width.'%;">
+							<a type="button" class="text-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 								<span class="fa fa-cog fa-fw"></span>'.$project['short_name'].'
 							</a>
 							<ul class="dropdown-menu">
@@ -626,26 +707,30 @@ public function shortcode_project_panel($atts){
 								<li><a href="#" title="Ver las tareas del proyecto '.$project['short_name'].'"><i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i> Documentos</a></li>
 							</ul>
 						</div>
-					</div>
-					<div class="col-xs-12 col-md-10">
-						<div>
-							<div class="month text-center" style="float:left;width:'.$proj_prev.'%;">&nbsp;</div>
-							<div class="month text-center" style="float:left;width:'.$proj_width.'%;">
-								<div class="progress progress-striped active">
-									<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="'.$project['percentage'].'" aria-valuemin="0" aria-valuemax="100" style="width: '.$project['percentage'].'%;">
-										<span>'.$project['percentage'].'%</span>
-									</div>
+						<div class="month" style="width:'.$proj_post.'%;">'.$short_name.'</div>
+					</div>';
+				}
+				$short_name= true==$silent  ? '<small style="color:#FFF;white-space: nowrap;text-overflow: ellipsis;display: block;overflow: hidden;">&nbsp;'.$project['short_name'].'</small>':'&nbsp;';
+				$start_class= (0 == $proj_prev) ? ' non_start ' : '';
+				$end_class= (0 == $proj_post) ? ' non_end ' : '';
+				$output.='
+					<div class="col-xs-12 project-timeline">
+						<div class="month text-center" style="width:'.$proj_prev.'%;">&nbsp;</div>
+						<div class="month text-center" style="width:'.$proj_width.'%;">
+							<div class="progress '.$start_class.$end_class.'">
+								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="'.$project['percentage'].'" aria-valuemin="0" aria-valuemax="100" style="width: '.$project['percentage'].'%;">
+									<span>'.$project['percentage'].'%</span>
 								</div>
 							</div>
-							<div class="month text-center" style="float:left;width:'.$proj_post.'%;">&nbsp;</div>
 						</div>
+						<div class="month" style="width:'.$proj_post.'%;">'.$short_name.'</div>
 					</div>
 				</div>';
 			}else{
 				//No se muestra el proyecto, ya que no tiene fechas valida planificadas
 			}
 		}
-		
+		$output.="</div>";
 	}else{
 		$output.='<div class="well">';
 			$output.='<p class="h3"><i class="fa fa-exclamation-circle fa-sm text-danger"></i> Error</p>';
@@ -656,6 +741,7 @@ public function shortcode_project_panel($atts){
 		$output.='</div>';
 
 	}
+	$output.='</div>';#wrap plugin shortcode csi-shortcode
 	return $output;	
 }
 //END OF CLASS	
@@ -663,91 +749,4 @@ public function shortcode_project_panel($atts){
 
 global $NOVIS_CSI_PROJECT;
 $NOVIS_CSI_PROJECT =new NOVIS_CSI_PROJECT_CLASS();
-
-	$output='
-	<div class="panel panel-default">
-		<div class="panel-heading">
-			<h3><i class="fa fa-check"></i>Proyectos</h3>
-		</div>
-	<div class="panel-body">
-		<div id="DataTables_Table_0_wrapper" class="dataTables_wrapper form-inline" role="grid">
-			<div class="row">
-				<div class="col-lg-6"></div>
-				<div class="col-lg-6"></div>
-			</div>
-			
-			<table class="table bootstrap-datatable datatable small-font dataTable" id="DataTables_Table_0">
-				<thead>
-					<tr role="row">
-						<th class="sorting_asc" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-sort="ascending" aria-label="Task: activate to sort column descending" style="width: 156px;">
-							Task
-						</th>
-						<th class="sorting" role="columnheader" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Progress: activate to sort column ascending" style="width: 88px;">
-							Progress
-						</th>
-					</tr>
-				</thead>
-				<tbody role="alert" aria-live="polite" aria-relevant="all">
-					<tr class="odd">
-						<td class=" sorting_1">A/B Tests</td>
-						<td class=" ">
-							<div class="progress thin">
-								<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" style="width: 73%">
-									<span class="sr-only">73% Complete (success)</span>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr class="even">
-						<td class=" sorting_1">App Development</td>
-						<td class=" ">
-							<div class="progress thin">
-								<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100" style="width: 95%">
-									<span class="sr-only">95% Complete (success)</span>
-								</div>
-							</div>
-						</td>
-					</tr>
-					<tr class="odd">
-						<td class=" sorting_1">Growth Hacking</td>
-						<td class=" ">
-							<div class="progress thin">
-							  	<div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="11" aria-valuemin="0" aria-valuemax="100" style="width: 11%">
-							    	<span class="sr-only">11% Complete (success)</span>
-							  	</div>
-							</div>
-						</td>
-					</tr>
-					<tr class="even">
-						<td class=" sorting_1">Hire Developers</td>
-						<td class=" ">
-							<div class="progress thin">
-							  	<div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="27" aria-valuemin="0" aria-valuemax="100" style="width: 27%">
-							    	<span class="sr-only">27% Complete (success)</span>
-							  	</div>
-							</div>
-						</td>
-					</tr>
-					<tr class="odd">
-						<td class=" sorting_1">SEO Optimisation</td>
-						<td class=" ">
-							<div class="progress thin">
-							  	<div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="73" aria-valuemin="0" aria-valuemax="100" style="width: 73%">
-							    	<span class="sr-only">73% Complete (success)</span>
-							  	</div>
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<div class="row">
-				<div class="col-lg-12"></div>
-				<div class="col-lg-12 center"></div>
-			</div>
-		</div>
-	</div>
-</div>
-	';
-
-
 ?>
