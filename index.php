@@ -152,6 +152,46 @@ function csi_main_menu() {
 //	require_once("intro.php");
 	echo '</div>';
 }
+add_action( 'wp_enqueue_scripts', 'csi_enqueue_external_scripts' );
+
+function csi_enqueue_external_scripts() {
+	wp_register_script(
+		'bootstrap',
+		CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
+		array('jquery'),
+		'3.3.7'
+	);
+	wp_register_script(
+		'bootstrap',
+		CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
+		array('jquery'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'amcharts',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/amcharts.js' ,
+		array('jquery'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'amcharts-serial',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/serial.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'amcharts-responsive',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/plugins/responsive/responsive.min.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'jquery-confirm',
+		CSI_PLUGIN_URL.'/external/jquery-confirm/dist/jquery-confirm.min.js' ,
+		array('jquery'),
+		'3.0.1'
+	);
+}
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
 # Parent Class
 require_once(CSI_PLUGIN_DIR."/classes/class-base.php");

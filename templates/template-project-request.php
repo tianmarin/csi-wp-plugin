@@ -56,33 +56,11 @@
 	</title>
 	<?php
 		wp_register_script(
-			'amcharts',
-			CSI_PLUGIN_URL.'/external/amcharts/amcharts/amcharts.js' ,
-			array('jquery'),
-			'3.2'
+			'csiTemplateProjectRequest',
+			CSI_PLUGIN_URL.'/js/templates/min/template-project-request-min.js',
+			array('jquery-ui-datepicker','jquery-confirm'),
+			'0.9.0'
 		);
-		//-----------------------------------------------------
-		wp_register_script(
-			'amcharts-serial',
-			CSI_PLUGIN_URL.'/external/amcharts/amcharts/serial.js' ,
-			array('amcharts'),
-			'3.2'
-		);
-		//-----------------------------------------------------
-		wp_register_script(
-			'amcharts-responsive',
-			CSI_PLUGIN_URL.'/external/amcharts/amcharts/plugins/responsive/responsive.min.js' ,
-			array('amcharts'),
-			'3.2'
-		);
-		//------------------------------------------
-		wp_register_script(
-			'csi_WPCLIENT',
-			CSI_PLUGIN_URL.'/js/client-min.js' ,
-			array('jquery-ui-datepicker','amcharts-serial','amcharts-responsive'),
-			'2.0'
-		);
-		wp_enqueue_script('csi_WPCLIENT');
 		wp_localize_script(
 			'csi_WPCLIENT',
 			'csiWPCLIENT',
