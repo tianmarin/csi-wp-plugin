@@ -134,6 +134,7 @@ public function __construct(){
 			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
+			'user_input'				=>false,
 		),
 		'customer_id' => array(
 			'type'						=>'nat_number',
@@ -153,6 +154,7 @@ public function __construct(){
 			'form_placeholder'			=>'Cliente',
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
+			'user_input'				=>true,
 		),
 		'customer_name' => array(
 			'type'						=>'select',
@@ -172,6 +174,7 @@ public function __construct(){
 			'form_placeholder'			=>'Nombre de Cliente',
 			'form_special_form'			=>true,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 		'short_name' => array(
 			'type'						=>'text',
@@ -191,6 +194,7 @@ public function __construct(){
 			'form_placeholder'			=>'Nombre del Proyecto',
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 		'description' => array(
 			'type'						=>'textarea',
@@ -210,6 +214,7 @@ public function __construct(){
 			'form_placeholder'			=>'Descripci&oacute;n del Proyecto',
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 		'requested_user_id' => array(
 			'type'						=>'nat_number',
@@ -229,6 +234,7 @@ public function __construct(){
 			'form_placeholder'			=>"Solicitante.",
 			'form_special_form'			=>true,
 			'form_show_field'			=>false,
+			'user_input'				=>false,
 		),
 		'requested_date' => array(
 			'type'						=>'date',
@@ -248,6 +254,7 @@ public function __construct(){
 			'form_placeholder'			=>"Fecha de Solicitud.",
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
+			'user_input'				=>false,
 		),
 		'requested_time' => array(
 			'type'						=>'timestamp',
@@ -267,6 +274,7 @@ public function __construct(){
 			'form_placeholder'			=>"Hora de Solicitud.",
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
+			'user_input'				=>false,
 		),
 		'requested_start_date' => array(
 			'type'						=>'date',
@@ -286,6 +294,7 @@ public function __construct(){
 			'form_placeholder'			=>"Fecha estimada de inicio del Proyecto.",
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
+			'user_input'				=>true,
 		),
 		'requested_end_date' => array(
 			'type'						=>'date',
@@ -305,6 +314,7 @@ public function __construct(){
 			'form_placeholder'			=>"Fecha estimada de fin del Proyecto.",
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
+			'user_input'				=>true,
 		),
 		'requested_urgency_id' => array(
 			'type'						=>'select',
@@ -324,6 +334,7 @@ public function __construct(){
 			'form_placeholder'			=>"Urgencia del Proyecto",
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 		'status_id' => array(
 			'type'						=>'select',
@@ -343,6 +354,7 @@ public function __construct(){
 			'form_placeholder'			=>"Status del Proyecto",
 			'form_special_form'			=>true,
 			'form_show_field'			=>false,
+			'user_input'				=>false,
 		),
 		'planned_start_date' => array(
 			'type'						=>'date',
@@ -362,6 +374,7 @@ public function __construct(){
 			'form_placeholder'			=>"Fecha real de inicio del Proyecto.",
 			'form_special_form'			=>true,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 		'planned_end_date' => array(
 			'type'						=>'date',
@@ -381,6 +394,7 @@ public function __construct(){
 			'form_placeholder'			=>"Fecha real de fin del Proyecto.",
 			'form_special_form'			=>true,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 		'percentage' => array(
 			'type'						=>'percentage',
@@ -400,6 +414,7 @@ public function __construct(){
 			'form_placeholder'			=>"Porcentaje de Avance del Proyecto.",
 			'form_special_form'			=>true,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 		'last_modified_user_id' => array(
 			'type'						=>'current_user_id',
@@ -419,6 +434,7 @@ public function __construct(){
 			'form_placeholder'			=>"Identificador de usuario solicitante.",
 			'form_special_form'			=>true,
 			'form_show_field'			=>false,
+			'user_input'				=>false,
 		),
 		'last_modified_date' => array(
 			'type'						=>'date',
@@ -438,6 +454,7 @@ public function __construct(){
 			'form_placeholder'			=>"Fecha de Solicitud.",
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
+			'user_input'				=>false,
 		),
 		'last_modified_time' => array(
 			'type'						=>'timestamp',
@@ -457,6 +474,7 @@ public function __construct(){
 			'form_placeholder'			=>"Hora de Solicitud.",
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
+			'user_input'				=>false,
 		),
 		'doc_link' => array(
 			'type'						=>'text',
@@ -476,6 +494,7 @@ public function __construct(){
 			'form_placeholder'			=>"Enlace a la documentaci&oacute;n.",
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 		'task_link' => array(
 			'type'						=>'text',
@@ -495,21 +514,26 @@ public function __construct(){
 			'form_placeholder'			=>"Enlace al detalle de las tareas del Proyecto.",
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
+			'user_input'				=>true,
 		),
 	);
-	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
+	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'							));
 	//in a new blog creation, create the db for new blog
 	//Applies only for non-network classes
 	if( true != $this->network_class ){
-		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
-		add_action( 'wpmu_new_blog',							array( $this , 'db_install_data'			));
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install'							));
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install_data'					));
 	}
 	if ( !is_multisite() ) {
-		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
+		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"				));
 	}else{
-		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
+		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"				));
 	}
-	add_shortcode( 'csi_project_list_panel',			 		array( $this , 'shortcode_project_panel'	));
+	add_shortcode( 'csi_project_list_panel',			 		array( $this , 'shortcode_project_panel'			));
+	//Add Ajax actions
+	add_action( 'wp_ajax_csi_new_project_request', 				array( $this , 'csi_new_project_request'			));
+	add_action( 'wp_ajax_csi_user_project_request_status', 		array( $this , 'csi_user_project_request_status'	));
+//	add_action( 'wp_ajax_nopriv_csi_new_project_request', 		array( $this , 'new_project_request'		));
 }
 protected function backend_wp_sp_table_code($code){
 	return '<code>'.$code.'</code>';
@@ -592,12 +616,7 @@ public function shortcode_project_panel($atts){
 		$tl_start_date->modify('-1 month');
 	}
 	if ( false == $error ){
-		wp_register_script(
-			'bootstrap',
-			CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
-			array('jquery'),
-			'3.3.7'
-		);
+		//for bootstrap's .dropdown-toggle class
 		wp_enqueue_script('bootstrap');
 		wp_register_style(
 			"csi_client_style",
@@ -707,7 +726,7 @@ public function shortcode_project_panel($atts){
 								<li><a href="#" title="Ver las tareas del proyecto '.$project['short_name'].'"><i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i> Documentos</a></li>
 							</ul>
 						</div>
-						<div class="month" style="width:'.$proj_post.'%;">'.$short_name.'</div>
+						<div class="month" style="width:'.$proj_post.'%;">'.$project['short_name'].'</div>
 					</div>';
 				}
 				$short_name= true==$silent  ? '<small style="color:#FFF;white-space: nowrap;text-overflow: ellipsis;display: block;overflow: hidden;">&nbsp;'.$project['short_name'].'</small>':'&nbsp;';
@@ -744,9 +763,89 @@ public function shortcode_project_panel($atts){
 	$output.='</div>';#wrap plugin shortcode csi-shortcode
 	return $output;	
 }
-//END OF CLASS	
+public function csi_new_project_request(){
+	$insertArray			= array();
+	$response				= array();
+	$post					= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	# Validate user capability ??
+	$user_id				= get_current_user_id();
+	$current_datetime		= new DateTime();
+	$new_status_code		='revision';
+	global $NOVIS_CSI_PROJECT_STATUS;
+	global $wpdb;
+	$sql					= "SELECT id FROM ".$NOVIS_CSI_PROJECT_STATUS->tbl_name.' WHERE code ="'.$new_status_code.'"';
+	$status_id				=intval ( $wpdb->get_var($sql) );
+
+	foreach ( $this->db_fields as $key => $field){
+		if ( true == $field['user_input'] ){
+			if ( isset($post[$key]) ){
+				$insertArray[$key] = strip_tags(stripslashes( $post[$key] ));
+			}
+		}
+	}
+	$insertArray['requested_user_id']		= $user_id;
+	$insertArray['requested_date']			= $current_datetime->format('Y-m-d');
+	$insertArray['requested_time']			= $current_datetime->format('H:i:s');
+	$insertArray['status_id']				= $status_id;
+	$insertArray['last_modified_user_id']	= $user_id;
+	$insertArray['last_modified_date']		= $current_datetime->format('Y-m-d');
+	$insertArray['last_modified_time']		= $current_datetime->format('H:i:s');
+	if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
+		$response['id']=$wpdb->insert_id;
+		$response['message']="El nuevo ".$this->name_single." ha sido guardado.";
+	}else{
+		$response['error']=true;
+		$response['message']="Hubo un error al agregar el nuevo ".$this->name_single."; intenta nuevamente. :)";
+	}	
+	echo json_encode($response);
+	wp_die();
 }
 
+public function csi_user_project_request_status(){
+	global $NOVIS_CSI_PROJECT_STATUS;
+	$user_id = get_current_user_id();
+	$response = array();
+	$output = '';
+	$sql = "SELECT * FROM ".$this->tbl_name." WHERE requested_user_id=".$user_id." ORDER BY requested_date, customer_id ASC";
+	$projects = $this->get_sql($sql);
+	if ( 0 == count($projects)){
+		$output.= '<tr colspan="4">';
+			$output.= '	<td>
+							<p class="lead">No tienes Solicitudes de Proyecto</p>
+							<div class="col-xs-6 text-center">
+								<a class="btn btn-success csi-project-request-button animated flipInX" href="#project_request_form" role="button">Nueva solicitud</a>
+							</div>
+						</td>';
+		$output.= '</tr>';
+	}else{
+		foreach ( $projects as $project ){
+			$output.= '<tr>';
+				$output.= '<td class="text-center">'.$project['id'].'</td>';
+			if ( is_multisite() ){
+				if ( 0 == $project['customer_id'] ){
+					$output.= '<td class="text-left">...</td>';								
+				}else{
+					$customer_name = get_blog_details($project['customer_id'])->blogname;
+					$output.= '<td class="text-left">'.$customer_name.'</td>';
+				}
+			}
+				$output.= '<td class="text-left">'.$project['short_name'].'</td>';
+				$output.= '<td class="text-center">'.$project['requested_date'].'</td>';
+				$status = $NOVIS_CSI_PROJECT_STATUS->get_single($project['status_id']);
+				$output.= '<td class=" text-center '.$status['css_class'].'"><span class="text-'.$status['css_class'].'">'.$status['short_name'].'</span></td>';
+			$output.= '</tr>';
+		}
+	}
+	$response['message']=$output;
+	echo json_encode($response);
+	wp_die();
+}
+
+
+
+//END OF CLASS
+
+}
 global $NOVIS_CSI_PROJECT;
 $NOVIS_CSI_PROJECT =new NOVIS_CSI_PROJECT_CLASS();
 ?>

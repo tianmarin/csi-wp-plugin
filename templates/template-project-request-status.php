@@ -17,7 +17,7 @@
 <html id="ie8" <?php language_attributes(); ?>>
 <![endif]-->
 <!--[if !(IE 6) | !(IE 7) | !(IE 8)  ]><!-->
-<html <?php language_attributes(); ?> manifest="<?php _e(CSI_PLUGIN_URL.'/templates/manifest-project-request.manifest');?>">
+<html <?php language_attributes(); ?> class="bootstrap">
 <!--<![endif]-->
 
 <head>
@@ -37,7 +37,7 @@
 	?>
 	<meta name="apple-mobile-web-app-title" content="Project Request">
 	<?php add_action( 'wp_head', 'address_mobile_address_bar' ); ?>
-	<link rel="shortcut icon" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/project-request/project-request-icon@180x180.png');?>">
+	<link rel="shortcut icon" href="<?php _e(plugins_url( 'img/aa_logo.png' , __FILE__ ));?>">
 	<link rel="apple-touch-icon" sizes="180x180" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/project-request/project-request-icon@180x180.png');?>">
 	<link rel="apple-touch-startup-image" href="<?php _e(CSI_PLUGIN_URL.'/img/splash/project-request-splash.png');?>">
 	<title><?php
@@ -56,18 +56,39 @@
 	</title>
 	<?php
 		wp_register_script(
-			'csiTemplateProjectRequest',
-			CSI_PLUGIN_URL.'/js/templates/min/template-project-request-min.js',
-			array('jquery-ui-datepicker','jquery-confirm'),
-			'0.9.0'
+			'amcharts',
+			CSI_PLUGIN_URL.'/external/amcharts/amcharts/amcharts.js' ,
+			array('jquery'),
+			'3.2'
 		);
-		wp_enqueue_script('csiTemplateProjectRequest');
+		//-----------------------------------------------------
+		wp_register_script(
+			'amcharts-serial',
+			CSI_PLUGIN_URL.'/external/amcharts/amcharts/serial.js' ,
+			array('amcharts'),
+			'3.2'
+		);
+		//-----------------------------------------------------
+		wp_register_script(
+			'amcharts-responsive',
+			CSI_PLUGIN_URL.'/external/amcharts/amcharts/plugins/responsive/responsive.min.js' ,
+			array('amcharts'),
+			'3.2'
+		);
+		//------------------------------------------
+		wp_register_script(
+			'csi_WPCLIENT',
+			CSI_PLUGIN_URL.'/js/client-min.js' ,
+			array('jquery-ui-datepicker','amcharts-serial','amcharts-responsive'),
+			'2.0'
+		);
+		wp_enqueue_script('csi_WPCLIENT');
 		wp_localize_script(
-			'csiTemplateProjectRequest',
-			'csiTemplateProjectRequest',
+			'csi_WPCLIENT',
+			'csiWPCLIENT',
 			array(
 //				'ppost'							=> $this->plugin_post,
-				'ajaxUrl'						=> admin_url( 'admin-ajax.php' ),
+				'ajaxurl'						=> admin_url( 'admin-ajax.php' ),
 			)
 		);
 		//------------------------------------------
@@ -90,15 +111,6 @@
 		wp_enqueue_style("jquery-ui-bootstrap" );
 		//------------------------------------------
 		wp_register_style(
-			"jquery-confirm",
-			CSI_PLUGIN_URL.'/external/jquery-confirm/dist/jquery-confirm.min.css' ,
-			null,
-			"1.0",
-			"all"
-		);
-		wp_enqueue_style("jquery-confirm" );
-		//------------------------------------------
-		wp_register_style(
 			"csi_client_style",
 			CSI_PLUGIN_URL.'/css/client.css' ,
 			null,
@@ -106,6 +118,8 @@
 			"all"
 		);
 		wp_enqueue_style("csi_client_style" );
+//	add_action('init', 'aa_head_cleanup');
+//	function aa_head_cleanup() {
 		remove_action( 'wp_head', 'feed_links_extra', 3 );                      // Category Feeds
 		remove_action( 'wp_head', 'feed_links', 2 );                            // Post and Comment Feeds
 		remove_action( 'wp_head', 'rsd_link' );                                 // EditURI link
@@ -121,9 +135,11 @@
 //		remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
 //		remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
 //		remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
+//		wp_dequeue_script('page_volver_arriba');
 
 		add_filter('show_admin_bar', '__return_false');							//remove the admin_bar fucntion
 		remove_action('wp_head', '_admin_bar_bump_cb');							//remove the admin_bar style (html: padding)
+//		echo do_shortcode("[abap_analyzer]");
 		
 	wp_head();
 	?>
@@ -134,7 +150,7 @@
 	<![endif]-->
 </head>
 <body>
-	<div class="container-fluid csi-project-request-welcome">
+	<div class="container-fluid csi-project-request-welcome" style="background-color: #263238">
 		<div class="row">
 			<div class="col-xs-12">
 				<?php
@@ -146,78 +162,12 @@
 			<div style="color:#FFF" class="col-xs-12 col-md-8 col-md-offset-2">
 				<h2>&iquest;Quieres solicitar un nuevo proyecto?</h2>
 				<p class="lead text-justify">Antes de solicitar un nuevo proyecto, hay cierta informaci&oacute;n que requerimos. Como puedes ver, tenemos muchos proyectos en marcha :P</p>
-			</div>
-			<div class="col-xs-12 csi-project-request-welcome-buttons">
-				<div class="col-xs-6 text-center">
-					<a class="btn btn-danger csi-project-request-button animated flipInX" href="#user-project-request-status" role="button">Ver mis solicitudes</a>
-				</div>
-				<div class="col-xs-6 text-center">
-					<a class="btn btn-success csi-project-request-button animated flipInX" href="#project_request_form" role="button">Nueva solicitud</a>
-				</div>
+				<p class="text-center">
+					<a class="btn btn-danger btn-lg animated flipInX" href="#project_request_form" id="csi-project-request-start-button" role="button">Comenzar</a>
+				</p>
 			</div>
 		</div>
-	</div><!-- .csi-project-request-welcome -->
-	<div class="container-fluid" id="user-project-request-status">
-		<?php
-			$user_id = get_current_user_id();
-			$user_name = get_userdata($user_id);
-			if ( $user_name ){
-				$user_name = ' de '.$user_name->display_name;
-			}else{
-				$user_name = '';
-			}
-		?>
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h4><i class="fa fa-check"></i> Status de Solicitudes <?php _e($user_name);?></h4>
-			</div>
-			<div class="panel-body">
-				A continuación puedes ver el estado de las Solicitudes de Proyecto que has creado.
-			</div>
-			<table class="table table-condensed table-striped">
-				<thead>
-					<tr>
-						<th class="text-center"><i class="fa fa-hashtag"></i></th>
-						<?php
-							if ( is_multisite() ){
-								_e('<th class="text-center">Cliente</th>');
-							}
-						?>
-						<th class="text-center">Nombre de Proyecto</th>
-						<th class="text-center">Fecha de Solicitud</th>
-						<th class="text-center">Status de Solicitud</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-						/*
-						global $NOVIS_CSI_PROJECT;
-						global $NOVIS_CSI_PROJECT_STATUS;
-						$sql = "SELECT * FROM ".$NOVIS_CSI_PROJECT->tbl_name." ORDER BY requested_date, customer_id ASC";
-						$projects = $NOVIS_CSI_PROJECT->get_sql($sql);
-						foreach ( $projects as $project ){
-							echo '<tr>';
-								echo '<td class="text-center">'.$project['id'].'</td>';
-							if ( is_multisite() ){
-								if ( 0 == $project['customer_id'] ){
-									echo '<td class="text-left">...</td>';								
-								}else{
-									$customer_name = get_blog_details($project['customer_id'])->blogname;
-									echo '<td class="text-left">'.$customer_name.'</td>';
-								}
-							}
-								echo '<td class="text-left">'.$project['short_name'].'</td>';
-								echo '<td class="text-center">'.$project['requested_date'].'</td>';
-								$status = $NOVIS_CSI_PROJECT_STATUS->get_single($project['status_id']);
-								echo '<td class=" text-center '.$status['css_class'].'"><span class="text-'.$status['css_class'].'">'.$status['short_name'].'</span></td>';
-							echo '</tr>';
-						}
-						*/
-					?>
-				</tbody>
-			</table>
-		</div>
-	</div><!-- #user-project-request-status -->
+	</div>
 	<div class="container" id="project_request_form">
 		<div class="">
 			<div class="page-header">
@@ -227,10 +177,10 @@
 				<input type="hidden" name="Y21hcmlu[action]" value="add">
 				<input type="hidden" id="Y21hcmlu[actioncode]" name="Y21hcmlu[actioncode]" value="5f11c693c2">
 				<input type="hidden" name="_wp_http_referer" value="/Developer/Development/WP_PLUGINS/home/pagina-ejemplo/project-request-template/">
-				<div class="form-group" name="Y21hcmlu[customer_id]">
-					<label for="Y21hcmlu[customer_id]" class="col-sm-2 control-label">Nombre de Cliente</label>
+				<div class="form-group " name="Y21hcmlu[customer_name]">
+					<label for="Y21hcmlu[customer_name]" class="col-sm-2 control-label">Nombre de Cliente</label>
 					<div class="col-sm-10">
-						<select class="form-control" id="Y21hcmlu[customer_id]" name="Y21hcmlu[customer_id]" data-required="true">
+						<select class="form-control" id="Y21hcmlu[customer_name]" name="Y21hcmlu[customer_name]" data-required="true">
 							<option value="0" disabled="">Seleccionar</option>
 							<?php
 								if ( is_multisite() ){
@@ -323,12 +273,12 @@
 				<div class="form-group ">
 					<div class="col-sm-2 control-label">&nbsp;</div>
 					<div class="col-sm-10">
-						<button type="submit" class="btn btn-danger btn-block btn-lg " data-loading-text="<i class='fa fa-spinner fa-spin'></i> Creando Solicitud">Solicitar</button>
+						<button type="submit" class="btn btn-danger btn-block btn-lg ">Solicitar</button>
 					</div>
 				</div>
 			</form>
 		</div>
-	</div><!-- #project_request_form -->
+	</div>
     <?php wp_footer(); ?>
 </body>
 </html>
