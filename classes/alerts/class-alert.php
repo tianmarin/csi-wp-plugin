@@ -326,37 +326,15 @@ public function shortcode_system_panel($atts){
 				array_push($dataProvider, $date_data);
 			}
 			wp_register_script(
-				'amcharts',
-				CSI_PLUGIN_URL.'/external/amcharts/amcharts/amcharts.js' ,
-				array('jquery'),
-				'3.2'
+				'csiShortcodeProjectPanel',
+				CSI_PLUGIN_URL.'/js/shortcodes/min/shortcode-project-panel-min.js' ,
+				array('amcharts','amcharts-serial','amcharts-responsive'),
+				'0.9.0'
 			);
-		//	wp_enqueue_script('amcharts');
-			//-----------------------------------------------------
-			wp_register_script(
-				'amcharts-serial',
-				CSI_PLUGIN_URL.'/external/amcharts/amcharts/serial.js' ,
-				array('amcharts'),
-				'3.2'
-			);
-		//	wp_enqueue_script('amcharts-serial');
-			//-----------------------------------------------------
-			wp_register_script(
-				'amcharts-responsive',
-				CSI_PLUGIN_URL.'/external/amcharts/amcharts/plugins/responsive/responsive.min.js' ,
-				array('amcharts'),
-				'3.2'
-			);
-			wp_register_script(
-				'csi_WPCLIENT',
-				CSI_PLUGIN_URL.'/js/client-min.js' ,
-				array('jquery','amcharts','amcharts-serial','amcharts-responsive'),
-				'1.0'
-			);
-			wp_enqueue_script('csi_WPCLIENT');
+			wp_enqueue_script('csiShortcodeProjectPanel');
 			wp_localize_script(
-				'csi_WPCLIENT',
-				'csiWPCLIENT_'.'ewa_system_graph_'.$system,
+				'csiShortcodeProjectPanel',
+				'csiShortcodeProjectPanel_'.'ewa_system_graph_'.$system,
 				array(
 					'ppost'							=> $this->plugin_post,
 					'ajaxurl'						=> admin_url( 'admin-ajax.php' ),
