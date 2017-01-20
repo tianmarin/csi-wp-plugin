@@ -35,43 +35,60 @@ $novis_csi_vars = array(
 	'plugin_shortcode'							=> 'aa',									//used by plugin association in shortcodes
 	'table_prefix'								=>'z_csi_',
 //DATABASE TABLES
-	'customer'				."_network_class"	=> TRUE,
-	##Alert Module
-	'action_party'			."_network_class"	=> FALSE,
-	'alert_priority'		."_network_class"	=> TRUE,
-	'alert'					."_network_class"	=> FALSE,
+	'customer'					."_network_class"	=> TRUE,
+	'sapcustno'					."_network_class"	=> TRUE,
+	'customer_system'			."_network_class"	=> TRUE,
+	##EWA Module
+	'ewa_alert_action_party'	."_network_class"	=> TRUE,
+	'ewa_alert_priority'		."_network_class"	=> TRUE,
+	'ewa_alert_rating'			."_network_class"	=> TRUE,
+	'ewa_alert'					."_network_class"	=> TRUE,
+	'ewa_rating'				."_network_class"	=> TRUE,
+	'ewa_status'				."_network_class"	=> TRUE,
+	'ewa'						."_network_class"	=> TRUE,
 	##Project Management Module
-	'project_urgency'		."_network_class"	=> TRUE,
-	'project_status'		."_network_class"	=> TRUE,
-	'project'				."_network_class"	=> TRUE,
+	'project_urgency'			."_network_class"	=> TRUE,
+	'project_status'			."_network_class"	=> TRUE,
+	'project'					."_network_class"	=> TRUE,
 
 
-//	'customer'				."_tbl_name"	=> $wpdb->base_prefix	.'z_csi_'	.'customer',
 //MENU SLUGS
-	'main'					."_menu_slug"	=> 'csi_'		.'main',
-	'network'				."_menu_slug"	=> 'csi_'		.'network',
-	'customer'				."_menu_slug"	=> 'csi_'		.'customer',
-	##Alert Module
-	'action_party'			."_menu_slug"	=> 'csi_'		.'action_party',
-	'alert_priority'		."_menu_slug"	=> 'csi_'		.'alert_priority',
-	'alert'					."_menu_slug"	=> 'csi_'		.'alert',
+	'main'						."_menu_slug"	=> 'csi_'		.'main',
+	'network'					."_menu_slug"	=> 'csi_'		.'network',
+	'customer'					."_menu_slug"	=> 'csi_'		.'customer',
+	'sapcustno'					."_menu_slug"	=> 'csi_'		.'sapcustno',
+	'customer_system'			."_menu_slug"	=> 'csi_'		.'customer_system',
+	##EWA Module
+	'ewa_alert_action_party'	."_menu_slug"	=> 'csi_'		.'ewa_alert_action_party',
+	'ewa_alert_priority'		."_menu_slug"	=> 'csi_'		.'ewa_alert_priority',
+	'ewa_alert_rating'			."_menu_slug"	=> 'csi_'		.'ewa_alert_rating',
+	'ewa_alert'					."_menu_slug"	=> 'csi_'		.'ewa_alert',
+	'ewa_rating'				."_menu_slug"	=> 'csi_'		.'ewa_rating',
+	'ewa_status'				."_menu_slug"	=> 'csi_'		.'ewa_status',
+	'ewa'						."_menu_slug"	=> 'csi_'		.'ewa',
 	##Project Management Module
-	'project_status'		."_menu_slug"	=> 'csi_'		.'project_status',
-	'project_urgency'		."_menu_slug"	=> 'csi_'		.'project_urgency',
-	'project'				."_menu_slug"	=> 'csi_'		.'project',
+	'project_status'			."_menu_slug"	=> 'csi_'		.'project_status',
+	'project_urgency'			."_menu_slug"	=> 'csi_'		.'project_urgency',
+	'project'					."_menu_slug"	=> 'csi_'		.'project',
 
 //MENU CAPABILITIES
-	'main'					."_menu_cap"		=> 'manage_options',
-	'network'				."_menu_cap"		=> 'manage_options',
-	'customer'				."_menu_cap"		=> 'manage_options',
-	##Alert Module
-	'action_party'			."_menu_cap"		=> 'manage_options',
-	'alert_priority'		."_menu_cap"		=> is_multisite()?'manage_network':'manage_options',
-	'alert'					."_menu_cap"		=> 'manage_options',
+	'main'						."_menu_cap"		=> 'manage_options',
+	'network'					."_menu_cap"		=> 'manage_options',
+	'customer'					."_menu_cap"		=> 'manage_options',
+	'sapcustno'					."_menu_cap"		=> 'manage_options',
+	'customer_system'			."_menu_cap"		=> 'manage_options',
+	##EWA Module
+	'ewa_alert_action_party'	."_menu_cap"		=> 'manage_options',
+	'ewa_alert_priority'		."_menu_cap"		=> is_multisite()?'manage_network':'manage_options',
+	'ewa_alert_rating'			."_menu_cap"		=> 'manage_options',
+	'ewa_alert'					."_menu_cap"		=> 'manage_options',
+	'ewa_rating'				."_menu_cap"		=> 'manage_options',
+	'ewa_status'				."_menu_cap"		=> 'manage_options',
+	'ewa'						."_menu_cap"		=> 'manage_options',
 	##Project Management Module
-	'project_status'		."_menu_cap"		=> 'manage_options',
-	'project_urgency'		."_menu_cap"		=> 'manage_options',
-	'project'				."_menu_cap"		=> 'manage_options',
+	'project_status'			."_menu_cap"		=> 'manage_options',
+	'project_urgency'			."_menu_cap"		=> 'manage_options',
+	'project'					."_menu_cap"		=> 'manage_options',
 );
 
 
@@ -152,7 +169,7 @@ function csi_main_menu() {
 //	require_once("intro.php");
 	echo '</div>';
 }
-add_action( 'wp_enqueue_scripts', 'csi_enqueue_external_scripts' );
+add_action( 'wp_enqueue_scripts', 'csi_enqueue_external_scripts', 5);
 
 function csi_enqueue_external_scripts() {
 	wp_register_script(
@@ -160,12 +177,6 @@ function csi_enqueue_external_scripts() {
 		CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
 		array('jquery'),
 		'3.3.7'
-	);
-	wp_register_script(
-		'bootstrap',
-		CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
-		array('jquery'),
-		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts',
@@ -176,6 +187,12 @@ function csi_enqueue_external_scripts() {
 	wp_register_script(
 		'amcharts-serial',
 		CSI_PLUGIN_URL.'/external/amcharts/amcharts/serial.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'amcharts-pie',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/pie.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
@@ -198,12 +215,18 @@ require_once(CSI_PLUGIN_DIR."/classes/class-base.php");
 
 # Extended Classes
 ## Cross Module Classes
-require_once(CSI_PLUGIN_DIR."/classes/customer/class-customer.php");
+require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-customer.php");
+require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-sapcustno.php");
+require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-customer-system.php");
 ## Landscape Module Classes
 ## Alert Module Classes
-require_once(CSI_PLUGIN_DIR."/classes/alerts/class-action-party.php");
-require_once(CSI_PLUGIN_DIR."/classes/alerts/class-alert-priority.php");
-require_once(CSI_PLUGIN_DIR."/classes/alerts/class-alert.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-alert-action-party.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-alert-priority.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-alert-rating.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-alert.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-rating.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-status.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa.php");
 
 
 require_once(CSI_PLUGIN_DIR."/classes/project/class-project-status.php");

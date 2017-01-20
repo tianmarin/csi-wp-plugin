@@ -199,3 +199,134 @@ Every Week SAP Solution Manager generates the Early Watch for Solution Report. T
 
 * Multi-customer Dashboard
 * Customer Multi-Project Dashboard
+
+
+
+
+
+
+
+
+
+
+
+###### Customer
+
+- `id`
+- `code`
+- `shortname`
+- `blog_id`
+- `sapcustno` ***
+
+##### CUSTOMER_SAPCUSTNO
+
+- `id`
+- `customer_id`
+- `sapcustno`
+
+###### System
+
+- `id`
+- `customer_id` *** No necesariamente
+- `system_no`
+- `inst_no`
+- `sid`
+- `landscape_id`
+- `enviroment_id`
+
+###### EWA
+
+- `id`
+- `system_no`
+- `ewa_session_no`
+- `planned_date`
+- `ewa_status`
+- `ewa_rating`
+
+##### EWA_STATUS
+
+- `id`
+- `rating_rating`
+- `icon`
+- `css_class`
+- `hex_color`
+- `last_modified_user_id`
+- `last_modified_user_email`
+- `last_modified_date`
+- `last_modified_time`
+
+##### EWA_RATING
+
+- `id`
+- `rating_rating`
+- `icon`
+- `css_class`
+- `hex_color`
+- `last_modified_user_id`
+- `last_modified_user_email`
+- `last_modified_date`
+- `last_modified_time`
+
+##### ALERT
+
+- `id`
+- `ewa_session_no`
+- `alert_group`
+- `alert_rating`
+- `alert_no`
+- `alert_text`
+- `auto_asign`
+- `hidden`
+- `party_id`
+- `action_id`
+- `customer_flag`
+- `last_modified_user_id`
+- `last_modified_user_email`
+- `last_modified_date`
+- `last_modified_time`
+
+###### ALERT_RATING
+
+- `id`
+- `alert_rating`
+- `icon`
+- `css_class`
+- `hex_color`
+- `last_modified_user_id`
+- `last_modified_user_email`
+- `last_modified_date`
+- `last_modified_time`
+
+###### ALERT_PRIORITY
+
+- `id`
+- `alert_group`
+- `alert_no`
+- `priority`
+- `reference_link`
+- `last_modified_user_id`
+- `last_modified_user_email`
+- `last_modified_date`
+- `last_modified_time`
+
+
+
+###### Landscape
+
+###### Environment
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

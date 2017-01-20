@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') or die("No script kiddies please!");
 
-class NOVIS_CSI_CUSTOMER_CLASS extends NOVIS_CSI_CLASS{
+class NOVIS_CSI_CUSTOMER_SYSTEM_CLASS extends NOVIS_CSI_CLASS{
 
 /**
 * __construct
@@ -16,11 +16,11 @@ public function __construct(){
 	global $wpdb;
 	global $novis_csi_vars;
 	//como se definió en novis_csi_vars
-	$this->class_name	= 'customer';
+	$this->class_name	= 'customer_system';
 	//Nombre singular para títulos, mensajes a usuario, etc.
-	$this->name_single	= 'Cliente';
+	$this->name_single	= 'Sistema de Cliente';
 	//Nombre plural para títulos, mensajes a usuario, etc.
-	$this->name_plural	= 'Clientes';
+	$this->name_plural	= 'Sistemas de Cliente';
 	//Identificador de menú padre
 	$this->parent_slug	= $novis_csi_vars['network_menu_slug'];
 	//Identificador de submenú de la clase
@@ -40,7 +40,7 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.6.0';
+	$this->db_version	= '0.6.1';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -48,13 +48,17 @@ public function __construct(){
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql_wt	="(
 								id int unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-								code varchar(3) not null COMMENT 'Three letter ID',
-								short_name varchar(50) null COMMENT 'Short name of customer',
-								blog_id bigint(20) unsigned null  COMMENT 'Blog id of customer',
+								sapcustno bigint(13) unsigned not null COMMENT 'SAP Customer Number',
+								system_no bigint(18) unsigned not null COMMENT 'SAP System Number',
+								inst_no bigint(10) unsigned not null COMMENT 'SAP System Installation Number',
+								sid varchar(15) not null COMMENT 'System ID',
+								landscape_id int unsigned not null COMMENT 'System Landscape',
+								environment_id int unsigned not null COMMENT 'System Environment',
 								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
 								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
 								creation_date date null COMMENT 'Date of the creation of this record',
 								creation_time time null COMMENT 'Time of the creation of this record',
+								creation_filename varchar(255) null COMMENT 'Name of the file used to create this record',
 								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
 								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
 								last_modified_date date null COMMENT 'Date of the last modification of this record',
@@ -128,61 +132,120 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'code' => array(
+		'sapcustno' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>true,
+			'backend_wp_sp_table'		=>true,
+			'backend_wp_table_lead'		=>true,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>'ID que SAP ha dado al cliente. Este se puede encontrar en SAP Solution Manager',
+			'form_input_size'			=>false,
+			'form_label'				=>'Customer SAP Number',
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>true,
+		),
+		'system_no' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>true,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>'El n&uacute;mero identificador del sistema.',
+			'form_input_size'			=>false,
+			'form_label'				=>'System Number',
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>true,
+		),
+		'inst_no' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>true,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>'El n&uacute;mero de instalaci&oacute;n del sistema.',
+			'form_input_size'			=>false,
+			'form_label'				=>'Intall Number',
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>true,
+		),
+		'sid' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>true,
 			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>true,
+			'backend_wp_table_lead'		=>false,
 			'data_required'				=>true,
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>3,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'El c&oacute;digo de cliente es un identificador &uacute;nico de tres letras.<br/>Tamaño m&aacute;ximo: 3 caracteres.',
+			'form_help_text'			=>'El SID del sistema.<br/>Tamaño m&aacute;ximo: 3 caracteres.',
 			'form_input_size'			=>false,
-			'form_label'				=>'C&oacute;digo',
+			'form_label'				=>'SID',
 			'form_options'				=>false,
 			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
 			'form_show_field'			=>true,
 		),
-		'short_name' => array(
-			'type'						=>'text',
-			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>true,
-			'data_validation'			=>true,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>50,
-			'form_disabled'				=>false,
-			'form_help_text'			=>"Nombre descriptivo del cliente.<br/>Tamaño m&aacute;ximo: 3 caracteres.",
-			'form_input_size'			=>false,
-			'form_label'				=>"Nombre",
-			'form_options'				=>false,
-			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
-			'form_show_field'			=>true,
-		),
-		'blog_id' => array(
+		'landscape_id' => array(
+//			'type'						=>'select',
 			'type'						=>'nat_number',
 			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>false,
+			'backend_wp_sp_table'		=>true,
 			'backend_wp_table_lead'		=>false,
-			'data_required'				=>false,
+			'data_required'				=>true,
 			'data_validation'			=>true,
 			'data_validation_min'		=>1,
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'ID del Blog del cliente. La lista se visualiza aqui: <a href="/wp-admin/network/sites.php">Network Sites</a>',
+			'form_help_text'			=>"Selecciona el landscape",
 			'form_input_size'			=>false,
-			'form_label'				=>'Blog Id',
-			'form_options'				=>false,
+			'form_label'				=>'Landscape',
+			'form_options'				=>array(),
 			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
+			'form_special_form'			=>true,
+			'form_show_field'			=>true,
+		),
+		'environment_id' => array(
+//			'type'						=>'select',
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>true,
+			'backend_wp_sp_table'		=>true,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>"Selecciona el ambiente",
+			'form_input_size'			=>false,
+			'form_label'				=>'Ambiente',
+			'form_options'				=>array(),
+			'form_placeholder'			=>false,
+			'form_special_form'			=>true,
 			'form_show_field'			=>true,
 		),
 		'creation_user_id' => array(
@@ -248,6 +311,25 @@ public function __construct(){
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>true,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'creation_filename' => array(
+			'type'						=>'text',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
@@ -355,6 +437,18 @@ public function __construct(){
 protected function backend_wp_sp_table_code($code){
 	return strtoupper($code);
 }
+
+protected function backend_wp_sp_table_sapcustno($sapcustno){
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_CUSTOMER;
+	global $wpdb;
+	
+	$sql = 'SELECT T01.short_name FROM '.$NOVIS_CSI_SAPCUSTNO->tbl_name.' as T00 LEFT JOIN '.$NOVIS_CSI_CUSTOMER->tbl_name.' as T01 ON T00.customer_id=T01.id WHERE T00.sapcustno="'.$sapcustno.'"';
+	$short_name = $wpdb->get_row($sql,'ARRAY_A')['short_name'];
+	return $short_name.' (<small>'.$sapcustno.'</small>)';
+	
+}
+
 protected function backend_wp_sp_table_blog_id($blog_id){
 	if ( is_multisite() ){
 		return '<a href="/wp-admin/network/site-info.php?id='.$blog_id.'">'.$blog_id.'</a>';
@@ -362,11 +456,21 @@ protected function backend_wp_sp_table_blog_id($blog_id){
 		return $blog_id;
 	}
 }
+public function get_system_no_col(){
+	global $wpdb;
+	$sql = "SELECT system_no FROM ".$this->tbl_name;
+	return $wpdb->get_col( $sql );
+}
+public function get_row_by_system_no($system_no){
+	global $wpdb;
+	$sql = 'SELECT * FROM '.$this->tbl_name.' WHERE system_no = "'.$system_no.'" ';
+	return $wpdb->get_row( $sql, 'ARRAY_A');
+}
 
 
 //END OF CLASS	
 }
 
-global $NOVIS_CSI_CUSTOMER;
-$NOVIS_CSI_CUSTOMER =new NOVIS_CSI_CUSTOMER_CLASS();
+global $NOVIS_CSI_CUSTOMER_SYSTEM;
+$NOVIS_CSI_CUSTOMER_SYSTEM =new NOVIS_CSI_CUSTOMER_SYSTEM_CLASS();
 ?>
