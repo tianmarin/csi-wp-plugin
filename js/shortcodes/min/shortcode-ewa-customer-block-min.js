@@ -1,0 +1,1 @@
+jQuery(document).ready(function($){$(".ewa-customer-block-ewa-chart").each(function(a,e){var t=$(e).attr("id"),r=window.csiEWACustomerBlock,l=$(e).data("chart-data"),o=r[l+"_DataProvider"];AmCharts.makeChart(t,{type:"pie",dataProvider:o,valueField:"ewas",titleField:"title",colorField:"color",labelColorField:"color",labelsEnabled:!1,radius:40})})});

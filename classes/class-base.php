@@ -247,6 +247,7 @@ protected function update_class_row($action="edit", $postvs ){
 	global $wpdb;
 	$response = array();
 	if(self::check_form_values($postvs)){
+		$current_user = wp_get_current_user();
 		$insertArray 	= array();
 		$editArray		= array();
 		$editArray_eval	= array();
@@ -265,8 +266,29 @@ protected function update_class_row($action="edit", $postvs ){
 				case 'timestamp':
 					$insertArray[$key]=current_time( 'mysql');
 					break;
-				case 'current_user_id':
+				case 'create_user_id':
 					$insertArray[$key]=intval(get_current_user_id());
+					break;
+				case 'create_user_email':
+					$insertArray[$key]=$current_user->user_email;
+					break;
+				case 'create_date':
+					$insertArray[$key]=date("Y-m-d");
+					break;
+				case 'create_time':
+					$insertArray[$key]=date("H:i:s");
+					break;
+				case 'edit_user_id':
+					$insertArray[$key]=intval(get_current_user_id());
+					break;
+				case 'edit_user_email':
+					$insertArray[$key]=$current_user->user_email;
+					break;
+				case 'edit_date':
+					$insertArray[$key]=date("Y-m-d");
+					break;
+				case 'edit_time':
+					$insertArray[$key]=date("H:i:s");
 					break;
 				case 'nat_number':
 				case 'select':
@@ -437,7 +459,11 @@ protected function select_rows($elem_per_page = 10){
 			}
 		}
 	}
-
+	if ( 0 == count($sql_elements) ){
+		$response['tbody']='<tr class="danger"><td class="text-center" colspan="999"><p class="lead">La clase no est&aacute; configurada para desplegar estos men&uacute;.</p></td><tr>';
+		$response['pagination'] = '';
+		return $response;
+	}
 	$sql="SELECT ".implode(",", $sql_elements)." 
 			FROM ".$this->tbl_name."
 			LIMIT ".$elem_per_page*($current_page-1).",".$elem_per_page;
@@ -572,7 +598,7 @@ function get_sql($sql , $output_style = 'ARRAY_A' ){
 * @since 1.0
 * @author Cristian Marin
 */
-protected function show_form(
+public function show_form(
 					$type=null,				//add,update
 					$item=null,				//id a editar
 					$menu_slug=null,
@@ -611,7 +637,7 @@ protected function show_form(
 					id="'.$this->menu_slug.'"
 					>';
 	$output.='<input type="hidden" name="'.$this->plugin_post.'[action]" value="'.$type.'" />';
-	$output.=wp_nonce_field( $type, $this->plugin_post."[actioncode]");
+	$output.=wp_nonce_field( $type, $this->plugin_post."[actioncode]",true,false);
 	if(isset($item)){
 		$output.='<input type="hidden" name="'.$this->plugin_post.'[id]" value="'.$item.'" />';
 	}
@@ -886,7 +912,7 @@ protected function show_form(
 	$output.='</div>';
 	return $output;
 }
-protected function write_log($log){
+public function write_log($log){
 	if ( is_array( $log ) || is_object( $log ) ) {
 		error_log( print_r( $log, true ) );
 	}else{
@@ -898,8 +924,26 @@ protected function validate_date($date, $format = 'Y-m-d'){
 	$d = DateTime::createFromFormat($format, $date);
 	return $d && $d->format($format) == $date;
 }
+protected function findMonday($date = null){
+	if ($date instanceof DateTime) {
+		$date = clone $date;
+	} else if (!$date) {
+		$date = new DateTime();
+	} else {
+		$date = new DateTime($date);
+	}
 
+	$date->setTime(0, 0, 0);
 
+	if ($date->format('N') == 1) {
+		// If the date is already a Monday, return it as-is
+		return $date;
+	} else {
+		// Otherwise, return the date of the nearest Monday in the past
+		// This includes Sunday in the previous week instead of it being the start of a new week
+		return $date->modify('last monday');
+	}
+}
 //END OF CLASS	
 }
 ?>

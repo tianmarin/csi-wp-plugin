@@ -1,6 +1,6 @@
 /*
 Script Name: Template Project Request
-Dependencies: jquery, jquery-ui-datepicker, jquery-confirm
+Dependencies: jquery, bootstrap, jquery-ui-datepicker, jquery-confirm
 */
 /*global csiTemplateProjectRequest*/
 jQuery(document).ready(function($){

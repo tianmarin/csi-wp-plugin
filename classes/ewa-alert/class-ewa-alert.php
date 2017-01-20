@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') or die("No script kiddies please!");
 
-class NOVIS_CSI_ALERT_CLASS extends NOVIS_CSI_CLASS{
+class NOVIS_CSI_EWA_ALERT_CLASS extends NOVIS_CSI_CLASS{
 
 /**
 * __construct
@@ -16,13 +16,13 @@ public function __construct(){
 	global $wpdb;
 	global $novis_csi_vars;
 	//como se definió en novis_csi_vars
-	$this->class_name	= 'alert';
+	$this->class_name	= 'ewa_alert';
 	//Nombre singular para títulos, mensajes a usuario, etc.
 	$this->name_single	= 'Alertas';
 	//Nombre plural para títulos, mensajes a usuario, etc.
 	$this->name_plural	= 'Alertas';
 	//Identificador de menú padre
-	$this->parent_slug	= $novis_csi_vars['main_menu_slug'];
+	$this->parent_slug	= $novis_csi_vars['network_menu_slug'];
 	//Identificador de submenú de la clase
 	$this->menu_slug	= $novis_csi_vars[$this->class_name.'_menu_slug'];
 	//Utilizadp para validaciones
@@ -40,22 +40,34 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.5.2';
+	$this->db_version	= '0.6.1';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql_wt	="(
-								id int(4) unsigned not null auto_increment,
-								system_id int(4) unsigned not null,
-								alert_priority_id tinyint(2) unsigned not null,
-								issued_date date not null,
-								last_modified_user_id bigint(20) unsigned null,
-								last_modified_date date null,
-								alert_message tinytext not null,
-								action_party_id tinyint(2) unsigned null,
-								action_id varchar(50) null,
+								id bigint unsigned not null auto_increment COMMENT 'Unique ID for each entry',
+								ewa_session_no bigint(13) unsigned not null COMMENT 'EWA session number',
+								alert_group varchar(40) not null COMMENT 'EWA alert group text',
+								alert_rating varchar(1) not null COMMENT 'EWA alert rating char',
+								alert_no tinyint unsigned not null COMMENT 'EWA alert number',
+								alert_text varchar(255) not null COMMENT 'EWA alert text',
+								auto_asign bool null default 0 COMMENT 'Indicates if record was modified by automated process',
+								hidden bool not null default 0 COMMENT 'Duplicate fields must be hidden by the system',
+								action_party_id tinyint(2) unsigned null COMMENT 'Specify which action party is to be used',
+								action_id varchar(50) null COMMENT 'Specify the identifier in the action party',
+								customer_flag bool null COMMENT 'Specify if the execution of the action in on the customer side',
+								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
+								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+								creation_date date null COMMENT 'Date of the creation of this record',
+								creation_time time null COMMENT 'Time of the creation of this record',
+								creation_filename varchar(255) null COMMENT 'Name of the file used to create this record',
+								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
+								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+								last_modified_date date null COMMENT 'Date of the last modification of this record',
+								last_modified_time time null COMMENT 'Time of the last modification of this record',
+								
 								UNIQUE KEY id (id)
 							) $charset_collate;";
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
@@ -107,7 +119,7 @@ public function __construct(){
 		*/
 		'id' => array(
 			'type'						=>'id',
-			'backend_wp_in_table'		=>true,
+			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>true,
@@ -115,17 +127,55 @@ public function __construct(){
 			'data_validation_min'		=>1,
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>'static',
+			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'ID',
+			'form_label'				=>false,
 			'form_options'				=>false,
 			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'system_id' => array(
-			'type'						=>'select',
+		'ewa_session_no' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'alert_group' => array(
+			'type'						=>'text',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'alert_rating' => array(
+			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
@@ -135,16 +185,35 @@ public function __construct(){
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'ID del sistema en el cual se gener&oacute; la alerta',
+			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'Identificador de Sistema',
+			'form_label'				=>false,
 			'form_options'				=>false,
-			'form_placeholder'			=>'Identificador de Sistema',
+			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
-		'alert_priority_id' => array(
-			'type'						=>'select',
+		'alert_no' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'alert_text' => array(
+			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
@@ -154,54 +223,92 @@ public function __construct(){
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'ID de la prioridad de la alerta',
+			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'Identificador de Prioridad de Alerta',
+			'form_label'				=>false,
 			'form_options'				=>false,
-			'form_placeholder'			=>'Identificador de Prioridad de Alerta',
+			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
-		'issued_date' => array(
-			'type'						=>'date',
+		'auto_asign' => array(
+			'type'						=>'bool',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
-			'data_required'				=>true,
+			'data_required'				=>false,
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'Fecha en la cual se gener&oacute; la alerta',
+			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'Fecha de generaci&oacute;n',
+			'form_label'				=>false,
 			'form_options'				=>false,
-			'form_placeholder'			=>'Fecha de generaci&oacute;n',
+			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
-		'last_modified_user_id' => array(
+		'hidden' => array(
+			'type'						=>'bool',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'action_party_id' => array(
 			'type'						=>'nat_number',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>false,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'ID del usuario modificador',
+			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'ID de usuario modificador',
+			'form_label'				=>false,
 			'form_options'				=>false,
-			'form_placeholder'			=>'ID de usuario modificador',
+			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'last_modified_date' => array(
-			'type'						=>'date',
+		'action_id' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'customer_flag' => array(
+			'type'						=>'bool',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
@@ -211,16 +318,16 @@ public function __construct(){
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'Fecha de &uacute;ltima modificaci&oacute;n',
+			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'Fecha de &uacute;ltima modificaci&oacute;',
+			'form_label'				=>false,
 			'form_options'				=>false,
-			'form_placeholder'			=>'Fecha de &uacute;ltima modificaci&oacute;',
+			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'alert_message' => array(
-			'type'						=>'text',
+		'creation_user_id' => array(
+			'type'						=>'create_user_id',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
@@ -230,16 +337,73 @@ public function __construct(){
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'Mensaje de Error',
+			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'Mensaje de Error',
+			'form_label'				=>false,
 			'form_options'				=>false,
-			'form_placeholder'			=>'Mensaje de Error',
+			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
-		'action_party_id' => array(
-			'type'						=>'select',
+		'creation_user_email' => array(
+			'type'						=>'create_user_email',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'creation_date' => array(
+			'type'						=>'create_date',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'creation_time' => array(
+			'type'						=>'create_time',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'creation_filename' => array(
+			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
@@ -249,16 +413,16 @@ public function __construct(){
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'Identificador del Sistema de Ticket',
+			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'ID del Sistema de Ticket',
+			'form_label'				=>false,
 			'form_options'				=>false,
-			'form_placeholder'			=>'ID del Sistema de Ticket',
+			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
 		),
-		'action_id' => array(
-			'type'						=>'text',
+		'last_modified_user_id' => array(
+			'type'						=>'edit_user_id',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
@@ -266,15 +430,72 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>50,
+			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'Identificador del Ticket',
+			'form_help_text'			=>false,
 			'form_input_size'			=>false,
-			'form_label'				=>'ID del Ticket',
+			'form_label'				=>false,
 			'form_options'				=>false,
-			'form_placeholder'			=>'ID del Ticket',
+			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
-			'form_show_field'			=>true,
+			'form_show_field'			=>false,
+		),
+		'last_modified_user_email' => array(
+			'type'						=>'edit_user_email',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'last_modified_date' => array(
+			'type'						=>'edit_date',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'last_modified_time' => array(
+			'type'						=>'edit_time',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
 		),
 	);
 	
@@ -296,8 +517,8 @@ public function shortcode_system_panel($atts){
 	
 	if ( $system > 0 ){
 		//Obtener información del Sistema
-		global $NOVIS_CSI_ALERT_PRIORITY;
-		global $NOVIS_CSI_ACTION_PARTY;
+		global $NOVIS_CSI_EWA_ALERT_RATING;
+		global $NOVIS_CSI_EWA_ACTION_PARTY;
 		$output.='<div class="col-xs-12 col-sm-12 col-md-6">';
 		$output.='<header>';
 			$output.='<h3>CRP <small>CRM Productivo</small></h3>';
@@ -374,8 +595,8 @@ public function shortcode_system_panel($atts){
 					a.action_id as action
 					FROM
 						(($this->tbl_name as a
-						LEFT JOIN $NOVIS_CSI_ALERT_PRIORITY->tbl_name as b ON a.alert_priority_id = b.id)
-						LEFT JOIN $NOVIS_CSI_ACTION_PARTY->tbl_name as c ON a.action_party_id = c.id)
+						LEFT JOIN $NOVIS_CSI_EWA_ALERT_RATING->tbl_name as b ON a.alert_priority_id = b.id)
+						LEFT JOIN $NOVIS_CSI_EWA_ACTION_PARTY->tbl_name as c ON a.action_party_id = c.id)
 					WHERE
 						a.system_id=$system
 						AND a.issued_date='".$date['date']."'
@@ -422,6 +643,6 @@ public function shortcode_system_panel($atts){
 //END OF CLASS	
 }
 
-global $NOVIS_CSI_ALERT;
-$NOVIS_CSI_ALERT =new NOVIS_CSI_ALERT_CLASS();
+global $NOVIS_CSI_EWA_ALERT;
+$NOVIS_CSI_EWA_ALERT =new NOVIS_CSI_EWA_ALERT_CLASS();
 ?>

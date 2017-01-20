@@ -62,8 +62,10 @@
 
                 // Add your templates to this array.
                 $this->templates = array(
-                        'templates/template-project-request.php'     => 'CSI Project Request',
-                        'templates/template-project-request-status.php'     => 'CSI Project Request Status',
+                	'templates/template-project-request.php'			=> 'CSI Project Request',
+					'templates/template-project-request-status.php'		=> 'CSI Project Request Status',
+					'templates/template-cmp-planner.php'				=> 'CSI PCM Planner',
+					'templates/template-ewa-upload.php'					=> 'CSI EWA Uploader',
                 );
 				
         } 
