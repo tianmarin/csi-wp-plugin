@@ -40,7 +40,7 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.5.2';
+	$this->db_version	= '0.5.3';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -809,10 +809,10 @@ public function csi_user_project_request_status(){
 	$sql = "SELECT * FROM ".$this->tbl_name." WHERE requested_user_id=".$user_id." ORDER BY requested_date, customer_id ASC";
 	$projects = $this->get_sql($sql);
 	if ( 0 == count($projects)){
-		$output.= '<tr colspan="4">';
-			$output.= '	<td>
-							<p class="lead">No tienes Solicitudes de Proyecto</p>
-							<div class="col-xs-6 text-center">
+		$output.= '<tr>';
+			$output.= '	<td colspan="5">
+							<p class="text-center lead">No tienes Solicitudes de Proyecto</p>
+							<div class="text-center">
 								<a class="btn btn-success csi-project-request-button animated flipInX" href="#project_request_form" role="button">Nueva solicitud</a>
 							</div>
 						</td>';

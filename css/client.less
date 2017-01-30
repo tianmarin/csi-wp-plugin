@@ -1,5 +1,5 @@
-@import '../external/fontawesome/less/font-awesome.less';
 @import '../external/animate.less/less/animate.less';
+@import '../external/fontawesome/less/font-awesome.less';
 .csi-shortcode{
 	@import '../external/bootstrap/less/bootstrap.less';
 	.csi-project-panel{
@@ -64,6 +64,9 @@
 		}
 	}
 }
+a[href="http://www.amcharts.com/javascript-charts/"]{
+	display: none !important;
+}
 .csi-project-request-welcome{
 	min-height: 100vh;
 	background-color: #263238;
@@ -104,4 +107,78 @@
 }
 #user-project-request-status{
 	min-height: 100vh;
+}
+
+#csi-ewa-template-control-center-date-input{
+	display: none;
+	& + label{
+		cursor: pointer;
+	}
+}
+.csi-ewa-template-control-center-alert-form-check{
+	& + label > i:before {
+		cursor: pointer;
+		content: '\f10c';
+	}
+	&:checked + label > i:before {
+		cursor: pointer;
+		content: '\f05d';
+	}
+	
+}
+#csi-ewa-template-control-center-action-checkbox{
+	display: none;
+	& + label{
+		cursor: pointer;
+		i:before{
+			content: '\f10c';
+		}
+	}
+	&:checked + label{
+		
+		& > i:before{
+			content: '\f05d';
+		}
+	}
+}
+
+#csi-template-ewa-control-center-table{
+	#table-filter{
+		th{
+			vertical-align: top;
+		}
+	}
+	#filter-date-range{
+		cursor: pointer;
+	}
+}
+
+.ajax-loading{
+	&:before{
+		z-index: 100;
+		display: table-row-group;
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(255,255,255,0.8);
+		content:'';
+		top:0;
+		left:0;
+		border:thin solid rgba(0,0,0,0.2);
+	}
+	&:after{
+		z-index: 101;
+		display: block;
+		position: absolute;
+		content: "\f1ce";
+		.fa-spin;
+		.fa-3x;
+		text-align: center;
+		color: rgba(100,150,200,0.5);
+		font-family: "FontAwesome";
+		top:5%;
+		left:50%
+		
+	
+	}
 }

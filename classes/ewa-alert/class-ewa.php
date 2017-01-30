@@ -406,14 +406,26 @@ public function __construct(){
 		add_action( 'wpmu_new_blog',							array( $this , 'db_install'								));
 	}
 	add_action( 'wp_ajax_csi_ajax_upload_ewa_file',				array( $this , 'csi_ajax_upload_ewa_file'				));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_control_center_fetch_alerts',		array( $this , 'csi_ajax_template_ewa_control_center_fetch_alerts'	));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_fetch_alerts',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_fetch_alerts'	));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_alert_chart',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_alert_chart'	));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_action_gauge',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_action_gauge'	));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart'	));
+	
+	
+	
+	
+	
 	add_shortcode( 'ewa_system_history',			 			array( $this , 'csi_shortcode_ewa_system_history'		));
 	add_shortcode( 'csi_ewa_status',					 		array( $this , 'csi_shortcode_ewa_status'				));
 	add_shortcode( 'csi_ewa_status_by_customer',		 		array( $this , 'csi_shortcode_ewa_status_by_customer'	));
 	add_shortcode( 'csi_ewa_system_dashboard',			 		array( $this , 'csi_shortcode_ewa_ssystem_dashboard'	));
-	add_shortcode( 'csi_ewa_customer_block',			 		array( $this , 'csi_shortcode_ewa_customer_block'	));
+	add_shortcode( 'csi_ewa_customer_block',			 		array( $this , 'csi_shortcode_ewa_customer_block'		));
+	add_shortcode( 'csi_ewa_week_summary',				 		array( $this , 'csi_shortcode_ewa_week_summary'			));
 	
 
 }
+
 public function get_ewa_session_no_col(){
 	global $wpdb;
 	$sql = "SELECT ewa_session_no FROM ".$this->tbl_name;
@@ -445,7 +457,7 @@ public function csi_ajax_upload_ewa_file(){
 	global $NOVIS_CSI_CUSTOMER_SYSTEM;
 	$curr_system_no				=$NOVIS_CSI_CUSTOMER_SYSTEM->get_system_no_col();
 	$curr_sessno				=$this->get_ewa_session_no_col();
-	$allowed_mime_types 		= array('text/csv','text/plain');
+	$allowed_mime_types 		= array('text/csv','text/plain', '');
 	
 	if ( FALSE == array_search( mime_content_type($_FILES['file']['tmp_name']) , $allowed_mime_types ) ){
 		$error_flag=TRUE;
@@ -530,7 +542,37 @@ public function csi_ajax_upload_ewa_file(){
 				if ( FALSE === array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) ) ) {
 					//silence is golden
 				}else{
-					//Check for no duplicates (duplicates are not inserted )
+					if ( 'NULL' == $line[$csv_h_alert_number] || '' == $line[$csv_h_alert_rating] ){
+						if ( 'G' == $line[$csv_h_ewa_rating] ){
+							continue;
+						}
+						$line[$csv_h_alert_group]	= 'NOVIS_NO_ALERT';
+						$line[$csv_h_alert_rating]	= 'Z';
+						$line[$csv_h_alert_number]	= '1';
+						$line[$csv_h_alert_text]	= 'No alert has been generated [novis]';
+					}
+					$ALERT = array(
+						'system_no'				=> $line[$csv_h_systno],
+						'ewa_session_no'		=> $line[$csv_h_sessno],
+						'alert_group'			=> $line[$csv_h_alert_group],
+						'alert_rating'			=> $line[$csv_h_alert_rating],
+						'alert_no'				=> $line[$csv_h_alert_number],
+						'alert_text'			=> $line[$csv_h_alert_text],
+						'creation_filename'		=> $csv_filename,
+					);
+					$ALERT_exists = FALSE;
+					foreach ( $ALERT_insert_array as $ALERT_insert_array_serial ){
+						if ( serialize ( $ALERT_insert_array_serial )  == serialize ( $ALERT ) ) {
+							$ALERT_exists = TRUE;
+						}
+					}
+					if ( FALSE == $ALERT_exists ){
+						$count_alerts = array_push( $ALERT_insert_array, $ALERT );
+					}else{
+						$prevent_dup_alert++;						
+					}
+/*
+						//Check for no duplicates (duplicates are not inserted )
 					
 					if (FALSE !== array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) )
 						&& FALSE !== array_search( $line[$csv_h_systno], array_column( $EWA_insert_array, 'system_no' ) ) 
@@ -561,11 +603,12 @@ public function csi_ajax_upload_ewa_file(){
 //					}else{
 //						$prevent_dup_alert++;
 					}
+*/
 				}
 			}
-			$prevent_dup_alert = count ( $ALERT_insert_array);
+//			$prevent_dup_alert = count ( $ALERT_insert_array);
 			$ALERT_insert_array = array_unique($ALERT_insert_array, SORT_REGULAR);
-			$prevent_dup_alert = count ( $ALERT_insert_array) - $prevent_dup_alert;
+//			$prevent_dup_alert = count ( $ALERT_insert_array) - $prevent_dup_alert;
 			if (0 < count ( $EWA_insert_array ) ) {
 				$sql = "INSERT INTO ".$this->tbl_name. " (system_no, ewa_session_no, planned_date, ewa_status, ewa_rating, creation_filename, creation_user_id, creation_user_email, creation_date, creation_time)
 						VALUES ";
@@ -633,11 +676,14 @@ public function csi_ajax_upload_ewa_file(){
 		}
 		// ----- 
 	}
+	if ( 0 < $prevent_dup_alert ){
+		$prevent_dup_output ='<div class="alert alert-info" role="alert">';
+		$prevent_dup_output .='Se han omitido ' . intval ( $prevent_dup_alert ) .' alertas duplicadas.';
+		$prevent_dup_output .='</div>';
+	}else{
+		$prevent_dup_output ='';
+	}
 	if ( FALSE === $error_flag ){
-		if ( 0 < $prevent_dup_alert ){
-			$prevent_dup_output ='<div class="alert alert-info" role="alert">';
-			$prevent_dup_output .='Se han omitido <strong>'.$prevent_dup_alert.'<div class="alert alert-info" role="alert">';
-		}
 		if ( 0 < count( $non_reg_systno ) ) {
 			$non_reg_output.='<div class="row">';
 			$non_reg_output.='<div class="col-xs-12">';
@@ -657,6 +703,10 @@ public function csi_ajax_upload_ewa_file(){
 	}
 	$response['status']='ok';
 	$response['message']	 ='';
+	$response['message']	.=$prevent_dup_output;
+	$response['message']	.='Se han insertado ' . count ( $EWA_insert_array ) . ' EWAs.';
+	$response['message']	.='Se han insertado ' . count ( $ALERT_insert_array ) . ' alertas.';
+	$response['message']	.='Se han omitido ' . $skipped_ewa_reports . ' repores EWAs que ya estaban registrados en el sistema';
 	$response['message']	.=$mime_type_error;
 	$response['message']	.=$db_error;
 	$response['message']	.=$rewind_error;
@@ -770,7 +820,7 @@ public function csi_shortcode_ewa_system_history(){
 	return $output;
 }
 
-public function csi_shortcode_ewa_status_by_customer($atts){
+public function csi_shortcode_ewa_status_by_customer ( $atts ) {
 	//Variable definition
 	global $wpdb;
 	global $NOVIS_CSI_EWA_RATING;
@@ -1027,8 +1077,6 @@ public function csi_shortcode_ewa_status_by_customer($atts){
 			'graphs'		=> $graphs,
 		)
 	);
-	self::write_log( json_encode($dataProvider));
-	self::write_log( json_encode($graphs));
 	$output.='<div class="row">';
 		$output.='<div id="ewa_summary" class="ewa_summary_graph" style="min-height: 500px"></div>';
 		$output.='<div id="ewa_summary_legend" class="ewa_summary_legend"  ></div>';
@@ -1211,6 +1259,7 @@ public function csi_shortcode_ewa_status($atts){
 	$output.='</div>';
 	return $output;
 }
+
 public function csi_shortcode_ewa_ssystem_dashboard($atts){
 	//global variables
 	global $wpdb;
@@ -1536,7 +1585,8 @@ public function csi_shortcode_ewa_ssystem_dashboard($atts){
 	}
 	return $o;
 }
-public function csi_shortcode_ewa_customer_block($atts){
+
+public function csi_shortcode_ewa_customer_block ( $atts ) { 
 	//global variables
 	global $wpdb;
 	global $NOVIS_CSI_CUSTOMER;
@@ -1721,8 +1771,1090 @@ public function csi_shortcode_ewa_customer_block($atts){
 	);
 	return $o;
 }
+
+public function csi_shortcode_ewa_week_summary ( $atts ) {
+	//global variables
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_EWA_RATING;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_SAPCUSTNO;
+	//local variables
+	$javascript = array (
+		'ppost'							=> $this->plugin_post,
+		'ajaxurl'						=> admin_url( 'admin-ajax.php' ),
+	);
+	$customers		= self::shortcode_get_customers_atts($atts);
+	$weeks			= isset ($atts [ 'weeks' ]) ? intval( $atts [ 'weeks' ] ) : 0;
+	$days			= intval ($weeks * 7 );
+	$now			= new DateTime();
+	$now			= $now->modify('-' . $days . ' days');
+	$week			= $now->format("W");
+	$year			= $now->format("Y");
+	$monday			= new DateTime();
+	$monday->setISODate($year,$week);
+	$monday			= $monday->format('Y-m-d');
+	$sunday			= new DateTime();
+	$sunday->setISODate($year,$week,7);
+	$sunday 		= $sunday->format('Y-m-d');
+
+	$o				='';
+	$o.='<h2>Tabla de EWAs por cliente - Semana ' . $week . ' <small>' . $monday . ' - ' . $sunday . '</small></h2>';
+	$o.='<table class="table table-condensed">';
+		$o.='<thead>';
+			$o.='<tr>';
+				$o.='<th>Cliente</th>';
+				$o.='<th class="text-center">Sistemas</th>';
+				$o.='<th class="text-center">EWAs</th>';
+				$o.='<th class="text-center">Status <small>EWAs generados</small></th>';
+				$o.='<th>&nbsp;</th>';
+			$o.='</tr>';
+		$o.='</thead>';
+		//Por cada cliente (ordenado por algo?)
+		$o.='<tbody>';
+	foreach ( $customers as $customer ){
+		$customer = $wpdb->get_row('SELECT * FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' WHERE id = "' . $customer . '"','ARRAY_A');
+		$systems_no = self::get_systems_no_by_cust_id( $customer['id'] );
+		if ( 0 < count ( $systems_no ) ){
+			$ewas = self::get_ewa_session_no_by_system_list( $systems_no, $monday, $sunday);			
+		}else{
+			$ewas = NULL;
+		}
+		$o.='<tr class="active">';
+		$o.='<th>' . $customer['short_name'] . ' <small class="text-muted">' . $customer['code'] . '</small></th>';
+		$o.='<td class="text-center">' . count ( $systems_no ) . ' Sistemas</td>';
+		$o.='<td class="text-center">';
+		$o.=count ( $ewas['ewas_id'] ) . ' EWAs ';
+		if ( count ( $systems_no ) > count ( $ewas['ewas_id'] ) ) {
+			$o.='<i class="fa fa-exclamation-circle fa-fw text-danger"></i>';
+		}
+		if ( count ( $systems_no ) == count ( $ewas['ewas_id'] ) ) {
+			$o.='<i class="fa fa-check-square fa-fw text-success"></i>';
+		}
+		if ( count ( $systems_no ) < count ( $ewas['ewas_id'] ) ) {
+			$o.='<i class="fa fa-exclamation-triangle fa-fw text-warning"></i>';
+		}
+		$o.='</td>';
+		$o.='<td><div class="text-center">';
+		//build ewas array grouped by rating
+		if ( NULL != $ewas && 0 < count ( $ewas['ewas'] ) ) {
+			$ewas_rating = array();
+			foreach ( $ewas['ewas'] as $ewa ){
+				$ewa = array(
+					'ewa_rating'	=> $ewa['ewa_rating'],
+					'short_name'	=> $ewa['short_name'],
+					'css_class'		=> $ewa['css_class'],
+					'hex_color'		=> $ewa['hex_color'],
+					'total'			=> 1,
+				);
+				$index = array_search( $ewa['ewa_rating'], array_column( $ewas_rating, 'ewa_rating' ) );
+				if (FALSE === $index ){
+					array_push($ewas_rating, $ewa);
+				}else{
+					$ewas_rating[$index]['total'] += 1;
+				}
+			}
+			foreach ( $ewas_rating as $ewa_rating ){
+				$o.='<span
+						class="label label-' . $ewa_rating['css_class'] . '"
+						data-toggle="tooltip"
+						data-placement="top"
+						title="' . $ewa_rating['short_name'] . ': ' . $ewa_rating['total'] . '">' . $ewa_rating['total'] . '</span>';
+			}
+		}
+		$o.='
+				</div>
+		</td>';
+		$o.='<td class="text-center">';
+		if ( 0 < count ( $systems_no ) &&  NULL != $systems_no){
+			$o.='<button
+				class="btn btn-default btn-sm"
+				type="button"
+				data-toggle="collapse"
+				data-target="#csi-ewa-week-summary-' . $customer['id'] . '"
+				aria-expanded="false"
+				aria-controls="collapseExample">
+				Ver mas
+			</button>';
+		}else{
+			$o.='&nbsp;';
+		}
+		$o.='</td>';
+		$o.='</tr>';
+		if ( 0 < count ( $systems_no ) &&  NULL != $systems_no){
+			$o.='<tr class="collapse" id="csi-ewa-week-summary-' . $customer['id'] . '">';
+			$o.='<td></td>';				
+			$o.='<td colspan="999">';
+			$o.='<table class="table table-condensed table-hover">';
+			$o.='<thead>';
+			$o.='<tr>';
+			$o.='<th>SID</td>';
+			$o.='<th>EWA</th>';
+			$o.='<th>Alertas</th>';
+			$o.='</tr>';
+			$o.='</thead>';
+			$o.='<tbody>';
+			foreach ( $systems_no as $system_no ){
+				$ewas = self::get_ewa_session_no_by_system_list( array ( $system_no ) , $monday, $sunday);				
+				$system = $wpdb->get_row ( 'SELECT * FROM ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' WHERE system_no = "' . $system_no . '"', 'ARRAY_A' );
+				$o.='<tr>';
+				$o.='<td>' . $system['sid'] . ' <small class="text-muted">' . $system['system_no'] . '</small></td>';
+				$o.='<td>';
+				if ( NULL != $ewas && 0 < count ( $ewas['ewas'] ) ){
+					foreach ( $ewas['ewas'] as $ewa){
+						$o.='<span
+								class="label label-' . $ewa['css_class'] . '"
+								data-toggle="tooltip"
+								data-placement="top"
+								title="' . $ewa['ewa_session_no'] . ' (' . $ewa['short_name'] . ')">1</span>';
+					}
+				}else{
+					$o.='&nbsp;';
+				}
+				$o.='</td>';
+				$o.='<td>';
+					$alerts = self::get_alerts_by_ewa_session_no_list ( $ewas['ewas_id'] );
+					if ( NULL != $alerts && 0 < count ( $alerts) ) {
+						$alerts_rating = array();
+						foreach ( $alerts as $alert ){
+							$alert = array(
+								'alert_rating'	=> $alert['alert_rating'],
+								'short_name'	=> $alert['short_name'],
+								'css_class'		=> $alert['css_class'],
+								'hex_color'		=> $alert['hex_color'],
+								'total'			=> 1,
+							);
+							$index = array_search( $alert['alert_rating'], array_column( $alerts_rating, 'alert_rating' ) );
+							if (FALSE === $index ){
+								array_push($alerts_rating, $alert);
+							}else{
+								$alerts_rating[$index]['total'] += 1;
+							}
+						}
+						foreach ( $alerts_rating as $alert_rating ){
+							$o.='<span
+									class="label label-' . $alert_rating['css_class'] . '"
+									data-toggle="tooltip"
+									data-placement="top"
+									title="' . $alert_rating['short_name'] . ': ' . $alert_rating['total'] . '">' . $alert_rating['total'] . '</span>';
+						}
+					}else{
+						if ( 0 < count ( $ewas['ewas_id'] ) ) {
+							$o.='<span class="text-success"><i class="fa fa-check fa-fw"></i></span>';
+						}else{
+							$o.='<button class="btn btn-default btn-sm ewa-week-summary-sql-code-button" data-system-no="' . $system['system_no'] . '"><i class="fa fa-code fa-fw"></i></button>';
+						}
+					}
+				$o.='</td>';
+				$o.='</tr>';
+			}
+			$o.='</tbody>';
+			$o.='</table>';
+			$o.='</td>';
+			$o.='</tr>';
+		}//if count $systems_no
+	}//foreach $customers
+		$o.='</tbody>';
+	$o.='</table>';
+		wp_register_style(
+			"jquery-confirm",
+			CSI_PLUGIN_URL.'/external/jquery-confirm/dist/jquery-confirm.min.css' ,
+			null,
+			"1.0",
+			"all"
+		);
+		wp_enqueue_style("jquery-confirm" );
+	wp_register_script(
+		'csiEWAWeekSummary',
+		CSI_PLUGIN_URL.'/js/shortcodes/min/shortcode-ewa-week-summary-min.js' ,
+		array('jquery','bootstrap', 'jquery-confirm', 'amcharts','amcharts-serial','amcharts-responsive','amcharts-pie'),
+		'0.0.1'
+	);
+	wp_enqueue_script('csiEWAWeekSummary');
+	wp_localize_script(
+		'csiEWAWeekSummary',
+		'csiEWAWeekSummary',
+		$javascript
+	);
+	return $o;
+}
+
+protected function shortcode_get_customers_atts($atts){
+	global $NOVIS_CSI_CUSTOMER;
+	global $wpdb;
+	$customer = isset ( $atts [ 'customer' ] ) ? $atts [ 'customer' ] : NULL;
+	if ( NULL == $customer ){
+		if ( is_multisite() ){
+			//Current BLOG Customer
+			$sql = 'SELECT id FROM '.$NOVIS_CSI_CUSTOMER->tbl_name.' WHERE blog_id = "'.get_current_blog_id().'"';
+			$customer = $wpdb->get_col( $sql );
+		}else{
+			$customer = 'all';
+		}
+	}
+	if ( 'all' == $customer){
+		//All Customers
+		$sql = 'SELECT id FROM '.$NOVIS_CSI_CUSTOMER->tbl_name . ' ORDER BY short_name';
+		$customer = $wpdb->get_col( $sql );
+	}else{
+		$customer = explode ( ',', $customer );
+		foreach ($customer as $key => $val ){
+			if (FALSE == intval ( $customer[$key] ) ){
+				$sql = 'SELECT id FROM '.$NOVIS_CSI_CUSTOMER->tbl_name.' WHERE code="'.$customer[$key].'"';
+				$customer_id = $wpdb->get_var( $sql, 0, 0 );
+				$customer[$key] = intval ( $customer_id );
+			}
+		}
+	}
+	return $customer;
+}
+
+protected function get_systems_no_by_cust_id ( $customer_id, $environment = array( 1 ) ) {
+	global $wpdb;
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+
+	$sql = 'SELECT sapcustno FROM ' . $NOVIS_CSI_SAPCUSTNO->tbl_name . ' WHERE customer_id = "' . $customer_id .'"';
+	$sapcustno = $wpdb->get_col( $sql );
+	
+	if ( 0 >= count ( $sapcustno) ){
+		return false;
+	}
+	$sql = 'SELECT system_no FROM ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name;
+	$sql.=' WHERE sapcustno IN (' . implode ( ', ', $sapcustno ) . ') AND environment_id IN (' . implode ( ',', $environment) . ') ORDER BY sid, system_no';
+	$system_no = $wpdb->get_col( $sql );
+	
+	return $system_no;
+}
+
+protected function get_ewa_session_no_by_system_list( $system_list = array() , $start_date , $end_date ) {
+	global $wpdb;
+	global $NOVIS_CSI_EWA_RATING;
+	if ( $system_list == null || 0 === count ( $system_list) ){
+		return false;
+	}
+	if ( $start_date === null ){
+		$start_date		= new DateTime();
+		$start_date		= $start_date->format ( 'Y-m-d' );
+	}
+	if ( $end_date === null ){
+		$end_date		= new DateTime();
+		$end_date		= $end_date->format ( 'Y-m-d' );
+	}
+	$sql = 'SELECT
+				T00.ewa_session_no,
+				T00.planned_date,
+				T00.ewa_rating,
+				T01.short_name,
+				T01.css_class,
+				T01.hex_color
+			FROM
+				' . $this->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_EWA_RATING->tbl_name . ' as T01
+					ON T00.ewa_rating=T01.ewa_rating
+			WHERE
+				system_no IN (' . implode ( ',', $system_list ) .')
+				AND planned_date BETWEEN "' . $start_date . '" AND "' . $end_date . '"
+	';
+	return array(
+		'ewas_id'	=> $wpdb->get_col ( $sql ),
+		'ewas'		=> $this->get_sql ( $sql ),
+	);
+}
+
+protected function get_alerts_by_ewa_session_no_list ( $ewa_session_no = array() ){
+	global $wpdb;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	if ( $ewa_session_no == null || 0 === count ( $ewa_session_no) ){
+		return false;
+	}
+	$sql = 'SELECT
+				T02.ewa_rating,
+				T00.alert_rating,
+				T01.short_name,
+				T01.css_class,
+				T01.icon,
+				T01.hex_color
+			FROM
+				' . $NOVIS_CSI_EWA_ALERT->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_EWA_ALERT_RATING->tbl_name . ' as T01
+					ON T00.alert_rating=T01.alert_rating
+				LEFT JOIN ' . $this->tbl_name . ' as T02
+					ON T00.ewa_session_no = T02.ewa_session_no
+			WHERE
+				T00.ewa_session_no IN (' . implode ( ',', $ewa_session_no ) .')
+			';
+	return $this->get_sql ( $sql );
+}
+
+public function csi_ajax_template_ewa_control_center_fetch_alerts(){
+	//variables globales
+	global $wpdb;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
+	//variables localse
+	$tbody				= '';
+	$graphs_container	='';
+	$graphs				= array();
+	$response			= array();
+	$now				= NULL;
+	$alerts				= array();
+	//parámetros de función
+	if ( isset ( $_REQUEST [ 'date' ] ) ){
+		$timestamp		= strtotime ( $_REQUEST [ 'date' ] );
+		if ( FALSE == $timestamp ){
+			$now		= NULL;
+		}else{
+			$now		= new DateTime ( date ( 'Y-m-d', $timestamp ) );
+		}
+	}
+	if ( NULL == $now ) {
+		$now			= new DateTime();
+	}
+
+	$week				= $now->format("W");
+	$year				= $now->format("Y");
+	$monday				= new DateTime();
+	$monday->setISODate($year,$week);
+	$monday				= $monday->format('Y-m-d');
+	$sunday				= new DateTime();
+	$sunday->setISODate($year,$week,7);
+	$sunday				= $sunday->format('Y-m-d');
+	$action_flag		= ( isset ( $_REQUEST ['action_flag'] ) && 'true' == $_REQUEST ['action_flag'] ) ? TRUE : FALSE;
+	
+	//filter
+	$filter_customer	= ( isset ( $_REQUEST ['filter_customer'] ) && '' != $_REQUEST ['filter_customer'] ) ? $_REQUEST ['filter_customer'] : FALSE;
+	$filter_sid			= ( isset ( $_REQUEST ['filter_sid'] ) && '' != $_REQUEST ['filter_sid'] ) ? $_REQUEST ['filter_sid'] : FALSE;
+	$filter_group		= ( isset ( $_REQUEST ['filter_group'] ) && '' != $_REQUEST ['filter_group'] ) ? $_REQUEST ['filter_group'] : FALSE;
+	$filter_text		= ( isset ( $_REQUEST ['filter_text'] ) && '' != $_REQUEST ['filter_text'] ) ? $_REQUEST ['filter_text'] : FALSE;
+
+	$response ['action_flag']		= $action_flag;
+	$response ['date_m']			= $monday;
+	$response ['date_s']			= $sunday;
+	
+	$sql = '
+			SELECT
+			T01.id,
+			T01.alert_rating,
+			T04.short_name,
+			T04.code,
+			T02.sid,
+			T01.alert_group,
+			T01.alert_text,
+			T05.css_class,
+			T05.icon,
+			T01.action_party_id,
+			T01.action_id,
+			T01.customer_flag,
+			T06.url
+			FROM
+				' . $this->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_EWA_ALERT->tbl_name . ' as T01
+					ON T01.ewa_session_no = T00.ewa_session_no
+				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T02
+					ON T00.system_no = T02.system_no
+				LEFT JOIN ' . $NOVIS_CSI_SAPCUSTNO->tbl_name . ' as T03
+					ON T02.sapcustno = T03.sapcustno
+				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T04
+					ON T03.customer_id = T04.id
+				LEFT JOIN ' . $NOVIS_CSI_EWA_ALERT_RATING->tbl_name . ' as T05
+					ON T05.alert_rating = T01.alert_rating
+				LEFT JOIN ' . $NOVIS_CSI_EWA_ALERT_ACTION_PARTY->tbl_name . ' as T06
+					ON T01.action_party_id = T06.id 
+			WHERE
+				T00.planned_date BETWEEN "' . $monday . '" AND "' . $sunday . '"
+	';
+	if ( FALSE == $action_flag ){
+		$sql .=' AND T01.action_id is NULL ';
+	}
+	if ( FALSE != $filter_customer ){
+		$sql .=' AND UPPER(T04.code) LIKE "%' . strtoupper( $filter_customer ) . '%" ';
+	}
+	if ( FALSE != $filter_sid ){
+		$sql .=' AND UPPER(T02.sid) LIKE "%' . strtoupper( $filter_sid ) . '%" ';
+	}
+	if ( FALSE != $filter_group ){
+		$sql .=' AND UPPER(T01.alert_group) LIKE "%' . strtoupper( $filter_group ) . '%" ';
+	}
+	if ( FALSE != $filter_text ){
+		$sql .=' AND UPPER(T01.alert_text) LIKE "%' . strtoupper( $filter_text ) . '%" ';
+	}
+	$sql.=' LIMIT 30 ';
+	$alerts = $this->get_sql($sql);
+	if ( 0 < count ( $alerts ) ){
+		$sql = 'SELECT * FROM ' . $NOVIS_CSI_EWA_ALERT_ACTION_PARTY->tbl_name;
+		$action_parties = $this->get_sql ( $sql );
+		$action = '';
+		foreach ( $alerts as $alert ){
+			if ( NULL != $alert['action_id'] ){
+				$url=str_replace('[TICKET]', $alert['action_id'], $alert['url'] );
+				$action_btn = '<a href="'. $url . '" class="btn btn-primary btn-sm">' . $alert['action_id'] . '</a>';
+			}else{
+				$action_btn='';
+			}
+			$tbody.=
+				'<tr class="' . $alert['css_class'] . '">
+					<th>' . $alert['code'] . '</th>
+					<td>' . $alert['sid'] . '</td>
+					<td class="hidden-xs"> PRIORIDAD </td>
+					<td class=""><small>' . $alert['alert_group'] . '</small></td>
+					<td class="text-' . $alert['css_class'] . ' col-xs-4"><small><i class="fa fa-' . $alert['icon'] . ' "></i> ' . $alert['alert_text'] . '</small></td>
+					<td>
+						<div class="btn-group" role="group" aria-label="options">
+							' . $action_btn . '
+							<button
+								class="btn btn-default btn-sm"
+								type="button"
+								data-toggle="collapse"
+								data-target="#csi-ewa-template-control-center-alert-' . $alert['id'] . '"
+								aria-expanded="false"
+								aria-controls="csi-ewa-template-control-center-alert-' . $alert['id'] . '"
+								data-parent="#accordion">
+								<i class="fa fa-pencil fa-fw"></i>
+							</button>
+						</div><!-- .btn-group -->
+					</td>
+				</tr>';
+			$tbody.='
+				<tr class="collapse ' . $alert['css_class'] . '" id="csi-ewa-template-control-center-alert-' . $alert['id'] . '">
+					<td colspan="999">
+						<p class="text-center">
+							<form class="form-inline text-center csi-ewa-template-control-center-alert-form" data-alert-id="' . $alert['id'] . '">
+								<div class="form-group">
+									<div class="input-group">
+										<div class="input-group-addon"><i class="fa fa-cogs  fa-fw"></i></div>
+											<select class="form-control" name="action_party_id">';
+			foreach ( $action_parties as $action_party ){
+				$tbody.='<option value="' . $action_party['id'] . '" ' . ($action_party['id'] == $alert['action_party_id'] ? 'selected' : '') . ' >';
+				$tbody.=$action_party['short_name'];
+				$tbody.='</option>';
+			}
+			$tbody.='						</select>
+										</div>
+								</div>
+								<div class="form-group">
+									<div class="input-group">
+										<div class="input-group-addon"><i class="fa fa-hashtag fa-sm"></i></div>
+										<input type="text" class="form-control" name="action_id" placeholder="#" maxchar="50" value="' . $alert['action_id'] . '">
+										</div>
+								</div>
+								<div class="form-group">
+									<div class="input-group">
+										<div class="input-group-addon">Responsabilidad de Cliente</div>
+											<span class="form-control">
+												<input
+													type="checkbox"
+													id="alert-customer-flag-' . $alert['id'] . '"
+													class="sr-only csi-ewa-template-control-center-alert-form-check"
+													name="customer_flag" ' . (1 == $alert['customer_flag'] ? 'checked' : '') . '
+												/>
+												<label for="alert-customer-flag-' . $alert['id'] . '" >
+													<i class="fa fa-lg fa-fw"></i>
+												</label>
+											</span>
+										</div>
+								</div>
+								<button type="submit" class="btn btn-primary">
+									' . ( $alert['action_id'] == '' ? '<i class="fa fa-send fa-fw"></i> Asignar' : 'Editar') . '
+								</button>
+							</form>
+						</p>
+					</td>
+				</tr>
+				
+			';
+		}
+		//justgage
+		$sql = '
+				SELECT
+					T00.alert_rating,
+					T02.hex_color,
+					T02.short_name,
+					T02.id,
+					COUNT(T00.alert_rating) as total,
+					SUM(CASE WHEN T00.action_id IS NOT NULL THEN 1 else 0 end) as action
+				FROM
+					' . $NOVIS_CSI_EWA_ALERT->tbl_name . ' as T00
+					LEFT JOIN ' . $this->tbl_name . ' as T01
+						ON T01.ewa_session_no = T00.ewa_session_no
+					LEFT JOIN ' . $NOVIS_CSI_EWA_ALERT_RATING->tbl_name . ' as T02
+						ON T00.alert_rating = T02.alert_rating
+				WHERE
+					T01.planned_date BETWEEN "' . $monday . '" AND "' . $sunday . '"
+				GROUP BY
+					T00.alert_rating
+		';
+		$alerts				= $this->get_sql ( $sql );
+		$graphs_container	= '';
+		$graphs				= array();
+		foreach ( $alerts as $alert ){
+			$graph = array(
+				'id'					=> 'csi-template-ewa-control-center-graph-' . $alert['id'],
+				'label'					=> '%',
+				'levelColorsGradient'	=> false,
+				'max'					=> 100,
+				'min'					=> 0,
+				'levelColors'			=> array ( '#' . $alert['hex_color'], '#' . $alert['hex_color'] ),
+				'customSectors'			=> array(
+					'percents'			=> true,
+					'ranges'			=> array(
+						'color'			=> '#' . $alert['hex_color'],
+						'lo'			=> 0,
+						'hi'			=> 100,
+						),
+					),
+				'refreshAnimationTime'	=> 1000,
+				'refreshAnimationType'	=> "bounce",
+				'shadowOpacity'			=> 0,
+				'shadowSize'			=> 0,
+				'shadowVerticalOffset'	=> 10,
+				'title'					=> '',
+				'startAnimationTime'	=> 500,
+				'startAnimationType'	=> '>',
+				'value'					=> intval ( $alert['action'] / $alert['total'] * 100 ),
+			);
+			array_push($graphs, $graph);
+			$graphs_container .= '
+				<div class="col-xs-6 col-sm-6 col-md-3 col-lg-3 animated flipInX">
+					<div id="csi-template-ewa-control-center-graph-' . $alert['id'] . '"></div>
+					<p class="text-center text-muted"><small>Alertas <strong>' . $alert['short_name'] . '</strong> con acci&oacute;n (' . $alert['action'] . ' de ' . $alert['total'] . ')</small></p>
+				</div>
+			';
+		}
+	}else{
+		$tbody.='<tr class="active"><td colspan="999"><p class="h3 text-muted text-center">No hay alertas en este per&iacute;odo con el filtro indicado.</p></td></tr>';
+	}
+
+
+
+	$response['date']				= '<i class="fa fa-calendar fa-fw"></i> Semana ' . $week . '<br/><small>' . $monday . ' - ' . $sunday . '</small>';
+	$response['tbody']				= $tbody;
+	$response['graphs']				= $graphs;
+	$response['graphsContainer']	= $graphs_container;
+	echo json_encode($response);
+	wp_die();	
+}
+
+public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
+	//variables globales
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_EWA_RATING;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
+	//variables locales
+	$request				= $_REQUEST;
+	$tbody					= '';
+	$graphs_container		='';
+	$graphs					= array();
+	$response				= array();
+	$now					= NULL;
+	$alerts					= array();
+	
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$ewa_sql = $sql . '
+			GROUP BY
+				T00.ewa_session_no
+			ORDER BY
+				T00.planned_date, T03.code, T01.sid,T00.ewa_session_no
+			LIMIT 20
+	';
+	$ewas = $this->get_sql ( $ewa_sql );
+	foreach ( $ewas as $ewa ){
+		$tbody.='
+			<tr>
+				<td>' . $ewa['customer_short_name'] . ' <small class="text-muted">(' . $ewa['customer_code'] . ')</small></td>
+				<td class="text-center">' . $ewa['ewa_planned_date'] . '</td>
+				<td class="' . $ewa['ewa_class'] . '">
+					<a href="#alerts_ewa_' . $ewa['ewa_session_no'] . '" data-toggle="collapse" title="Alarmas del EWA: ' . $ewa['ewa_session_no'] . '">
+						<i class="fa fa-' . $ewa['ewa_icon'] . ' text-' . $ewa['ewa_class'] . '"></i> ' . $ewa['sid'] . '
+					</a>
+				</td>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+			</tr>
+		';
+		if ( ( $_REQUEST['filter_alert_group'] != '' ) || ( $_REQUEST['filter_alert_text'] != '' ) ) {
+			$display_alerts = 'in';
+		}else{
+			$display_alerts = '';
+		}
+		$tbody.='
+			<tr class="collapse ' . $display_alerts . '" id="alerts_ewa_' . $ewa['ewa_session_no'] . '">
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+				<td class="text-muted"><small>session number<br/>' . $ewa['ewa_session_no'] . '</small></td>
+				<td colspan="3"><table class="table table-condensed table-hover">';
+		$alert_sql = $sql . '
+				AND T00.ewa_session_no = "' . $ewa['ewa_session_no'] . '"
+		';
+		$alerts = $this->get_sql ( $alert_sql );
+		foreach ( $alerts as $alert ){
+			if ( NULL != $alert['action_id'] ){
+				$url=str_replace('[TICKET]', $alert['action_id'], $alert['url'] );
+				$action_btn = '<a href="'. $url . '" class="btn btn-primary btn-sm">' . $alert['action_id'] . '</a>';
+			}else{
+				$action_btn='&nbsp;';
+			}
+			$tbody.='
+					<tr>
+						<td><code><small>' . $alert['alert_group'] . '</small></code></td>
+						<td><small class=" text-' . $alert['alert_class'] . '"><i class="fa fa-' . $alert['alert_icon'] . '"></i> ' . $alert['alert_text'] . '</small></td>
+						<td>' . $action_btn . '</td>
+					</tr>
+			';
+		}
+				
+		$tbody.='
+					</table>
+				</td>
+			</tr>
+		';
+	}
+	$start_date		= self::csi_date_adjust( $request['filter_start_date'], 'monday' );
+	$end_date		= self::csi_date_adjust( $request['filter_end_date'], 'sunday' );
+	$response['panelTitleDates'] = '
+									<div class="form-group">
+										<div class="input-group">
+											<div class="input-group-addon text-center">
+												Semana ' . $start_date['week'] . ' <small class="text-muted">' . $start_date['year'] . '</small><br>
+												<small class="text-muted">' . $start_date['datetime']->format('M, j') . '</small>
+											</div>
+											<div class="input-group-addon"><i class="fa fa-arrow-right"></i></div>
+											<div class="input-group-addon text-center">
+												Semana ' . $end_date['week'] . ' <small class="text-muted">' . $end_date['year'] . '</small><br>
+												<small class="text-muted">' . $end_date['datetime']->format('M, j') . '</small>
+											</div>
+										</div>
+									</div>
+									';
+	$response['tbody'] = $tbody;
+
+	echo json_encode($response);
+	wp_die();
+}
+
+protected function csi_date_adjust ( $date = NULL, $day_flag = 0 ){
+	if ( NULL !== $date ) {
+		$timestamp = strtotime ( $date );
+		if ( FALSE == $timestamp ){
+			$date = NULL;
+		}else{
+			$date = new DateTime ( date ( 'Y-m-d', $timestamp ) );
+		}
+	}
+	if ( NULL == $date ) {
+		$date = new DateTime();
+	}
+	$week				= $date->format("W");
+	$year				= $date->format("Y");
+	switch ($day_flag){
+		case 'monday':
+			$date = new DateTime();
+			$date->setISODate ( $year, $week );
+			break;
+		case 'sunday':
+			$date = new DateTime();
+			$date->setISODate ( $year, $week, 7 );
+			break;
+		default:
+	}	
+	return array(
+		'date'		=> $date->format('Y-m-d'),
+		'datetime'	=> $date,
+		'week'		=> $week,
+		'year'		=> $year,
+	);
+}
+
+/**
+* csi_ajax_template_ewa_mgmt_control_center_alert_chart
+*
+* Number of alerts per status in period
+*/
+public function csi_ajax_template_ewa_mgmt_control_center_alert_chart(){
+	//variables globales
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_EWA_RATING;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
+	//variables localse
+	$graphs					= array();
+	$dataProvider			= array();
+	$response				= array();
+
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$sql.='
+		ORDER BY
+			T00.planned_date ASC
+	';
+	$alerts = $this->get_sql ( $sql );
+	foreach ( $alerts as $alert ){
+		$graph = array(
+			'balloonText'				=> "[[title]]: [[value]]",
+			'bullet'					=> "round",
+			'bulletSize'				=> 6,
+			'bulletAlpha'				=> 0.4,
+			'bulletBorderAlpha'			=> 0.25,
+			'bulletBorderColor'			=> '#000000',
+			'bulletBorderThickness'		=> 1,
+			'fillAlphas'				=> 0.1,
+			'lineAlpha'					=> 1,
+			'title'						=> $alert['alert_short_name'],
+			'type'						=> "smoothedLine",
+			'fillColors'				=> array('#'.$alert['hex_color'],'rgba(255,255,255,0)'),
+			'lineColor'					=> '#'.$alert['hex_color'],
+			'valueField'				=> $alert['alert_rating'],
+		);
+//		$alert['ewa_planned_date']		= self::findMonday($alert['ewa_planned_date']);
+		$reg = array(
+			'date'					=> $alert['ewa_planned_date'],
+			$alert['alert_rating']	=> 1,
+		);
+		$index = array_search( $alert['ewa_planned_date'], array_column( $dataProvider, 'date' ) );
+		if (FALSE === $index ){
+			array_push($dataProvider, $reg);
+		}else{
+			if ( ! isset ( $dataProvider[$index][$alert['alert_rating']] ) ) {
+				$dataProvider[$index][$alert['alert_rating']] =1;
+//				array_push($dataProvider[$index], array ( $alert['alert_rating'] , 1 ) );
+			}else{
+				$dataProvider[$index][$alert['alert_rating']] +=1;
+			}
+		}
+		$index = array_search( $alert['alert_rating'], array_column( $graphs, 'valueField' ) );
+		if (FALSE === $index ){
+			array_push($graphs, $graph);
+		}
+		
+	}
+	$o='';
+	$valueAxes = array(
+		'axisAlpha'						=> 0,
+		'position'						=> 'left',
+	);
+	$chart_cursor = array(
+		'categoryBalloonDateFormat'		=> "YYYY-MM-DD",
+		'cursorAlpha'					=> 0,
+		'valueLineEnabled'				=> false,
+		'valueLineBalloonEnabled'		=> false,
+		'valueLineAlpha'				=> 0.5,
+		'fullWidth'						=> true,
+	);
+	$category_axis	= array(
+//		'minPeriod'						=> 'DD',
+		'parseDates'					=> true,
+		'minorGridAlpha'				=> 0.1,
+//		'minorGridEnabled'				=> true,
+	);
+	$chart = array(
+		'type'				=> 'serial',
+		'dataProvider'		=> $dataProvider,
+		'graphs'			=> $graphs,
+		'dataDateFormat'	=> 'YYYY-MM-DD',
+		'categoryField'		=> 'date',
+		'categoryAxis'		=> $category_axis,
+//		'valueAxes'			=> $valueAxes,
+		'chartCursor'		=> $chart_cursor,
+	);
+	$response['chart']			= $chart;
+	$response['dataProvider']	= $dataProvider;
+	$response['graphs']			= $graphs;
+	echo json_encode($response);
+	wp_die();
+}
+
+public function csi_ajax_template_ewa_mgmt_control_center_action_gauge(){
+	//variables locales
+	$charts_container	= '';
+	$charts				= array();
+	//justgage
+	$sql = '
+			SELECT
+				T05.alert_rating,
+				T06.hex_color,
+				T06.short_name,
+				T06.id,
+				COUNT(T05.alert_rating) as total,
+				SUM(CASE WHEN T05.action_id IS NOT NULL THEN 1 else 0 end) as action
+			';
+	$sql.= self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST, FALSE );
+	$sql.='
+			GROUP BY
+				T05.alert_rating
+	';
+	$alerts				= $this->get_sql ( $sql );
+	foreach ( $alerts as $alert ){
+		if ($alert['total'] != 0 ){
+			$bands = array(
+				array(
+					'color'					=> '#' . $alert['hex_color'],
+					'endValue'				=> intval ( $alert['action'] / $alert['total'] * 100 ),
+					'startValue'			=> 0,
+				),
+				array(
+					'color'					=> '#CCC',
+					'endValue'				=> 100,
+					'startValue'			=> intval ( $alert['action'] / $alert['total'] * 100 ),
+				),
+			);
+			$arrows = array(
+				array(
+					'value'		=> intval ( $alert['action'] / $alert['total'] * 100 ),
+				),
+			);
+			$axes = array(
+				array(
+					'bands'				=> $bands,			
+					'bottomText'		=> intval ( $alert['action'] / $alert['total'] * 100 ) .'% con acción',
+					'endValue'			=> 100,
+					'axisThickness'		=> 1,
+					'axisAlpha'			=> 0.2,
+					'tickAlpha'			=> 0.2,
+					'endAngle'			=> 90,
+					'startAngle'		=> -90,
+					'bottomTextYOffset'	=> -20,
+				),
+			);
+			$chart = array(
+				'type'		=> 'gauge',
+				'arrows'	=> $arrows,
+				'axes'		=> $axes,
+				'divId'		=> 'csi-template-ewa-mgmt-control-center-action-gauge-' . $alert['id'],
+			);
+			array_push($charts, $chart);
+			$charts_container .= '
+				<div class="col-xs-6 col-sm-6 col-md-3 col-lg-3 animated flipInX">
+					<div id="csi-template-ewa-mgmt-control-center-action-gauge-' . $alert['id'] . '" style="height:150px;"></div>
+					<p class="text-center text-muted"><small>Alertas <strong>' . $alert['short_name'] . '</strong> (' . $alert['action'] . ' de ' . $alert['total'] . ')</small></p>
+				</div>
+			';
+		}
+	}
+	$response['charts']				= $charts;
+	$response['chartsContainer']	= $charts_container;
+	echo json_encode($response);
+	wp_die();	
+}
+
+protected function csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($request = array(), $select = TRUE ){
+	//variables globales
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_EWA_RATING;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
+	//variables locales
+	$sql					= '';
+	$environment			= array(1);
+	//parámetros de función
+	$filter_start_date		= self::csi_date_adjust( $request['filter_start_date'], 'monday' );
+	$filter_end_date		= self::csi_date_adjust( $request['filter_end_date'], 'sunday' );
+	$filter_customer		= isset ( $request['filter_customer'] ) && '' != $request['filter_customer'] ? $request['filter_customer'] : FALSE ;
+	$filter_sid				= isset ( $request['filter_sid'] ) && '' != $request['filter_sid']? $request['filter_sid'] : FALSE ;
+	$filter_alert_group		= isset ( $request['filter_alert_group'] ) && '' != $request['filter_alert_group'] ? $request['filter_alert_group'] : FALSE ;
+	$filter_alert_text		= isset ( $request['filter_alert_text'] ) && '' != $request['filter_alert_text'] ? $request['filter_alert_text'] : FALSE ;
+	$filter_action			= isset ( $request['filter_action'] ) && 0 != $request['filter_action'] ? $request['filter_action'] : FALSE ;
+	$filter_customer_flag	= isset ( $request['filter_customer_flag'] ) && 0 != $request['filter_customer_flag'] ? $request['filter_customer_flag'] : FALSE ;
+	
+	if ( TRUE == $select ){
+		$sql.= '
+			SELECT
+				T03.code as customer_code,
+				T03.short_name as customer_short_name,
+				T04.icon as ewa_icon,
+				T04.css_class as ewa_class,
+				T01.sid as sid,
+				T00.planned_date as ewa_planned_date,
+				T00.ewa_session_no as ewa_session_no,
+				T04.icon as ewa_icon,
+				T04.short_name as ewa_short_name,
+				T04.css_class as ewa_class,
+				T04.hex_color as ewa_hex_color,
+				T04.ewa_rating as ewa_rating,
+				T05.alert_group as alert_group,
+				T05.alert_rating as alert_rating,
+				T05.alert_text as alert_text,
+				T05.action_id as action_id,
+				T06.icon as alert_icon,
+				T06.short_name as alert_short_name,
+				T06.css_class as alert_class,
+				T06.hex_color as hex_color,
+				T07.url as url
+		';
+	}
+	$sql.='
+			FROM
+				' . $this->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T01
+					ON T00.system_no = T01.system_no
+				LEFT JOIN ' . $NOVIS_CSI_SAPCUSTNO->tbl_name . ' as T02
+					ON T01.sapcustno = T02.sapcustno
+				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T03
+					ON T02.customer_id = T03.id
+				LEFT JOIN ' . $NOVIS_CSI_EWA_RATING->tbl_name . ' as T04
+					ON T04.ewa_rating = T00.ewa_rating
+				LEFT JOIN ' . $NOVIS_CSI_EWA_ALERT->tbl_name . ' as T05
+					ON T00.ewa_session_no = T05.ewa_session_no
+				LEFT JOIN ' . $NOVIS_CSI_EWA_ALERT_RATING->tbl_name . ' as T06
+					ON T06.alert_rating = T05.alert_rating
+				LEFT JOIN ' . $NOVIS_CSI_EWA_ALERT_ACTION_PARTY->tbl_name . ' as T07
+					ON T05.action_party_id = T07.id
+			WHERE
+				T00.planned_date BETWEEN "' . $filter_start_date['date'] . '" AND "' . $filter_end_date['date'] . '"
+				AND T01.environment_id IN (' . implode ( ',', $environment ) .')
+	';
+	if ( FALSE != $filter_customer ){
+		$sql.=' AND ( UPPER(T03.code) LIKE "%' . strtoupper($filter_customer) . '%" OR UPPER(T03.short_name) LIKE "%' . strtoupper($filter_customer) . '%" ) ';
+	}
+	if ( FALSE != $filter_sid ){
+		$sql.=' AND UPPER(T01.sid) LIKE "%' . strtoupper($filter_sid) . '%" ';
+	}
+	if ( FALSE != $filter_alert_group ){
+		$sql.=' AND UPPER(T05.alert_group) LIKE "%' . strtoupper($filter_alert_group) . '%" ';
+	}
+	if ( FALSE != $filter_alert_text ){
+		$sql.=' AND UPPER(T05.alert_text) LIKE "%' . strtoupper($filter_alert_text) . '%" ';
+	}
+	switch ($filter_action){
+		case 2: //Con acción
+			$sql.= ' AND T05.action_id IS NOT NULL ';
+			break;
+		case 3: //Sin acción
+			$sql.= ' AND T05.action_id IS NULL ';
+			break;
+		default:
+	}
+	switch ($filter_customer_flag){
+		case 2: //Con acción
+			$sql.= ' AND T05.customer_flag = "1" ';
+			break;
+		case 3: //Sin acción
+			$sql.= ' AND T05.customer_flag != "1" ';
+			break;
+		default:
+	}
+	return $sql;	
+}
+
+public function csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart(){
+	//variables globales
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_EWA_RATING;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
+	//variables localse
+	$graphs					= array();
+	$dataProvider			= array();
+	$response				= array();
+
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$sql.='
+		GROUP BY
+			T00.ewa_session_no
+		ORDER BY
+			T00.planned_date ASC
+	';
+	$ewas = $this->get_sql ( $sql );
+	foreach ( $ewas as $ewa ){
+		$graph = array(
+			'balloonText'				=> "[[title]]: [[value]]",
+			'fillAlphas'				=> 0.8,
+			'lineAlpha'					=> 0,
+			'title'						=> $ewa['ewa_short_name'],
+			'type'						=> "column",
+			'fillColors'				=> '#'.$ewa['ewa_hex_color'],
+			'lineColor'					=> '#'.$ewa['ewa_hex_color'],
+			'valueField'				=> $ewa['ewa_rating'],
+		);
+//		$ewa['ewa_planned_date']		= self::findMonday($ewa['ewa_planned_date']);
+		$reg = array(
+			'date'					=> $ewa['ewa_planned_date'],
+			$ewa['ewa_rating']	=> 1,
+		);
+		$index = array_search( $ewa['ewa_planned_date'], array_column( $dataProvider, 'date' ) );
+		if (FALSE === $index ){
+			array_push($dataProvider, $reg);
+		}else{
+			if ( ! isset ( $dataProvider[$index][$ewa['ewa_rating']] ) ) {
+				$dataProvider[$index][$ewa['ewa_rating']] =1;
+//				array_push($dataProvider[$index], array ( $ewa['ewa_rating'] , 1 ) );
+			}else{
+				$dataProvider[$index][$ewa['ewa_rating']] +=1;
+			}
+		}
+		$index = array_search( $ewa['ewa_rating'], array_column( $graphs, 'valueField' ) );
+		if (FALSE === $index ){
+			array_push($graphs, $graph);
+		}
+		
+	}
+	$o='';
+	$valueAxes = array(
+		array(
+		'stackType'						=> 'regular',
+		),
+	);
+	$chart_cursor = array(
+		'categoryBalloonDateFormat'		=> "YYYY-MM-DD",
+		'cursorAlpha'					=> 0,
+		'valueLineEnabled'				=> false,
+		'valueLineBalloonEnabled'		=> false,
+		'valueLineAlpha'				=> 0.5,
+		'fullWidth'						=> true,
+	);
+	$category_axis	= array(
+		'parseDates'					=> true,
+		'minPeriod'						=> 'DD',
+		'minorGridAlpha'				=> 0.1,
+	);
+	$chart = array(
+		'type'				=> 'serial',
+		'dataProvider'		=> $dataProvider,
+		'graphs'			=> $graphs,
+		'dataDateFormat'	=> 'YYYY-MM-DD',
+		'categoryField'		=> 'date',
+		'categoryAxis'		=> $category_axis,
+		'chartCursor'		=> $chart_cursor,
+		'valueAxes'			=> $valueAxes,
+	);
+	$response['chart']			= $chart;
+	$response['dataProvider']	= $dataProvider;
+	$response['graphs']			= $graphs;
+	echo json_encode($response);
+	wp_die();
+}
+
+
+
+
+
+
 //END OF CLASS	
 }
+
 
 global $NOVIS_CSI_EWA;
 $NOVIS_CSI_EWA =new NOVIS_CSI_EWA_CLASS();
