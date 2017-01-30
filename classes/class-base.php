@@ -282,13 +282,13 @@ protected function update_class_row($action="edit", $postvs ){
 					$insertArray[$key]=intval(get_current_user_id());
 					break;
 				case 'edit_user_email':
-					$insertArray[$key]=$current_user->user_email;
+					$editArray[$key]=$current_user->user_email;
 					break;
 				case 'edit_date':
-					$insertArray[$key]=date("Y-m-d");
+					$editArray[$key]=date("Y-m-d");
 					break;
 				case 'edit_time':
-					$insertArray[$key]=date("H:i:s");
+					$editArray[$key]=date("H:i:s");
 					break;
 				case 'nat_number':
 				case 'select':
@@ -305,7 +305,9 @@ protected function update_class_row($action="edit", $postvs ){
 				case 'display':
 					break;
 				default:
-					$insertArray[$key] = $editArray[$key] = strip_tags(stripslashes( $postvs[$key] ));
+					if ( isset ( $postvs[$key] ) ) {
+						$insertArray[$key] = $editArray[$key] = strip_tags(stripslashes( $postvs[$key] ));
+					}
 			}
 		}
 		$response['insert']=$insertArray;

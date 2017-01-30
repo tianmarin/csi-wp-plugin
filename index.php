@@ -169,7 +169,7 @@ function csi_main_menu() {
 //	require_once("intro.php");
 	echo '</div>';
 }
-add_action( 'wp_enqueue_scripts', 'csi_enqueue_external_scripts', 5);
+add_action( 'wp_enqueue_scripts', 'csi_enqueue_external_scripts', 1);
 
 function csi_enqueue_external_scripts() {
 	wp_register_script(
@@ -197,6 +197,12 @@ function csi_enqueue_external_scripts() {
 		'1.1.2'
 	);
 	wp_register_script(
+		'amcharts-gauge',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/gauge.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
 		'amcharts-responsive',
 		CSI_PLUGIN_URL.'/external/amcharts/amcharts/plugins/responsive/responsive.min.js' ,
 		array('amcharts'),
@@ -207,6 +213,30 @@ function csi_enqueue_external_scripts() {
 		CSI_PLUGIN_URL.'/external/jquery-confirm/dist/jquery-confirm.min.js' ,
 		array('jquery'),
 		'3.0.1'
+	);
+	wp_register_script(
+		'raphael',
+		CSI_PLUGIN_URL.'/external/justgage/raphael-2.1.4.min.js' ,
+		array(),
+		'2.1.4'
+	);
+	wp_register_script(
+		'justgage',
+		CSI_PLUGIN_URL.'/external/justgage/justgage.js' ,
+		array('raphael'),
+		'1.2.2'
+	);
+	wp_register_script(
+		'momentjs',
+		CSI_PLUGIN_URL.'/external/momentjs/moment-with-locales.js' ,
+		array(),
+		'2.17.1'
+	);
+	wp_register_script(
+		'daterangepicker',
+		CSI_PLUGIN_URL.'/external/bootstrap-daterangepicker-master/daterangepicker.js' ,
+		array('bootstrap','momentjs'),
+		'2.1.25'
 	);
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------

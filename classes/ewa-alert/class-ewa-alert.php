@@ -18,7 +18,7 @@ public function __construct(){
 	//como se definió en novis_csi_vars
 	$this->class_name	= 'ewa_alert';
 	//Nombre singular para títulos, mensajes a usuario, etc.
-	$this->name_single	= 'Alertas';
+	$this->name_single	= 'Alerta';
 	//Nombre plural para títulos, mensajes a usuario, etc.
 	$this->name_plural	= 'Alertas';
 	//Identificador de menú padre
@@ -505,6 +505,7 @@ public function __construct(){
 	if( true != $this->network_class ){
 		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
 	}
+	add_action( 'wp_ajax_csi_ajax_template_ewa_control_center_update_alerts',				array( $this , 'csi_ajax_template_ewa_control_center_update_alerts'	));
 	add_shortcode( 'csi_ewa_system_panel',				 		array( $this , 'shortcode_system_panel'		));
 }
 public function shortcode_system_panel($atts){
@@ -640,8 +641,58 @@ public function shortcode_system_panel($atts){
 	}
 	return $output;
 }
+
+
+public function csi_ajax_template_ewa_control_center_update_alerts(){
+	//global variables
+	global $wpdb;
+	//local variables
+	$request = $_REQUEST;
+	$alert_id			= isset ( $request['alert_id'] ) ? intval ( $request['alert_id'] ) : NULL ;
+	$action_party_id	= isset ( $request['action_party_id'] ) ? intval ( $request['action_party_id'] ) : NULL ;
+	$action_id			= isset ( $request['action_id'] ) ? $request['action_id'] : NULL ;
+	$customer_flag		= isset ( $request['customer_flag'] ) ? $request['customer_flag'] : NULL;
+	if (	NULL === $alert_id &&
+			NULL === $action_party_id &&
+			NULL === $action_id &&
+			NULL === $customer_flag ){
+		$respnse['error']=true;
+		$response['message']="Ha ocurrido un error.";
+	}else{
+		$whereArray	= array(
+			'id'				=> $request['alert_id'],			
+		);
+		$current_user = wp_get_current_user();
+		$editArray	= array(
+			'action_party_id'			=> $request['action_party_id'],
+			'action_id'					=> $request['action_id'],
+			'customer_flag'				=> ( 'true' == $request['customer_flag'] ? 1 : 0 ),
+			'last_modified_user_id'		=> intval(get_current_user_id()),
+			'last_modified_user_email'	=> $current_user->user_email,
+			'last_modified_date'		=> date("Y-m-d"),
+			'last_modified_time'		=> date("H:i:s"),
+		);
+		$result = $wpdb->update($this->tbl_name,$editArray,$whereArray);
+		if( $result === false ){
+			$response['status']='error';
+			$response['message']="Hubo un error al editar el ".$this->name_single."; intenta nuevamente. :)";
+		}elseif ( $result == 0){
+			$response['status']='error';
+			$response['message']="Los valores son iguales. ".$this->name_single." no modificado.";
+		}else{
+			$response['status']='ok';
+			$response['message']=$this->name_single." editado exitosamente.";
+		}
+	}
+	echo json_encode($response);
+	wp_die();	
+}
+
+
 //END OF CLASS	
 }
+
+
 
 global $NOVIS_CSI_EWA_ALERT;
 $NOVIS_CSI_EWA_ALERT =new NOVIS_CSI_EWA_ALERT_CLASS();

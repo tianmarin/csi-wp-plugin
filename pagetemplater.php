@@ -66,6 +66,8 @@
 					'templates/template-project-request-status.php'		=> 'CSI Project Request Status',
 					'templates/template-cmp-planner.php'				=> 'CSI PCM Planner',
 					'templates/template-ewa-upload.php'					=> 'CSI EWA Uploader',
+					'templates/template-ewa-control-center.php'			=> 'CSI EWA Control Center',
+					'templates/template-ewa-mgmt-control-center.php'	=> 'CSI EWA Mgmt Control Center',
                 );
 				
         } 
