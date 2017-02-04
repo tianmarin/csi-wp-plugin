@@ -209,6 +209,36 @@ function csi_enqueue_external_scripts() {
 		'1.1.2'
 	);
 	wp_register_script(
+		'amcharts-light',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/light.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'amcharts-chalk',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/chalk.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'amcharts-dark',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/dark.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'amcharts-patterns',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/patterns.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
+		'amcharts-black',
+		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/black.js' ,
+		array('amcharts'),
+		'1.1.2'
+	);
+	wp_register_script(
 		'jquery-confirm',
 		CSI_PLUGIN_URL.'/external/jquery-confirm/dist/jquery-confirm.min.js' ,
 		array('jquery'),
