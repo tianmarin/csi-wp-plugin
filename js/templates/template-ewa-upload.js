@@ -36,7 +36,7 @@ $('#csi-ewa-upload-form').submit(function(event){
 		return this;
 	}
 	window.console.log('Archivo a evaluar: '+file.name+' '+file.type+' '+file.size);
-	var allowedMimeType = ['text/csv','text/plain'];
+	var allowedMimeType = ['text/csv','text/plain','application/vmd.ms-excel'];
 	if( -1 >= $.inArray(file.type, allowedMimeType)){
 		submit_btn.html(submit_btn.data('normal-text'));
 		submit_btn.removeClass('disabled');

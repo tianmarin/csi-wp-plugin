@@ -406,11 +406,15 @@ public function __construct(){
 		add_action( 'wpmu_new_blog',							array( $this , 'db_install'								));
 	}
 	add_action( 'wp_ajax_csi_ajax_upload_ewa_file',				array( $this , 'csi_ajax_upload_ewa_file'				));
-	add_action( 'wp_ajax_csi_ajax_template_ewa_control_center_fetch_alerts',		array( $this , 'csi_ajax_template_ewa_control_center_fetch_alerts'	));
-	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_fetch_alerts',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_fetch_alerts'	));
-	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_alert_chart',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_alert_chart'	));
-	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_action_gauge',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_action_gauge'	));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_control_center_fetch_alerts',		array( $this , 'csi_ajax_template_ewa_control_center_fetch_alerts'				));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_fetch_alerts',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_fetch_alerts'			));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_alert_chart',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_alert_chart'			));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_action_gauge',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_action_gauge'			));
 	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart'	));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_alert_pies',			array( $this , 'csi_ajax_template_ewa_mgmt_control_center_alert_pies'		));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_customer_ewas',		array( $this , 'csi_ajax_template_ewa_mgmt_control_center_customer_ewas'	));
+	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_customer_alerts',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_customer_alerts'	));
+	
 	
 	
 	
@@ -433,10 +437,14 @@ public function get_ewa_session_no_col(){
 }
 
 public function csi_ajax_upload_ewa_file(){
+	//global variables
 	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	//local variables
 	$response 					= array();	
 	$curr_system_no				= array();
 	$error_flag					= FALSE;
+	$error_msg					= '';
 	$EWA_insert_array			= array();
 	$EWA_insert_array_temp		= array();
 	$ALERT_insert_array			= array();
@@ -454,10 +462,9 @@ public function csi_ajax_upload_ewa_file(){
 
 	set_time_limit(600);	
 	
-	global $NOVIS_CSI_CUSTOMER_SYSTEM;
 	$curr_system_no				=$NOVIS_CSI_CUSTOMER_SYSTEM->get_system_no_col();
 	$curr_sessno				=$this->get_ewa_session_no_col();
-	$allowed_mime_types 		= array('text/csv','text/plain', '');
+	$allowed_mime_types 		= array('text/csv','text/plain', '', 'application/vmd.ms-excel');
 	
 	if ( FALSE == array_search( mime_content_type($_FILES['file']['tmp_name']) , $allowed_mime_types ) ){
 		$error_flag=TRUE;
@@ -471,210 +478,218 @@ public function csi_ajax_upload_ewa_file(){
 		//SAPCUSTNO|SOLID|SOLDESC|DBID|INSTNO|SYSTNO|SESSNO|PLANNED_DATE|EWA_STATUS|EWA_RATING|ALERT_GROUP|ALERT_NUMBER|ALERT_RATING|TEXT		
 		//Get CSV Headers
 		$line = fgetcsv($csv_file,$line_lenght);
-		foreach ( $line as $key => $field){ $line[$key] = htmlspecialchars ( trim ( $field ) ); }
-		if ( FALSE === ($csv_h_sapcustno	= array_search("SAPCUSTNO",		$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_solid		= array_search("SOLID"	,		$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_soldesc		= array_search("SOLDESC",		$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_dbid			= array_search("DBID",			$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_instno		= array_search("INSTNO",		$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_systno		= array_search("SYSTNO",		$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_sessno		= array_search("SESSNO",		$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_planned_date	= array_search("PLANNED_DATE",	$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_ewa_status	= array_search("EWA_STATUS",	$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_ewa_rating	= array_search("EWA_RATING",	$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_alert_group	= array_search("ALERT_GROUP",	$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_alert_number	= array_search("ALERT_NUMBER",	$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_alert_rating	= array_search("ALERT_RATING",	$line)) ) { $error_flag = TRUE;}
-		if ( FALSE === ($csv_h_alert_text	= array_search("TEXT",			$line)) ) { $error_flag = TRUE;}
-		
-		while  ( FALSE !== ($line = fgetcsv($csv_file,$line_lenght) ) ){
-			foreach ( $line as $key => $field){
-					$line[$key] = htmlspecialchars ( trim ( $field ) ) ;
-			}
-			//Check if system is registered
-			if ( FALSE === array_search($line[$csv_h_systno], $curr_system_no)){
-				if ( FALSE === array_search( $line[$csv_h_systno], array_column( $non_reg_systno, 'systno' ) ) ) {
-					if ( 0 < intval ( $line[$csv_h_systno] ) ) {
-						$reg=array(
-							'sapcustno'		=> $line[$csv_h_sapcustno],
-							'solid'			=> $line[$csv_h_solid],
-							'soldesc'		=> $line[$csv_h_soldesc],
-							'dbid'			=> $line[$csv_h_dbid],
-							'systno'		=> $line[$csv_h_systno],
-						);
-						array_push($non_reg_systno, $reg);
-					}
-				}
-			}else{
-				//Validar si el ewa ya está registrado en el sistema
-				//Si el ewa ya fue ingresado al sistema, se guarda como EWAs Omitidos
-				//Check if ewa_session_no is registered
-				if ( FALSE === array_search( $line[$csv_h_sessno], $curr_sessno ) ) {
-					//Check if is not already registered to save
-					if ( FALSE === array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) ) ) {
-						$EWA = array(
-							'system_no'			=> $line[$csv_h_systno],
-							'ewa_session_no'	=> $line[$csv_h_sessno],
-							'planned_date'		=> $line[$csv_h_planned_date],
-							'ewa_status'		=> $line[$csv_h_ewa_status],
-							'ewa_rating'		=> $line[$csv_h_ewa_rating],
-							'creation_filename'	=> $csv_filename,
-						);
-						$count_ewas = array_push( $EWA_insert_array, $EWA );
-					}else{
-						// silence is golden
-					}
-				}else{
-					$skipped_ewa_reports++;
-			// 		Este ewa ya existe en el sistema.... por lo tanto se omite
-				}
-			}
+		foreach ( $line as $key => $field){
+			$line[$key] = htmlspecialchars ( trim ( $field ) );
 		}
-		//prepare the variables for insert
-
-		if ( FALSE != rewind($csv_file) ){
-			$line = fgetcsv($csv_file,$line_lenght);
+		if ( FALSE === ($csv_h_sapcustno	= array_search("SAPCUSTNO",		$line)) ) {
+			$error_msg.='<p class="text-warning">No se ha identificado la columna SAPCUSTNO en el archivo. Esta alerta no es cr&iacute;tica.</p>';
+			}
+		if ( FALSE === ($csv_h_solid		= array_search("SOLID"	,		$line)) ) {
+			$error_msg.='<p class="text-warning">No se ha identificado la columna SOLID en el archivo. Esta alerta no es cr&iacute;tica.</p>';
+			}
+		if ( FALSE === ($csv_h_soldesc		= array_search("SOLDESC",		$line)) ) {
+			$error_msg.='<p class="text-warning">No se ha identificado la columna SOLDESC en el archivo. Esta alerta no es cr&iacute;tica.</p>';
+			}
+		if ( FALSE === ($csv_h_dbid			= array_search("DBID",			$line)) ) {
+			$error_msg.='<p class="text-danger">No se ha identificado la columna DBID en el archivo. Esta alerta no es cr&iacute;tica.</p>';
+			}
+		if ( FALSE === ($csv_h_instno		= array_search("INSTNO",		$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna INSTNO en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_systno		= array_search("SYSTNO",		$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna SYSTNO en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_sessno		= array_search("SESSNO",		$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna SESSNO en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_planned_date	= array_search("PLANNED_DATE",	$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna PLANNED_DATE en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_ewa_status	= array_search("EWA_STATUS",	$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna EWA_STATUS en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_ewa_rating	= array_search("EWA_RATING",	$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna EWA_RATING en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_alert_group	= array_search("ALERT_GROUP",	$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna ALERT_GROUP en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_alert_number	= array_search("ALERT_NUMBER",	$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna ALERT_NUMBER en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_alert_rating	= array_search("ALERT_RATING",	$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna ALERT_RATING en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+		if ( FALSE === ($csv_h_alert_text	= array_search("TEXT",			$line)) ) {
+			$error_flag = TRUE;
+			$error_msg.='<p class="text-danger">No se ha identificado la columna TEXT en el archivo. Este comportamiento puede provocar errores en la carga.</p>';
+			}
+//		if ( FALSE == $error_flag ) {
 			while  ( FALSE !== ($line = fgetcsv($csv_file,$line_lenght) ) ){
 				foreach ( $line as $key => $field){
-					$line[$key] = htmlspecialchars ( trim ( $field ) ) ;
+						$line[$key] = htmlspecialchars ( trim ( $field ) ) ;
 				}
-				//Check if ewa_session_no is going to be inserted
-				if ( FALSE === array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) ) ) {
-					//silence is golden
+				//Check if system is registered
+				if ( FALSE === array_search($line[$csv_h_systno], $curr_system_no)){
+					if ( FALSE === array_search( $line[$csv_h_systno], array_column( $non_reg_systno, 'systno' ) ) ) {
+						if ( 0 < intval ( $line[$csv_h_systno] ) ) {
+							$reg=array(
+								'sapcustno'		=> $line[$csv_h_sapcustno],
+								'solid'			=> $line[$csv_h_solid],
+								'soldesc'		=> $line[$csv_h_soldesc],
+								'dbid'			=> $line[$csv_h_dbid],
+								'systno'		=> $line[$csv_h_systno],
+							);
+							array_push($non_reg_systno, $reg);
+						}
+					}
 				}else{
-					if ( 'NULL' == $line[$csv_h_alert_number] || '' == $line[$csv_h_alert_rating] ){
-						if ( 'G' == $line[$csv_h_ewa_rating] ){
-							continue;
+					//Validar si el ewa ya está registrado en el sistema
+					//Si el ewa ya fue ingresado al sistema, se guarda como EWAs Omitidos
+					//Check if ewa_session_no is registered
+					if ( FALSE === array_search( $line[$csv_h_sessno], $curr_sessno ) ) {
+						//Check if is not already registered to save
+						if ( FALSE === array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) ) ) {
+							$EWA = array(
+								'system_no'			=> $line[$csv_h_systno],
+								'ewa_session_no'	=> $line[$csv_h_sessno],
+								'planned_date'		=> $line[$csv_h_planned_date],
+								'ewa_status'		=> $line[$csv_h_ewa_status],
+								'ewa_rating'		=> $line[$csv_h_ewa_rating],
+								'creation_filename'	=> $csv_filename,
+							);
+							$count_ewas = array_push( $EWA_insert_array, $EWA );
+						}else{
+							// silence is golden
 						}
-						$line[$csv_h_alert_group]	= 'NOVIS_NO_ALERT';
-						$line[$csv_h_alert_rating]	= 'Z';
-						$line[$csv_h_alert_number]	= '1';
-						$line[$csv_h_alert_text]	= 'No alert has been generated [novis]';
-					}
-					$ALERT = array(
-						'system_no'				=> $line[$csv_h_systno],
-						'ewa_session_no'		=> $line[$csv_h_sessno],
-						'alert_group'			=> $line[$csv_h_alert_group],
-						'alert_rating'			=> $line[$csv_h_alert_rating],
-						'alert_no'				=> $line[$csv_h_alert_number],
-						'alert_text'			=> $line[$csv_h_alert_text],
-						'creation_filename'		=> $csv_filename,
-					);
-					$ALERT_exists = FALSE;
-					foreach ( $ALERT_insert_array as $ALERT_insert_array_serial ){
-						if ( serialize ( $ALERT_insert_array_serial )  == serialize ( $ALERT ) ) {
-							$ALERT_exists = TRUE;
-						}
-					}
-					if ( FALSE == $ALERT_exists ){
-						$count_alerts = array_push( $ALERT_insert_array, $ALERT );
 					}else{
-						$prevent_dup_alert++;						
+						$skipped_ewa_reports++;
+				// 		Este ewa ya existe en el sistema.... por lo tanto se omite
 					}
-/*
-						//Check for no duplicates (duplicates are not inserted )
-					
-					if (FALSE !== array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) )
-						&& FALSE !== array_search( $line[$csv_h_systno], array_column( $EWA_insert_array, 'system_no' ) ) 
-						) {
-							if ( 'NULL' == $line[$csv_h_alert_number] || '' == $line[$csv_h_alert_rating]  ){
-								$ALERT = array(
-									'system_no'				=> $line[$csv_h_systno],
-									'ewa_session_no'		=> $line[$csv_h_sessno],
-									'alert_group'			=> 'NOVIS_NO_ALERT',
-									'alert_rating'			=> 'Z',
-									'alert_no'				=> '1',
-									'alert_text'			=> 'No alert has been generated [novis]',
-									'creation_filename'		=> $csv_filename,
-								);
-							}else{
-								$ALERT = array(
-									'system_no'				=> $line[$csv_h_systno],
-									'ewa_session_no'		=> $line[$csv_h_sessno],
-									'alert_group'			=> $line[$csv_h_alert_group],
-									'alert_rating'			=> $line[$csv_h_alert_rating],
-									'alert_no'				=> $line[$csv_h_alert_number],
-									'alert_text'			=> $line[$csv_h_alert_text],
-									'creation_filename'		=> $csv_filename,
-								);
-								
+				}
+			}
+			//prepare the variables for insert
+		
+			if ( FALSE != rewind($csv_file) ){
+				$line = fgetcsv($csv_file,$line_lenght);
+				while  ( FALSE !== ($line = fgetcsv($csv_file,$line_lenght) ) ){
+					foreach ( $line as $key => $field){
+						$line[$key] = htmlspecialchars ( trim ( $field ) ) ;
+					}
+					//Check if ewa_session_no is going to be inserted
+					if ( FALSE === array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) ) ) {
+						//silence is golden
+					}else{
+						if ( 'NULL' == $line[$csv_h_alert_number] || '' == $line[$csv_h_alert_rating] ){
+							if ( 'G' == $line[$csv_h_ewa_rating] ){
+								continue;
 							}
+							$line[$csv_h_alert_group]	= 'NOVIS_NO_ALERT';
+							$line[$csv_h_alert_rating]	= 'Z';
+							$line[$csv_h_alert_number]	= '1';
+							$line[$csv_h_alert_text]	= 'No alert has been generated [novis]';
+						}
+						$ALERT = array(
+//							'system_no'				=> $line[$csv_h_systno],
+							'ewa_session_no'		=> $line[$csv_h_sessno],
+							'alert_group'			=> $line[$csv_h_alert_group],
+							'alert_rating'			=> $line[$csv_h_alert_rating],
+							'alert_no'				=> $line[$csv_h_alert_number],
+							'alert_text'			=> $line[$csv_h_alert_text],
+							'creation_filename'		=> $csv_filename,
+						);
+						$ALERT_exists = FALSE;
+						foreach ( $ALERT_insert_array as $ALERT_insert_array_serial ){
+							if ( serialize ( $ALERT_insert_array_serial )  == serialize ( $ALERT ) ) {
+								$ALERT_exists = TRUE;
+							}
+						}
+						if ( FALSE == $ALERT_exists ){
 							$count_alerts = array_push( $ALERT_insert_array, $ALERT );
-//					}else{
-//						$prevent_dup_alert++;
+						}else{
+							$prevent_dup_alert++;						
+						}
 					}
-*/
 				}
-			}
-//			$prevent_dup_alert = count ( $ALERT_insert_array);
-			$ALERT_insert_array = array_unique($ALERT_insert_array, SORT_REGULAR);
-//			$prevent_dup_alert = count ( $ALERT_insert_array) - $prevent_dup_alert;
-			if (0 < count ( $EWA_insert_array ) ) {
-				$sql = "INSERT INTO ".$this->tbl_name. " (system_no, ewa_session_no, planned_date, ewa_status, ewa_rating, creation_filename, creation_user_id, creation_user_email, creation_date, creation_time)
-						VALUES ";
-				foreach ( $EWA_insert_array as $key => $row ){
-					$EWA_insert_array_temp[$key]=' ("'.$row['system_no'].'","'.$row['ewa_session_no'].'","'.$row['planned_date'].'","'.$row['ewa_status'].'","'.$row['ewa_rating'].'","'.$row['creation_filename'].'","'.intval(get_current_user_id()).'","'.$current_user->user_email.'","'.date("Y-m-d").'","'.date("H:i:s").'") ';
-				}
-				$sql.=implode(",", $EWA_insert_array_temp);
-				$ewa_inserts = $wpdb->query($sql);
-				
-				if ( FALSE === $ewa_inserts ){
-					$error_flag=TRUE;
-					$db_error='<p>Ha ocurrido un error al insertar los registros de EWA en la Base de Datos.</p><p><code>'.$sql.'</code></p>';
-					$db_error.='<br/>Solicita apoyo al administrador del sistema.';
-				}else{
-					global $NOVIS_CSI_EWA_ALERT;
-					$sql = "INSERT INTO ".$NOVIS_CSI_EWA_ALERT->tbl_name. " (ewa_session_no, alert_group, alert_rating, alert_no, alert_text, creation_filename, creation_user_id, creation_user_email, creation_date, creation_time)
+				$ALERT_insert_array = array_unique($ALERT_insert_array, SORT_REGULAR);
+				if (0 < count ( $EWA_insert_array ) ) {
+					$sql = "INSERT INTO ".$this->tbl_name. " (system_no, ewa_session_no, planned_date, ewa_status, ewa_rating, creation_filename, creation_user_id, creation_user_email, creation_date, creation_time)
 							VALUES ";
-					foreach ( $ALERT_insert_array as $key => $row ){
-						$ALERT_insert_array_temp[$key] =' ("'.$row['ewa_session_no'].'","'.$row['alert_group'].'","'.$row['alert_rating'].'","'.$row['alert_no'].'","'.$row['alert_text'].'","'.$row['creation_filename'].'","'.intval(get_current_user_id()).'","'.$current_user->user_email.'","'.date("Y-m-d").'","'.date("H:i:s").'") ';
+					foreach ( $EWA_insert_array as $key => $row ){
+						$EWA_insert_array_temp[$key]=' ("'.$row['system_no'].'","'.$row['ewa_session_no'].'","'.$row['planned_date'].'","'.$row['ewa_status'].'","'.$row['ewa_rating'].'","'.$row['creation_filename'].'","'.intval(get_current_user_id()).'","'.$current_user->user_email.'","'.date("Y-m-d").'","'.date("H:i:s").'") ';
 					}
-					$sql.=implode(",", $ALERT_insert_array_temp);
-					// Normally @@global.max_allowed_packet = 1048576
-					$check_max_allowed_packet= $wpdb->get_row('SELECT @@global.max_allowed_packet as max_allowed_packet','ARRAY_A')['max_allowed_packet'];
-					$query_size = strlen( $sql ) + 1024 * 4;
-					self::write_log( $query_size );
-					self::write_log($check_max_allowed_packet);
-					if ( $query_size >= $check_max_allowed_packet ){
-						self::write_log("WARNING! To prevent DB Error for getting packet bigger than 'max_allowed_packet' bytes, global.max_allowed_packet will be temporarily modified. QUERY_SIZE : ".$query_size." max_allowed_packet : ".$check_max_allowed_packet);
-						//In order to this fix to work, you need to grant the database user the "SUPER" privilege
-						/*
-						REVOKE ALL PRIVILEGES ON *.* FROM 'user'@'localhost';
-						REVOKE GRANT OPTION ON *.* FROM 'user'@'localhost';
-						GRANT SUPER ON *.* TO 'user'@'localhost' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
-						*/
-						$query_size = ( $query_size < 33554432 )? 33554432 : 67108864 ;
-						self::write_log( $wpdb->query( 'SET @@global.max_allowed_packet = ' . $query_size ) );
-						self::write_log ( "WARNING! max_allowed_packet changed to ".$query_size );
-						$alert_inserts = $wpdb->query($sql);
-						self::write_log( $wpdb->query( 'SET @@global.max_allowed_packet = ' . $check_max_allowed_packet ) );
-						self::write_log ( "WARNING! max_allowed_packet changed back to " . $check_max_allowed_packet );
-					}else{
-						$alert_inserts = $wpdb->query($sql);
-					}
-					if ( FALSE === $alert_inserts ){
+					$sql.=implode(",", $EWA_insert_array_temp);
+					$ewa_inserts = $wpdb->query($sql);
+					
+					if ( FALSE === $ewa_inserts ){
 						$error_flag=TRUE;
-						$db_error='<p>Ha ocurrido un error al insertr los registros de Alertas de EWA en la Base de Datos.</p><p><code>'.$sql.'</code></p>';
+						$db_error='<p>Ha ocurrido un error al insertar los registros de EWA en la Base de Datos.</p><p><code>'.$sql.'</code></p>';
 						$db_error.='<br/>Solicita apoyo al administrador del sistema.';
+					}else{
+						global $NOVIS_CSI_EWA_ALERT;
+						$sql = "INSERT INTO ".$NOVIS_CSI_EWA_ALERT->tbl_name. " (ewa_session_no, alert_group, alert_rating, alert_no, alert_text, creation_filename, creation_user_id, creation_user_email, creation_date, creation_time)
+								VALUES ";
+						foreach ( $ALERT_insert_array as $key => $row ){
+							$ALERT_insert_array_temp[$key] =' ("'.$row['ewa_session_no'].'","'.$row['alert_group'].'","'.$row['alert_rating'].'","'.$row['alert_no'].'","'.$row['alert_text'].'","'.$row['creation_filename'].'","'.intval(get_current_user_id()).'","'.$current_user->user_email.'","'.date("Y-m-d").'","'.date("H:i:s").'") ';
+						}
+						$sql.=implode(",", $ALERT_insert_array_temp);
+						// Normally @@global.max_allowed_packet = 1048576
+						$check_max_allowed_packet= $wpdb->get_row('SELECT @@global.max_allowed_packet as max_allowed_packet','ARRAY_A')['max_allowed_packet'];
+						$query_size = strlen( $sql ) + 1024 * 4;
+						self::write_log( $query_size );
+						self::write_log($check_max_allowed_packet);
+						if ( $query_size >= $check_max_allowed_packet ){
+							self::write_log("WARNING! To prevent DB Error for getting packet bigger than 'max_allowed_packet' bytes, global.max_allowed_packet will be temporarily modified. QUERY_SIZE : ".$query_size." max_allowed_packet : ".$check_max_allowed_packet);
+							//In order to this fix to work, you need to grant the database user the "SUPER" privilege
+							/*
+							REVOKE ALL PRIVILEGES ON *.* FROM 'user'@'localhost';
+							REVOKE GRANT OPTION ON *.* FROM 'user'@'localhost';
+							GRANT SUPER ON *.* TO 'user'@'localhost' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
+							*/
+							$query_size = ( $query_size < 33554432 )? 33554432 : 67108864 ;
+							self::write_log( $wpdb->query( 'SET @@global.max_allowed_packet = ' . $query_size ) );
+							self::write_log ( "WARNING! max_allowed_packet changed to ".$query_size );
+							$alert_inserts = $wpdb->query($sql);
+							self::write_log( $wpdb->query( 'SET @@global.max_allowed_packet = ' . $check_max_allowed_packet ) );
+							self::write_log ( "WARNING! max_allowed_packet changed back to " . $check_max_allowed_packet );
+						}else{
+							$alert_inserts = $wpdb->query($sql);
+						}
+						if ( FALSE === $alert_inserts ){
+							$error_flag=TRUE;
+							$db_error='<p>Ha ocurrido un error al insertr los registros de Alertas de EWA en la Base de Datos.</p><p><code>'.$sql.'</code></p>';
+							$db_error.='<br/>Solicita apoyo al administrador del sistema.';
+						}
 					}
+					
+				}else{
+					$no_new_data ='<div class="alert alert-danger" role="alert">';
+					$no_new_data.='Ninguno de los registros en este archivo son v&aacute;lidos.';
+					$no_new_data.='<br/>Puede que estés cargando el archivo por segunda vez o los sistemas no est&eacute;n registrados.';
+					$no_new_data.='</div>';
+					
 				}
-				
 			}else{
-				$no_new_data ='<div class="alert alert-danger" role="alert">';
-				$no_new_data.='Ninguno de los registros en este archivo son v&aacute;lidos.';
-				$no_new_data.='<br/>Puede que estés cargando el archivo por segunda vez o los sistemas no est&eacute;n registrados.';
-				$no_new_data.='</div>';
+				$error_flag=TRUE;
 				
+				$rewind_error ='<div class="alert alert-danger" role="alert">';
+				$rewind_error.='Ha ocurrido un error al procesar el archivo (<code>Rewind CSV File <small>'.$_FILES['file']['tmp_name'].'</small></code>).';
+				$rewind_error.='<br/>Solicita apoyo al administrador del sistema.';
+				$rewind_error.='</div>';
 			}
-		}else{
-			$error_flag=TRUE;
+//		}else{
 			
-			$rewind_error ='<div class="alert alert-danger" role="alert">';
-			$rewind_error.='Ha ocurrido un error al procesar el archivo (<code>Rewind CSV File <small>'.$_FILES['file']['tmp_name'].'</small></code>).';
-			$rewind_error.='<br/>Solicita apoyo al administrador del sistema.';
-			$rewind_error.='</div>';
-		}
-		// ----- 
+//		}
+			// ----- 
 	}
 	if ( 0 < $prevent_dup_alert ){
 		$prevent_dup_output ='<div class="alert alert-info" role="alert">';
@@ -682,6 +697,13 @@ public function csi_ajax_upload_ewa_file(){
 		$prevent_dup_output .='</div>';
 	}else{
 		$prevent_dup_output ='';
+	}
+	if ( '' != $error_msg){
+		$error_msg = '
+				<div class="alert alert-info" role="alert">
+					<p class="text-info"><i class="fa fa-info"></i>Se han detectado algunos mensajes durante el proceso de carga.</p>
+					' . $error_msg . '
+				</div>';
 	}
 	if ( FALSE === $error_flag ){
 		if ( 0 < count( $non_reg_systno ) ) {
@@ -703,10 +725,10 @@ public function csi_ajax_upload_ewa_file(){
 	}
 	$response['status']='ok';
 	$response['message']	 ='';
+	$response['message']	 =$error_msg;
 	$response['message']	.=$prevent_dup_output;
-	$response['message']	.='Se han insertado ' . count ( $EWA_insert_array ) . ' EWAs.';
-	$response['message']	.='Se han insertado ' . count ( $ALERT_insert_array ) . ' alertas.';
-	$response['message']	.='Se han omitido ' . $skipped_ewa_reports . ' repores EWAs que ya estaban registrados en el sistema';
+	$response['message']	.='<p class="lead">Se han insertado ' . count ( $EWA_insert_array ) . ' EWAs.</p>';
+	$response['message']	.='<p class="lead">Se han insertado ' . count ( $ALERT_insert_array ) . ' alertas.</p>';
 	$response['message']	.=$mime_type_error;
 	$response['message']	.=$db_error;
 	$response['message']	.=$rewind_error;
@@ -1817,14 +1839,14 @@ public function csi_shortcode_ewa_week_summary ( $atts ) {
 	foreach ( $customers as $customer ){
 		$customer = $wpdb->get_row('SELECT * FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' WHERE id = "' . $customer . '"','ARRAY_A');
 		$systems_no = self::get_systems_no_by_cust_id( $customer['id'] );
-		if ( 0 < count ( $systems_no ) ){
+		if ( 0 < count ( $systems_no )){
 			$ewas = self::get_ewa_session_no_by_system_list( $systems_no, $monday, $sunday);			
 		}else{
 			$ewas = NULL;
 		}
 		$o.='<tr class="active">';
 		$o.='<th>' . $customer['short_name'] . ' <small class="text-muted">' . $customer['code'] . '</small></th>';
-		$o.='<td class="text-center">' . count ( $systems_no ) . ' Sistemas</td>';
+		$o.='<td class="text-center">' . ( $systems_no != false ? count ( $systems_no ) : 0 ) . ' Sistemas</td>';
 		$o.='<td class="text-center">';
 		$o.=count ( $ewas['ewas_id'] ) . ' EWAs ';
 		if ( count ( $systems_no ) > count ( $ewas['ewas_id'] ) ) {
@@ -1899,10 +1921,12 @@ public function csi_shortcode_ewa_week_summary ( $atts ) {
 			foreach ( $systems_no as $system_no ){
 				$ewas = self::get_ewa_session_no_by_system_list( array ( $system_no ) , $monday, $sunday);				
 				$system = $wpdb->get_row ( 'SELECT * FROM ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' WHERE system_no = "' . $system_no . '"', 'ARRAY_A' );
+				$url = 'http://intranetmx.noviscorp.com/novis/co/ewa-management/ewa-control-center/?customer_code=' . $customer['code'] . '&sid=' . $system['sid'] . '&date=this-week';
 				$o.='<tr>';
-				$o.='<td>' . $system['sid'] . ' <small class="text-muted">' . $system['system_no'] . '</small></td>';
+				$o.='<td><a href="' . $url . '">' . $system['sid'] . ' <small class="text-muted">' . $system['system_no'] . '</small></a></td>';
 				$o.='<td>';
 				if ( NULL != $ewas && 0 < count ( $ewas['ewas'] ) ){
+					$o.='<a href="' . $url . '">';
 					foreach ( $ewas['ewas'] as $ewa){
 						$o.='<span
 								class="label label-' . $ewa['css_class'] . '"
@@ -1910,6 +1934,7 @@ public function csi_shortcode_ewa_week_summary ( $atts ) {
 								data-placement="top"
 								title="' . $ewa['ewa_session_no'] . ' (' . $ewa['short_name'] . ')">1</span>';
 					}
+					$o.='</a>';
 				}else{
 					$o.='&nbsp;';
 				}
@@ -1917,6 +1942,7 @@ public function csi_shortcode_ewa_week_summary ( $atts ) {
 				$o.='<td>';
 					$alerts = self::get_alerts_by_ewa_session_no_list ( $ewas['ewas_id'] );
 					if ( NULL != $alerts && 0 < count ( $alerts) ) {
+						$o.='<a href="' . $url . '">';
 						$alerts_rating = array();
 						foreach ( $alerts as $alert ){
 							$alert = array(
@@ -1940,6 +1966,7 @@ public function csi_shortcode_ewa_week_summary ( $atts ) {
 									data-placement="top"
 									title="' . $alert_rating['short_name'] . ': ' . $alert_rating['total'] . '">' . $alert_rating['total'] . '</span>';
 						}
+						$o.='</a>';
 					}else{
 						if ( 0 < count ( $ewas['ewas_id'] ) ) {
 							$o.='<span class="text-success"><i class="fa fa-check fa-fw"></i></span>';
@@ -2353,6 +2380,8 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 	global $NOVIS_CSI_EWA_ALERT_RATING;
 	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
 	//variables locales
+	$page_size				= 20;
+	$pagination				= '';
 	$request				= $_REQUEST;
 	$tbody					= '';
 	$graphs_container		='';
@@ -2361,13 +2390,20 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 	$now					= NULL;
 	$alerts					= array();
 	
-	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$page_no				= isset ( $request['page_no'] ) ? intval ( $request['page_no'] ) : 0 ;
+	$count_sql = " SELECT COUNT(DISTINCT T00.ewa_session_no) as total ";
+	$count_sql.= self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql ( $request, FALSE );
+	$total_ewas = $wpdb->get_var ( $count_sql );
+	$page_count = ceil ( $total_ewas / $page_size );
+//	self::write_log ( $count_sql );
+	
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($request);
 	$ewa_sql = $sql . '
 			GROUP BY
 				T00.ewa_session_no
 			ORDER BY
 				T00.planned_date, T03.code, T01.sid,T00.ewa_session_no
-			LIMIT 20
+			LIMIT ' . $page_no * $page_size . ',' . $page_size . '
 	';
 	$ewas = $this->get_sql ( $ewa_sql );
 	foreach ( $ewas as $ewa ){
@@ -2377,7 +2413,9 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 				<td class="text-center">' . $ewa['ewa_planned_date'] . '</td>
 				<td class="' . $ewa['ewa_class'] . '">
 					<a href="#alerts_ewa_' . $ewa['ewa_session_no'] . '" data-toggle="collapse" title="Alarmas del EWA: ' . $ewa['ewa_session_no'] . '">
-						<i class="fa fa-' . $ewa['ewa_icon'] . ' text-' . $ewa['ewa_class'] . '"></i> ' . $ewa['sid'] . '
+						<span class="text-' . $ewa['ewa_class'] . '" >
+							<i class="fa fa-' . $ewa['ewa_icon'] . ' text-' . $ewa['ewa_class'] . '"></i> ' . $ewa['sid'] . '
+						</span>
 					</a>
 				</td>
 				<td>&nbsp;</td>
@@ -2385,7 +2423,15 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 				<td>&nbsp;</td>
 			</tr>
 		';
-		if ( ( $_REQUEST['filter_alert_group'] != '' ) || ( $_REQUEST['filter_alert_text'] != '' ) ) {
+		if (
+				( $_REQUEST['filter_alert_group'] != '' )
+			||	( $_REQUEST['filter_alert_text'] != '' )
+//			||	( isset ( $_GET['sid'] ) && $_GET['sid'] != '' ) 
+//			||	( isset ( $_REQUEST['filter_ewa_rating'] ) && $_REQUEST['filter_ewa_rating'] != 0 ) 
+//			||	( isset ( $_REQUEST['filter_alert_rating'] ) && $_REQUEST['filter_alert_rating'] != 0 ) 
+//			||	( isset ( $_REQUEST['filter_action'] ) && $_REQUEST['filter_action'] != 0 ) 
+//			||	( isset ( $_REQUEST['filter_customer_flag']) && $_REQUEST['filter_customer_flag'] != 0 ) 
+			) {
 			$display_alerts = 'in';
 		}else{
 			$display_alerts = '';
@@ -2425,22 +2471,44 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 	$start_date		= self::csi_date_adjust( $request['filter_start_date'], 'monday' );
 	$end_date		= self::csi_date_adjust( $request['filter_end_date'], 'sunday' );
 	$response['panelTitleDates'] = '
-									<div class="form-group">
-										<div class="input-group">
-											<div class="input-group-addon text-center">
-												Semana ' . $start_date['week'] . ' <small class="text-muted">' . $start_date['year'] . '</small><br>
-												<small class="text-muted">' . $start_date['datetime']->format('M, j') . '</small>
-											</div>
-											<div class="input-group-addon"><i class="fa fa-arrow-right"></i></div>
-											<div class="input-group-addon text-center">
-												Semana ' . $end_date['week'] . ' <small class="text-muted">' . $end_date['year'] . '</small><br>
-												<small class="text-muted">' . $end_date['datetime']->format('M, j') . '</small>
-											</div>
-										</div>
-									</div>
-									';
+	<div class="form-group">
+		<div class="input-group">
+			<div class="input-group-addon text-center">
+				Semana ' . $start_date['week'] . ' <small class="text-muted">' . $start_date['year'] . '</small><br>
+				<small class="text-muted">' . $start_date['datetime']->format('M, j') . '</small>
+			</div>
+			<div class="input-group-addon"><i class="fa fa-arrow-right"></i></div>
+			<div class="input-group-addon text-center">
+				Semana ' . $end_date['week'] . ' <small class="text-muted">' . $end_date['year'] . '</small><br>
+				<small class="text-muted">' . $end_date['datetime']->format('M, j') . '</small>
+			</div>
+		</div>
+	</div>
+	';
+	$response['panelTitleDates'].='<div class=""><small>Con los filtros seleccionados se han obtenido ' . $total_ewas . ' Reportes EWAs.</small></div>';
 	$response['tbody'] = $tbody;
 
+	$pagination.= '
+	<nav aria-label="Page navigation">
+		<ul class="pagination">
+			<li class="' . ( ( $page_no <= 0 ) ? 'disabled' : '' ). '">
+				<a href="#" aria-label="Previous" data-page-no="' . strval ( ( $page_no <= 0 ) ? 0 : intval ( $page_no - 1 ) ) . '">
+					<span aria-hidden="true">&laquo;</span>
+				</a>
+			</li>
+	';
+		for ( $i = 0 ; $i < $page_count ; $i++ ){
+			$pagination.= ' <li class="' . ( $i == $page_no ? 'active' : '' ). '"><a href="#" data-page-no="' . $i . '">' . strval ( intval ($i + 1 ) ) . '</a></li>';
+		}
+	$pagination.='
+				<li class="' . ( ( $page_no + 1 >= $page_count) ? 'disabled' : '' ) . '">
+					<a href="#" aria-label="Next" data-page-no="' . ( strval ( $page_no + 1 >= $page_count ) ? $page_count-1 : intval ( $page_no + 1 ) ). '">
+					<span aria-hidden="true">&raquo;</span>
+				</a>
+			</li>
+		</ul>
+	</nav>';
+	$response['pagination'] = $pagination;
 	echo json_encode($response);
 	wp_die();
 }
@@ -2484,6 +2552,7 @@ protected function csi_date_adjust ( $date = NULL, $day_flag = 0 ){
 * Number of alerts per status in period
 */
 public function csi_ajax_template_ewa_mgmt_control_center_alert_chart(){
+	ini_set('memory_limit', '-1');
 	//variables globales
 	global $wpdb;
 	global $NOVIS_CSI_CUSTOMER;
@@ -2504,49 +2573,51 @@ public function csi_ajax_template_ewa_mgmt_control_center_alert_chart(){
 			T00.planned_date ASC
 	';
 	$alerts = $this->get_sql ( $sql );
+	self::write_log ( $sql );
 	foreach ( $alerts as $alert ){
-		$graph = array(
-			'balloonText'				=> "[[title]]: [[value]]",
-			'bullet'					=> "round",
-			'bulletSize'				=> 6,
-			'bulletAlpha'				=> 0.4,
-			'bulletBorderAlpha'			=> 0.25,
-			'bulletBorderColor'			=> '#000000',
-			'bulletBorderThickness'		=> 1,
-			'fillAlphas'				=> 0.1,
-			'lineAlpha'					=> 1,
-			'title'						=> $alert['alert_short_name'],
-			'type'						=> "smoothedLine",
-			'fillColors'				=> array('#'.$alert['hex_color'],'rgba(255,255,255,0)'),
-			'lineColor'					=> '#'.$alert['hex_color'],
-			'valueField'				=> $alert['alert_rating'],
-		);
-//		$alert['ewa_planned_date']		= self::findMonday($alert['ewa_planned_date']);
-		$reg = array(
-			'date'					=> $alert['ewa_planned_date'],
-			$alert['alert_rating']	=> 1,
-		);
+		$alert['ewa_planned_date']		= self::findMonday($alert['ewa_planned_date'])->format('Y-m-d');
 		$index = array_search( $alert['ewa_planned_date'], array_column( $dataProvider, 'date' ) );
 		if (FALSE === $index ){
+			$reg = array(
+				'date'					=> $alert['ewa_planned_date'],
+				$alert['alert_rating']	=> 1,
+			);
 			array_push($dataProvider, $reg);
 		}else{
 			if ( ! isset ( $dataProvider[$index][$alert['alert_rating']] ) ) {
 				$dataProvider[$index][$alert['alert_rating']] =1;
-//				array_push($dataProvider[$index], array ( $alert['alert_rating'] , 1 ) );
 			}else{
 				$dataProvider[$index][$alert['alert_rating']] +=1;
 			}
 		}
 		$index = array_search( $alert['alert_rating'], array_column( $graphs, 'valueField' ) );
 		if (FALSE === $index ){
+			$graph = array(
+				'balloonText'				=> "[[title]]: [[value]]",
+				'bullet'					=> "round",
+				'bulletSize'				=> 6,
+				'bulletAlpha'				=> 0.4,
+				'bulletBorderAlpha'			=> 0.25,
+				'bulletBorderColor'			=> '#000000',
+				'bulletBorderThickness'		=> 1,
+				'fillAlphas'				=> 0.1,
+				'lineAlpha'					=> 1,
+				'title'						=> $alert['alert_short_name'],
+				'type'						=> "smoothedLine",
+				'fillColors'				=> array('#'.$alert['hex_color'],'rgba(255,255,255,0)'),
+				'lineColor'					=> '#'.$alert['hex_color'],
+				'valueField'				=> $alert['alert_rating'],
+			);
 			array_push($graphs, $graph);
 		}
 		
 	}
 	$o='';
 	$valueAxes = array(
-		'axisAlpha'						=> 0,
-		'position'						=> 'left',
+		array(
+//		'stackType'						=> 'regular',
+		'integersOnly'					=> true,
+		),
 	);
 	$chart_cursor = array(
 		'categoryBalloonDateFormat'		=> "YYYY-MM-DD",
@@ -2557,20 +2628,36 @@ public function csi_ajax_template_ewa_mgmt_control_center_alert_chart(){
 		'fullWidth'						=> true,
 	);
 	$category_axis	= array(
-//		'minPeriod'						=> 'DD',
+		'minPeriod'						=> 'WW',
 		'parseDates'					=> true,
 		'minorGridAlpha'				=> 0.1,
 //		'minorGridEnabled'				=> true,
 	);
+	$legend = array(
+		'enabled'						=> true,
+		'align'							=> 'center',
+//		'useMarkerColorForValues'		=> true,
+//		'useMarkerColorForLabels'		=> true,
+		'periodValueText'				=> '[[value.sum]]',
+//		'divId'							=> 'csi-template-ewa-mgmt-control-center-infographics-alert-legend',
+	);
+	$title = array(
+		array(
+				'text'							=> 'Distribución de alertas',
+				'bold'							=> false
+		),
+	);
 	$chart = array(
-		'type'				=> 'serial',
-		'dataProvider'		=> $dataProvider,
-		'graphs'			=> $graphs,
-		'dataDateFormat'	=> 'YYYY-MM-DD',
-		'categoryField'		=> 'date',
-		'categoryAxis'		=> $category_axis,
-//		'valueAxes'			=> $valueAxes,
-		'chartCursor'		=> $chart_cursor,
+		'type'							=> 'serial',
+		'dataProvider'					=> $dataProvider,
+		'graphs'						=> $graphs,
+		'dataDateFormat'				=> 'YYYY-MM-DD',
+		'categoryField'					=> 'date',
+		'categoryAxis'					=> $category_axis,
+		'valueAxes'						=> $valueAxes,
+		'chartCursor'					=> $chart_cursor,
+		'legend'						=> $legend,
+//		'titles'						=> $title,
 	);
 	$response['chart']			= $chart;
 	$response['dataProvider']	= $dataProvider;
@@ -2597,6 +2684,8 @@ public function csi_ajax_template_ewa_mgmt_control_center_action_gauge(){
 	$sql.='
 			GROUP BY
 				T05.alert_rating
+			ORDER BY
+				T00.planned_date
 	';
 	$alerts				= $this->get_sql ( $sql );
 	foreach ( $alerts as $alert ){
@@ -2668,12 +2757,14 @@ protected function csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($
 	//parámetros de función
 	$filter_start_date		= self::csi_date_adjust( $request['filter_start_date'], 'monday' );
 	$filter_end_date		= self::csi_date_adjust( $request['filter_end_date'], 'sunday' );
-	$filter_customer		= isset ( $request['filter_customer'] ) && '' != $request['filter_customer'] ? $request['filter_customer'] : FALSE ;
-	$filter_sid				= isset ( $request['filter_sid'] ) && '' != $request['filter_sid']? $request['filter_sid'] : FALSE ;
-	$filter_alert_group		= isset ( $request['filter_alert_group'] ) && '' != $request['filter_alert_group'] ? $request['filter_alert_group'] : FALSE ;
-	$filter_alert_text		= isset ( $request['filter_alert_text'] ) && '' != $request['filter_alert_text'] ? $request['filter_alert_text'] : FALSE ;
-	$filter_action			= isset ( $request['filter_action'] ) && 0 != $request['filter_action'] ? $request['filter_action'] : FALSE ;
-	$filter_customer_flag	= isset ( $request['filter_customer_flag'] ) && 0 != $request['filter_customer_flag'] ? $request['filter_customer_flag'] : FALSE ;
+	$filter_customer		= isset ( $request['filter_customer'] )			&& '' != $request['filter_customer']		? $request['filter_customer']		: FALSE ;
+	$filter_sid				= isset ( $request['filter_sid'] )				&& '' != $request['filter_sid']				? $request['filter_sid']			: FALSE ;
+	$filter_ewa_rating		= isset ( $request['filter_ewa_rating'] )		&&  0 != $request['filter_ewa_rating']		? $request['filter_ewa_rating']		: FALSE ;
+	$filter_alert_group		= isset ( $request['filter_alert_group'] )		&& '' != $request['filter_alert_group']		? $request['filter_alert_group']	: FALSE ;
+	$filter_alert_text		= isset ( $request['filter_alert_text'] )		&& '' != $request['filter_alert_text']		? $request['filter_alert_text']		: FALSE ;
+	$filter_alert_rating	= isset ( $request['filter_alert_rating'] )		&&  0 != $request['filter_alert_rating']	? $request['filter_alert_rating']	: FALSE ;
+	$filter_action			= isset ( $request['filter_action'] )			&&  0 != $request['filter_action']			? $request['filter_action']			: FALSE ;
+	$filter_customer_flag	= isset ( $request['filter_customer_flag'] )	&&  0 != $request['filter_customer_flag']	? $request['filter_customer_flag']	: FALSE ;
 	
 	if ( TRUE == $select ){
 		$sql.= '
@@ -2728,11 +2819,17 @@ protected function csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($
 	if ( FALSE != $filter_sid ){
 		$sql.=' AND UPPER(T01.sid) LIKE "%' . strtoupper($filter_sid) . '%" ';
 	}
+	if ( FALSE != $filter_ewa_rating ){
+		$sql.=' AND T04.id = "' . intval($filter_ewa_rating) . '" ';
+	}
 	if ( FALSE != $filter_alert_group ){
 		$sql.=' AND UPPER(T05.alert_group) LIKE "%' . strtoupper($filter_alert_group) . '%" ';
 	}
 	if ( FALSE != $filter_alert_text ){
 		$sql.=' AND UPPER(T05.alert_text) LIKE "%' . strtoupper($filter_alert_text) . '%" ';
+	}
+	if ( FALSE != $filter_alert_rating ){
+		$sql.=' AND T06.id = "' . intval($filter_alert_rating) . '" ';
 	}
 	switch ($filter_action){
 		case 2: //Con acción
@@ -2779,6 +2876,7 @@ public function csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart(){
 	';
 	$ewas = $this->get_sql ( $sql );
 	foreach ( $ewas as $ewa ){
+		$ewa['ewa_planned_date']		= self::findMonday($ewa['ewa_planned_date'])->format('Y-m-d');
 		$graph = array(
 			'balloonText'				=> "[[title]]: [[value]]",
 			'fillAlphas'				=> 0.8,
@@ -2815,6 +2913,7 @@ public function csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart(){
 	$valueAxes = array(
 		array(
 		'stackType'						=> 'regular',
+		'integersOnly'					=> true,
 		),
 	);
 	$chart_cursor = array(
@@ -2827,7 +2926,7 @@ public function csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart(){
 	);
 	$category_axis	= array(
 		'parseDates'					=> true,
-		'minPeriod'						=> 'DD',
+		'minPeriod'						=> 'WW',
 		'minorGridAlpha'				=> 0.1,
 	);
 	$chart = array(
@@ -2847,9 +2946,287 @@ public function csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart(){
 	wp_die();
 }
 
+public function csi_ajax_template_ewa_mgmt_control_center_alert_pies(){
+	//variables locales
+	$charts_container	= '';
+	$charts				= array();
+	$dataProvider		= array();
+	//justgage
+	$sql = '
+			SELECT
+				COUNT(DISTINCT T05.id) as count_alert_group,
+				T05.alert_group as alert_group
+			';
+	$sql.= self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST, FALSE );
+	$sql.='
+			GROUP BY
+				T05.alert_group
+			ORDER BY
+				T05.alert_group
+	';
+	$alert_groups		= $this->get_sql ( $sql );
+	foreach ( $alert_groups as $alert_group ){
+		$reg = array(
+			'alert_group'			=> $alert_group['alert_group'],
+			'count_alert_group'		=> $alert_group['count_alert_group'],
+			
+		);
+		array_push($dataProvider, $reg);
+	}
+	$balloon = array(
+		'fixedPosition'	=> true,
+	);
+	$chart_alert_group = array(
+		'type'			=> 'pie',
+		'dataProvider'	=> $dataProvider,
+		'valueField'	=> 'count_alert_group',
+		'titleField'	=> 'alert_group',
+		'balloon'		=> $balloon,
+		'divId'			=> 'csi-template-ewa-mgmt-control-center-alert-pies-alert-group',
+		'labelText'		=> '',
+	);
+	array_push($charts, $chart_alert_group);
+	$sql = '
+			SELECT
+				COUNT(DISTINCT T05.id) as count_alert_text,
+				T05.alert_text as alert_text
+			';
+	$sql.= self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST, FALSE );
+	$sql.='
+			GROUP BY
+				T05.alert_text
+			ORDER BY
+				T05.alert_text
+	';
+	$alert_texts		= $this->get_sql ( $sql );
+	foreach ( $alert_texts as $alert_text ){
+		$reg = array(
+			'alert_text'			=> $alert_text['alert_text'],
+			'count_alert_text'		=> $alert_text['count_alert_text'],
+			
+		);
+		array_push($dataProvider, $reg);
+	}
+	$chart_alert_text = array(
+		'type'			=> 'pie',
+		'theme'			=> 'light',
+		'dataProvider'	=> $dataProvider,
+		'valueField'	=> 'count_alert_text',
+		'titleField'	=> 'alert_text',
+		'balloon'		=> $balloon,
+		'divId'			=> 'csi-template-ewa-mgmt-control-center-alert-pies-alert-text',
+		'labelText'		=> '',
+	);
+	array_push($charts, $chart_alert_text);
+	$charts_container	= '
+				<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 animated flipInX">
+					<div id="csi-template-ewa-mgmt-control-center-alert-pies-alert-group" style="height:250px;"></div>
+					<p class="text-center text-muted">Grupo de Alerta</p>
+				</div>
+				<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 animated flipInX">
+					<div id="csi-template-ewa-mgmt-control-center-alert-pies-alert-text" style="height:250px;"></div>
+					<p class="text-center text-muted">Texto de Alerta</p>
+				</div>
+	';
+	$response['charts']				= $charts;
+	$response['chartsContainer']	= $charts_container;
+	echo json_encode($response);
+	wp_die();	
+}
 
+public function csi_ajax_template_ewa_mgmt_control_center_customer_ewas(){
+	ini_set('memory_limit', '-1');
+	//variables globales
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_EWA_RATING;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
+	//variables localse
+	$graphs					= array();
+	$dataProvider			= array();
+	$response				= array();
 
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$sql.='
+		GROUP BY
+			T00.ewa_session_no
+		ORDER BY
+			T03.code ASC
+	';
+	$ewas = $this->get_sql ( $sql );
+	foreach ( $ewas as $ewa ){
+		$ewa['ewa_planned_date']		= self::findMonday($ewa['ewa_planned_date'])->format('Y-m-d');
+		$graph = array(
+			'balloonText'				=> "[[title]]: [[value]]",
+			'fillAlphas'				=> 0.8,
+			'lineAlpha'					=> 0,
+			'title'						=> $ewa['ewa_short_name'],
+			'type'						=> "column",
+			'fillColors'				=> '#'.$ewa['ewa_hex_color'],
+			'lineColor'					=> '#'.$ewa['ewa_hex_color'],
+			'valueField'				=> $ewa['ewa_rating'],
+		);
+//		$ewa['ewa_planned_date']		= self::findMonday($ewa['ewa_planned_date']);
+		$reg = array(
+			'code'					=> $ewa['customer_code'],
+			$ewa['ewa_rating']	=> 1,
+		);
+		$index = array_search( $ewa['customer_code'], array_column( $dataProvider, 'code' ) );
+		if (FALSE === $index ){
+			array_push($dataProvider, $reg);
+		}else{
+			if ( ! isset ( $dataProvider[$index][$ewa['ewa_rating']] ) ) {
+				$dataProvider[$index][$ewa['ewa_rating']] =1;
+//				array_push($dataProvider[$index], array ( $ewa['ewa_rating'] , 1 ) );
+			}else{
+				$dataProvider[$index][$ewa['ewa_rating']] +=1;
+			}
+		}
+		$index = array_search( $ewa['ewa_rating'], array_column( $graphs, 'valueField' ) );
+		if (FALSE === $index ){
+			array_push($graphs, $graph);
+		}
+		
+	}
+	$o='';
+	$balloon = array(
+		
+	);
+	$valueAxes = array(
+		array(
+		'stackType'						=> 'regular',
+		'integersOnly'					=> true,
+		),
+	);
+	$chart_cursor = array(
+//		'categoryBalloonDateFormat'		=> "YYYY-MM-DD",
+		'cursorAlpha'					=> 0,
+		'valueLineEnabled'				=> false,
+		'valueLineBalloonEnabled'		=> false,
+		'valueLineAlpha'				=> 0.5,
+		'fullWidth'						=> true,
+	);
+	$category_axis	= array(
+//		'parseDates'					=> true,
+//		'minPeriod'						=> 'WW',
+		'minorGridAlpha'				=> 0.1,
+	);
+	$chart = array(
+		'type'				=> 'serial',
+		'dataProvider'		=> $dataProvider,
+		'graphs'			=> $graphs,
+//		'dataDateFormat'	=> 'YYYY-MM-DD',
+		'categoryField'		=> 'code',
+		'categoryAxis'		=> $category_axis,
+		'chartCursor'		=> $chart_cursor,
+		'valueAxes'			=> $valueAxes,
+		'balloon'			=> $balloon,
+	);
+	$response['chart']			= $chart;
+	$response['dataProvider']	= $dataProvider;
+	$response['graphs']			= $graphs;
+	echo json_encode($response);
+	wp_die();
+}
 
+public function csi_ajax_template_ewa_mgmt_control_center_customer_alerts(){
+	ini_set('memory_limit', '-1');
+	//variables globales
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_SAPCUSTNO;
+	global $NOVIS_CSI_EWA_RATING;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
+	//variables localse
+	$graphs					= array();
+	$dataProvider			= array();
+	$response				= array();
+
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$sql.='
+		GROUP BY
+			T05.id
+		ORDER BY
+			T03.code ASC
+	';
+	$alerts = $this->get_sql ( $sql );
+	foreach ( $alerts as $alert ){
+//		$alert['alert_planned_date']		= self::findMonday($alert['alert_planned_date'])->format('Y-m-d');
+		$graph = array(
+			'balloonText'				=> "[[title]]: [[value]]",
+			'fillAlphas'				=> 0.8,
+			'lineAlpha'					=> 0,
+			'title'						=> $alert['alert_short_name'],
+			'type'						=> "column",
+			'fillColors'				=> '#'.$alert['hex_color'],
+			'lineColor'					=> '#'.$alert['hex_color'],
+			'valueField'				=> $alert['alert_rating'],
+		);
+//		$alert['alert_planned_date']		= self::findMonday($alert['alert_planned_date']);
+		$reg = array(
+			'code'					=> $alert['customer_code'],
+			$alert['alert_rating']	=> 1,
+		);
+		$index = array_search( $alert['customer_code'], array_column( $dataProvider, 'code' ) );
+		if (FALSE === $index ){
+			array_push($dataProvider, $reg);
+		}else{
+			if ( ! isset ( $dataProvider[$index][$alert['alert_rating']] ) ) {
+				$dataProvider[$index][$alert['alert_rating']] =1;
+//				array_push($dataProvider[$index], array ( $alert['alert_rating'] , 1 ) );
+			}else{
+				$dataProvider[$index][$alert['alert_rating']] +=1;
+			}
+		}
+		$index = array_search( $alert['alert_rating'], array_column( $graphs, 'valueField' ) );
+		if (FALSE === $index ){
+			array_push($graphs, $graph);
+		}
+		
+	}
+	$o='';
+	$valueAxes = array(
+		array(
+		'stackType'						=> 'regular',
+		'integersOnly'					=> true,
+		),
+	);
+	$chart_cursor = array(
+//		'categoryBalloonDateFormat'		=> "YYYY-MM-DD",
+		'cursorAlpha'					=> 0,
+		'valueLineEnabled'				=> false,
+		'valueLineBalloonEnabled'		=> false,
+		'valueLineAlpha'				=> 0.5,
+		'fullWidth'						=> true,
+	);
+	$category_axis	= array(
+//		'parseDates'					=> true,
+//		'minPeriod'						=> 'WW',
+		'minorGridAlpha'				=> 0.1,
+	);
+	$chart = array(
+		'type'				=> 'serial',
+		'dataProvider'		=> $dataProvider,
+		'graphs'			=> $graphs,
+//		'dataDateFormat'	=> 'YYYY-MM-DD',
+		'categoryField'		=> 'code',
+		'categoryAxis'		=> $category_axis,
+		'chartCursor'		=> $chart_cursor,
+		'valueAxes'			=> $valueAxes,
+	);
+	$response['chart']			= $chart;
+	$response['dataProvider']	= $dataProvider;
+	$response['graphs']			= $graphs;
+	echo json_encode($response);
+	wp_die();
+}
 
 
 //END OF CLASS	

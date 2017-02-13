@@ -34,10 +34,10 @@
 		echo '<meta name="apple-mobile-web-app-status-bar-style" content="black">';
 	}
 ?>
-	<meta name="apple-mobile-web-app-title" content="Project Request">
+	<meta name="apple-mobile-web-app-title" content="EWA Mgmt">
 	<?php add_action( 'wp_head', 'address_mobile_address_bar' ); ?>
-	<link rel="shortcut icon" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/project-request/project-request-icon@180x180.png');?>">
-	<link rel="apple-touch-icon" sizes="180x180" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/project-request/project-request-icon@180x180.png');?>">
+	<link rel="shortcut icon" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/ewa-mgmt/Icon-App-512x512@1x.png');?>">
+	<link rel="apple-touch-icon" sizes="512x512" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/ewa-mgmt/Icon-App-512x512@1x.png');?>">
 	<link rel="apple-touch-startup-image" href="<?php _e(CSI_PLUGIN_URL.'/img/splash/project-request-splash.png');?>">
 	<title><?php
 		/*
@@ -57,7 +57,7 @@
 	wp_register_script(
 	'csi-template-ewa-mgmt-control-center',
 	CSI_PLUGIN_URL.'/js/templates/min/template-ewa-mgmt-control-center-min.js' ,
-	array('jquery', 'jquery-ui-datepicker', 'justgage', 'bootstrap', 'jquery-confirm', 'amcharts','amcharts-serial', 'amcharts-gauge', 'amcharts-responsive','amcharts-pie', 'daterangepicker'),
+	array('jquery', 'jquery-ui-datepicker', 'justgage', 'bootstrap', 'jquery-confirm', 'amcharts','amcharts-serial', 'amcharts-gauge', 'amcharts-responsive','amcharts-pie', 'daterangepicker', 'amcharts-light', 'amcharts-chalk', 'amcharts-patterns', 'amcharts-dark', 'amcharts-black'),
 	'0.0.1'
 	);
 	wp_enqueue_script('csi-template-ewa-mgmt-control-center');
@@ -154,7 +154,7 @@
 			</p>
 				<div id="csi-template-ewa-mgmt-control-center-infographics-alert" class="collapse" style="position:relative;">
 					<div id="csi-template-ewa-mgmt-control-center-infographics-alert-chart" style="height:250px;"></div>
-					
+					<div id="csi-template-ewa-mgmt-control-center-infographics-alert-legend"></div>
 				</div>
 			<p>
 				<a class="text-muted" type="button" data-toggle="collapse" href="#csi-template-ewa-mgmt-control-center-infographics-ewa-status">
@@ -163,20 +163,40 @@
 			</p>
 			<div id="csi-template-ewa-mgmt-control-center-infographics-ewa-status" class="collapse" style="position:relative;">
 				<div id="csi-template-ewa-mgmt-control-center-infographics-ewa-status-chart" style="height:250px;"></div>
-				
 			</div>
+
 			<p>
-				<a href="#" class="text-muted" type="button" data-toggle="collapse" href="#csi-template-ewa-mgmt-control-center-infographics-action-bar">
-					<i class="fa fa-caret-right"></i> Acciones Barras
+				<a class="text-muted" type="button" data-toggle="collapse" href="#csi-template-ewa-mgmt-control-center-infographics-customer-ewas">
+					<i class="fa fa-caret-right"></i> EWAs por cliente
 				</a>
 			</p>
-			<div id="csi-template-ewa-mgmt-control-center-infographics-ewa-action-bar"></div>
+			<div id="csi-template-ewa-mgmt-control-center-infographics-customer-ewas" class="collapse" style="position:relative;">
+				<div id="csi-template-ewa-mgmt-control-center-infographics-customer-ewas-chart" style="height:250px;"></div>
+			</div>
+			<p>
+				<a class="text-muted" type="button" data-toggle="collapse" href="#csi-template-ewa-mgmt-control-center-infographics-customer-alerts">
+					<i class="fa fa-caret-right"></i> Alertas por cliente
+				</a>
+			</p>
+			<div id="csi-template-ewa-mgmt-control-center-infographics-customer-alerts" class="collapse" style="position:relative;">
+				<div id="csi-template-ewa-mgmt-control-center-infographics-customer-alerts-chart" style="height:250px;"></div>
+			</div>
+			
+			<p>
+				<a class="text-muted" type="button" data-toggle="collapse" href="#csi-template-ewa-mgmt-control-center-infographics-alert-pies">
+					<i class="fa fa-caret-right"></i> Informaci&oacute;n detallada de Alertas
+				</a>
+			</p>
+			<div id="csi-template-ewa-mgmt-control-center-infographics-alert-pies" class="collapse" style="position:relative;">
+				<div id="csi-template-ewa-mgmt-control-center-infographics-alert-pies-chart" style="height:300px;"></div>
+			</div>
+
 			<p>
 				<a class="text-muted" type="button" data-toggle="collapse" href="#csi-template-ewa-mgmt-control-center-infographics-action-percentage">
 					<i class="fa fa-caret-right"></i> Acciones Porcentaje
 				</a>
 			</p>
-			<div id="csi-template-ewa-mgmt-control-center-infographics-action-percentage" style="position:relative;" class="collapse">
+			<div id="csi-template-ewa-mgmt-control-center-infographics-action-percentage" style="position:relative;" class="collapse <?php _e ( isset ( $_GET['sid'] ) ? 'in' : '' ) ?>">
 				<div id="csi-template-ewa-mgmt-control-center-infographics-action-percentage-chart" style="height:250px;"></div>
 			</div>
 		</div><!-- #csi-template-ewa-mgmt-control-center-infographics -->
@@ -275,7 +295,7 @@
 						<tr class="collapse" id="table-filter">
 							<th class="col-xs-2">
 								<form class="table-filter-form">
-									<input type="text" class="form-control input-sm" placeholder="Cliente" id="filter-customer"/>
+									<input type="text" class="form-control input-sm" placeholder="Cliente" id="filter-customer" value="<?php _e ( isset ( $_GET['customer_code'] ) ? $_GET['customer_code'] : '' ) ?>"/>
 								</form>
 							</th>
 							<th class="col-xs-2">
@@ -289,7 +309,17 @@
 							</th>
 							<th class="col-xs-1">
 								<form class="table-filter-form">
-									<input type="text" class="form-control input-sm" placeholder="SID" id="filter-sid"/>
+									<select id="filter-ewa-rating" class="form-control input-sm">
+										<option value="0" selected>Todos</option>
+									<?php
+										global $NOVIS_CSI_EWA_RATING;
+										$ewa_ratings = $NOVIS_CSI_EWA_RATING->get_all();
+										foreach ( $ewa_ratings as $ewa_rating ){
+											echo '<option value="' . $ewa_rating['id'] . '">' . $ewa_rating['short_name'] . '</option>';
+										}
+									?>
+									</select>
+									<input type="text" class="form-control input-sm" placeholder="SID" id="filter-sid" value="<?php _e ( isset ( $_GET['sid'] ) ? $_GET['sid'] : '' ) ?>"/>
 								</form>
 							</th>
 							<th class="col-xs-2">
@@ -299,6 +329,16 @@
 							</th>
 							<th class="col-xs-3">
 								<form class="table-filter-form">
+									<select id="filter-alert-rating" class="form-control input-sm">
+										<option value="0" selected>Todos</option>
+									<?php
+										global $NOVIS_CSI_EWA_ALERT_RATING;
+										$alert_ratings = $NOVIS_CSI_EWA_ALERT_RATING->get_all();
+										foreach ( $alert_ratings as $alert_rating ){
+											echo '<option value="' . $alert_rating['id'] . '">' . $alert_rating['short_name'] . '</option>';
+										}
+									?>
+									</select>
 									<input type="text" class="form-control input-sm" placeholder="Alerta" id="filter-alert-text"/>
 								</form>
 							</th>
@@ -331,6 +371,9 @@
 					<tbody class="">
 					</tbody>
 				</table><!-- table#csi-ewa-template-control-center-alerts -->
+				<div style="position:relative;">
+					<div id="csi-template-ewa-mgmt-pagination" class="text-center"></div>
+				</div>
 			</div><!-- .panel .panel-default -->
 		</div>
 	</div><!-- #csi-template-ewa-control-center -->
