@@ -102,17 +102,14 @@
 
 		add_filter('show_admin_bar', '__return_false');							//remove the admin_bar fucntion
 		remove_action('wp_head', '_admin_bar_bump_cb');							//remove the admin_bar style (html: padding)
-		
+
 	wp_head();
 	?>
 	<link rel="profile" href="http://gmpg.org/xfn/11" />
 	<link rel="pingback" href="<?php bloginfo( 'pingback_url' ); ?>" />
 </head>
 <body>
-	
-	
-	
-		<!-- ------------------------------------------------------------------------------------------------------------- -->
+
 		<div id="csi-ewas-upload" class="container" style="min-height:100vh;">
 			<div class="row">
 				<div class="page-header">
@@ -121,7 +118,7 @@
 			</div>
 			<div class="row">
 				<div class="col-xs-12 col-sm-4 col-sm-push-8 well">
-					
+
 					<?php
 						$now = new DateTime();
 						$week = $now->format("W");
@@ -163,6 +160,6 @@
 
 			</div><!-- #csi-ewas-analysis-02 -->
 
-	
+
 </body>
 </html>

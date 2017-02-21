@@ -70,7 +70,7 @@
 	);
 	wp_register_style(
 		"csi_client_style",
-		CSI_PLUGIN_URL.'/css/client.css' ,
+		CSI_PLUGIN_URL.'/dist/css/style.css' ,
 		null,
 		"1.0",
 		"all"
@@ -85,7 +85,7 @@
 		"all"
 	);
 	wp_enqueue_style("bootstrap" );
-
+/*
 	wp_register_style(
 		"jquery-ui-bootstrap",
 		CSI_PLUGIN_URL.'/external/jquery-ui-bootstrap/css/custom-theme/jquery-ui-1.10.0.custom.css' ,
@@ -94,7 +94,8 @@
 		"all"
 	);
 	wp_enqueue_style("jquery-ui-bootstrap" );
-
+*/
+/*
 	wp_register_style(
 		"daterangepicker",
 		CSI_PLUGIN_URL.'/external/bootstrap-daterangepicker-master/daterangepicker.css' ,
@@ -103,7 +104,8 @@
 		"all"
 	);
 	wp_enqueue_style("daterangepicker" );
-
+*/
+/*
 	wp_register_style(
 		"jquery-confirm",
 		CSI_PLUGIN_URL.'/external/jquery-confirm/dist/jquery-confirm.min.css' ,
@@ -112,7 +114,7 @@
 		"all"
 	);
 	wp_enqueue_style("jquery-confirm" );
-
+*/
 
 	remove_action( 'wp_head', 'feed_links_extra', 3 );                      // Category Feeds
 	remove_action( 'wp_head', 'feed_links', 2 );                            // Post and Comment Feeds
@@ -126,7 +128,6 @@
 	remove_action( 'wp_print_styles', 'print_emoji_styles' );
 	add_filter('show_admin_bar', '__return_false');							//remove the admin_bar fucntion
 	remove_action('wp_head', '_admin_bar_bump_cb');							//remove the admin_bar style (html: padding)
-		
 	wp_head();
 	?>
 	<link rel="profile" href="http://gmpg.org/xfn/11" />
@@ -181,7 +182,7 @@
 			<div id="csi-template-ewa-mgmt-control-center-infographics-customer-alerts" class="collapse" style="position:relative;">
 				<div id="csi-template-ewa-mgmt-control-center-infographics-customer-alerts-chart" style="height:250px;"></div>
 			</div>
-			
+
 			<p>
 				<a class="text-muted" type="button" data-toggle="collapse" href="#csi-template-ewa-mgmt-control-center-infographics-alert-pies">
 					<i class="fa fa-caret-right"></i> Informaci&oacute;n detallada de Alertas

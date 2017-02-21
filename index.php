@@ -50,6 +50,9 @@ $novis_csi_vars = array(
 	'project_urgency'			."_network_class"	=> TRUE,
 	'project_status'			."_network_class"	=> TRUE,
 	'project'					."_network_class"	=> TRUE,
+	##Correction or Maintenance Plan
+	'cmp'						."_network_class"	=> TRUE,
+	'cmp_task_type'				."_network_class"	=> TRUE,
 
 
 //MENU SLUGS
@@ -70,6 +73,9 @@ $novis_csi_vars = array(
 	'project_status'			."_menu_slug"	=> 'csi_'		.'project_status',
 	'project_urgency'			."_menu_slug"	=> 'csi_'		.'project_urgency',
 	'project'					."_menu_slug"	=> 'csi_'		.'project',
+	##Correction or Maintenance Plan
+	'cmp'						."_menu_slug"	=> 'csi_'		.'cmp',
+	'cmp_task_type'				."_menu_slug"	=> 'csi_'		.'cmp_task_type',
 
 //MENU CAPABILITIES
 	'main'						."_menu_cap"		=> 'manage_options',
@@ -89,6 +95,9 @@ $novis_csi_vars = array(
 	'project_status'			."_menu_cap"		=> 'manage_options',
 	'project_urgency'			."_menu_cap"		=> 'manage_options',
 	'project'					."_menu_cap"		=> 'manage_options',
+	##Correction or Maintenance Plan
+	'cmp'						."_menu_cap"		=> 'manage_options',
+	'cmp_task_type'				."_menu_cap"		=> 'manage_options',
 );
 
 
@@ -119,7 +128,7 @@ function csi_register_admin_style(){
 */
 if( !is_multisite() ) {
 	add_action( 'admin_menu', 'csi_register_network_menu' );
-	
+
 }else{
 	add_action( 'network_admin_menu', 'csi_register_network_menu' );
 }
@@ -172,79 +181,89 @@ function csi_main_menu() {
 add_action( 'wp_enqueue_scripts', 'csi_enqueue_external_scripts', 1);
 
 function csi_enqueue_external_scripts() {
+/*
 	wp_register_script(
 		'bootstrap',
-		CSI_PLUGIN_URL.'/external/bootstrap/dist/js/bootstrap.min.js' ,
+		CSI_PLUGIN_URL.'/bower_components/bootstrap/dist/js/bootstrap.js' ,
 		array('jquery'),
 		'3.3.7'
 	);
+*/
+/*
 	wp_register_script(
 		'amcharts',
 		CSI_PLUGIN_URL.'/external/amcharts/amcharts/amcharts.js' ,
 		array('jquery'),
 		'1.1.2'
 	);
+*/
+	wp_register_script(
+		'amcharts',
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/amcharts.js' ,
+		array('jquery'),
+		'1.1.2'
+	);
 	wp_register_script(
 		'amcharts-serial',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/serial.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/serial.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts-pie',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/pie.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/pie.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts-gauge',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/gauge.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/gauge.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts-responsive',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/plugins/responsive/responsive.min.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/plugins/responsive/responsive.min.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts-light',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/light.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/themes/light.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts-chalk',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/chalk.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/themes/chalk.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts-dark',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/dark.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/themes/dark.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts-patterns',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/patterns.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/themes/patterns.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
 	wp_register_script(
 		'amcharts-black',
-		CSI_PLUGIN_URL.'/external/amcharts/amcharts/themes/black.js' ,
+		CSI_PLUGIN_URL.'/bower_components/amcharts3/amcharts/themes/black.js' ,
 		array('amcharts'),
 		'1.1.2'
 	);
-	wp_register_script(
-		'jquery-confirm',
-		CSI_PLUGIN_URL.'/external/jquery-confirm/dist/jquery-confirm.min.js' ,
+/*	wp_register_script(
+		'jquery-confirm',
+		CSI_PLUGIN_URL.'/bower_components/jquery-confirm2/dist/jquery-confirm.min.js' ,
 		array('jquery'),
-		'3.0.1'
+		'3.0.3'
 	);
-	wp_register_script(
+*/	wp_register_script(
 		'raphael',
 		CSI_PLUGIN_URL.'/external/justgage/raphael-2.1.4.min.js' ,
 		array(),
@@ -258,13 +277,13 @@ function csi_enqueue_external_scripts() {
 	);
 	wp_register_script(
 		'momentjs',
-		CSI_PLUGIN_URL.'/external/momentjs/moment-with-locales.js' ,
+		CSI_PLUGIN_URL.'/bower_components/moment/moment.js' ,
 		array(),
 		'2.17.1'
 	);
 	wp_register_script(
 		'daterangepicker',
-		CSI_PLUGIN_URL.'/external/bootstrap-daterangepicker-master/daterangepicker.js' ,
+		CSI_PLUGIN_URL.'/bower_components/bootstrap-daterangepicker/daterangepicker.js' ,
 		array('bootstrap','momentjs'),
 		'2.1.25'
 	);
@@ -288,6 +307,7 @@ require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-rating.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa.php");
 
+require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp.php");
 
 require_once(CSI_PLUGIN_DIR."/classes/project/class-project-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/project/class-project-urgency.php");

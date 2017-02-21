@@ -1,10 +1,16 @@
-@import '../bower_components/animate.less/animate.less';
-@import '../bower_components/font-awesome/less/font-awesome.less';
+/*
+* Shortcode StyleSheet
+*/
+@import './bower_components/animate.less/animate.less';
+@import './bower_components/font-awesome/less/font-awesome.less';
+@import './bower_components/jquery-confirm2/css/jquery-confirm.less';
 
-@fa-font-path:        "../bower_components/font-awesome/fonts";
-
+@fa-font-path:        "../../dist/fonts";
+.csi-template{
+	@import '../../bower_components/bootstrap/less/bootstrap.less';
+}
 .csi-shortcode{
-	@import '../external/bootstrap/less/bootstrap.less';
+	@import '../../bower_components/bootstrap/less/bootstrap.less';
 	.csi-project-panel{
 		padding-top: 50px;
 		position: relative;
@@ -59,7 +65,7 @@
 							border-right: none;
 						}
 						&.non_start{
-							border-left: none;						
+							border-left: none;
 						}
 					}
 				}
@@ -73,7 +79,7 @@ a[href="http://www.amcharts.com/javascript-charts/"]{
 .csi-project-request-welcome{
 	min-height: 100vh;
 	background-color: #263238;
-	background: url(../img/bg/template-project-request-bg.jpg) no-repeat center center fixed; 
+	background: url(../img/bg/template-project-request-bg.jpg) no-repeat center center fixed;
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
@@ -91,7 +97,7 @@ a[href="http://www.amcharts.com/javascript-charts/"]{
 				-webkit-animation-delay: @delay;
 				animation-delay: @delay;
 			}
-		}		
+		}
 	}
 }
 #project_request_form{
@@ -127,7 +133,7 @@ a[href="http://www.amcharts.com/javascript-charts/"]{
 		cursor: pointer;
 		content: '\f05d';
 	}
-	
+
 }
 #csi-ewa-template-control-center-action-checkbox{
 	display: none;
@@ -138,7 +144,7 @@ a[href="http://www.amcharts.com/javascript-charts/"]{
 		}
 	}
 	&:checked + label{
-		
+
 		& > i:before{
 			content: '\f05d';
 		}
@@ -181,7 +187,7 @@ a[href="http://www.amcharts.com/javascript-charts/"]{
 		font-family: "FontAwesome";
 		top:5%;
 		left:50%
-		
-	
+
+
 	}
 }
