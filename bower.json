@@ -1,0 +1,37 @@
+{
+  "name": "csi-wp-plugin",
+  "homepage": "https://github.com/tianmarin/csi-wp-plugin",
+  "authors": [
+    "Cristian Marin <tian.marin@gmail.com>"
+  ],
+  "description": "Continual Service Improvement WP Plugin",
+  "main": "index.php",
+  "keywords": [
+    "novis"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "font-awesome": "FortAwesome/Font-Awesome#^4.7.0",
+    "jquery-confirm2": "craftpip/jquery-confirm#^3.0.3",
+    "moment": "^2.17.1",
+    "bootstrap-daterangepicker": "^2.1.25",
+    "bootstrap": "^3.3.7",
+    "animate.less": "*",
+    "amcharts3": "^3.20.20",
+    "jquery-ui-bootstrap": "^0.2.5",
+    "angular": "^1.6.2",
+    "angular-route": "^1.6.2"
+  },
+  "devDependencies": {
+    "bootstrap-tagsinput": "^0.8.0",
+    "select2": "^4.0.3"
+  }
+}

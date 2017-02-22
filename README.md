@@ -1,6 +1,5 @@
-# Continuos Improvement - Wordpress Plugin
+# Continual Service Improvements - A WordPress Plugin
 This Wordpress Plugin is a personal effort to automate and showcase business information.
-
 ## Table of Contents
 1. [Features](#features)
 2. [Modules](#modules)
@@ -18,6 +17,32 @@ This Wordpress Plugin is a personal effort to automate and showcase business inf
 * Page Templates fully integrated and customer-url-related
 * Google Analytics full integration
 * Wordpress TinyMCE integration
+
+## Usage
+### Download
+### Installation
+### Update
+Every once in a while you can check if newer version is available executing `git status`.
+`git checkout master`
+
+If anything goes wrong (you should always take a DB backup before any update), you can rollback to an early version (hash)
+First execute `git hist`:
+```$ git hist
+* fa3c141 2017-02-01 | Added HTML header (HEAD, master) [Cristian Marin]
+* 8c32287 2011-01-09 | Added standard HTML page tags [Cristian Marin]
+* 43628f7 2011-01-05 | Added h1 tag [Cristian Marin]
+```
+then execute `git checkout <hash>`
+
+
+## Development
+isntall git, install bower, install gulp
+`git clone `
+`bower install`
+`gulp build`
+
+## Design
+Maybe this information belongs to a Wiki Page
 
 ## Modules
 ### System Landscape
@@ -118,7 +143,7 @@ This Wordpress Plugin is a personal effort to automate and showcase business inf
 * Plan Template url ( default: none)
 
 ### EWA & Actions Dashboard
-Every Week SAP Solution Manager generates the Early Watch for Solution Report. This module *somehow* process this information and presents the users a 
+Every Week SAP Solution Manager generates the Early Watch for Solution Report. This module *somehow* process this information and presents the users a
 #### Page Templates
 
 * Current Week (All customer and systems results, for a authorized user to change the
@@ -172,7 +197,7 @@ Every Week SAP Solution Manager generates the Early Watch for Solution Report. T
 #### Options
 * Public & Private Security hash complexity
 * Public & Private Security hash date expiration
-* Public & Private Security hash 
+* Public & Private Security hash
 
 ## BP Calendar
 * ICAL Publication
@@ -314,19 +339,3 @@ Every Week SAP Solution Manager generates the Early Watch for Solution Report. T
 ###### Landscape
 
 ###### Environment
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
