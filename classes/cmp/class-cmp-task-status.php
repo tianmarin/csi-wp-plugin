@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') or die("No script kiddies please!");
 
-class NOVIS_CSI_CMP_TASK_TYPE_CLASS extends NOVIS_CSI_CLASS{
+class NOVIS_CSI_CMP_TASK_STATUS_CLASS extends NOVIS_CSI_CLASS{
 
 /**
 * __construct
@@ -16,11 +16,11 @@ public function __construct(){
 	global $wpdb;
 	global $novis_csi_vars;
 	//como se definió en novis_csi_vars
-	$this->class_name	= 'cmp_task_type';
+	$this->class_name	= 'cmp_task_status';
 	//Nombre singular para títulos, mensajes a usuario, etc.
-	$this->name_single	= 'Tipo de Tarea';
+	$this->name_single	= 'Status de Tarea';
 	//Nombre plural para títulos, mensajes a usuario, etc.
-	$this->name_plural	= 'Tipos de Tarea';
+	$this->name_plural	= 'Status de Tarea';
 	//Identificador de menú padre
 	$this->parent_slug	= $novis_csi_vars['network_menu_slug'];
 	//Identificador de submenú de la clase
@@ -49,11 +49,12 @@ public function __construct(){
 	$this->crt_tbl_sql_wt	="(
 								id tinyint(2) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
 								code varchar(10) not null COMMENT 'Code ID for programming calls',
-								short_name varchar(20) not null COMMENT 'Rating name',
-								icon varchar(50) null COMMENT 'Icon of rating',
+								short_name varchar(20) not null COMMENT 'Status name',
+								value float null COMMENT 'Value of status',
+								icon varchar(50) null COMMENT 'Icon of status',
 								css_class varchar(100) null COMMENT 'Bootstrap Class',
-								hex_color varchar(6) null COMMENT 'HEX Color of Rating',
-								description text null COMMENT 'Description of this record',
+								hex_color varchar(6) null COMMENT 'HEX Color of status',
+								description text null COMMENT 'Description of status',
 								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
 								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
 								creation_date date null COMMENT 'Date of the creation of this record',
@@ -87,7 +88,7 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'alert_rating' => array(
+		'code' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
@@ -115,6 +116,25 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'value' => array(
+			'type'						=>'number',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>false,
+			'data_validation_min'		=>-10,
+			'data_validation_max'		=>10,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
@@ -173,6 +193,25 @@ public function __construct(){
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>6,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'description' => array(
+			'type'						=>'text',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>true,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>255,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -348,7 +387,7 @@ public function __construct(){
 	}else{
 		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
 	}
-	add_action( 'wp_ajax_csi_cmp_popup_task_type_info',			array( $this , 'csi_cmp_popup_task_type_info'	));
+	add_action( 'wp_ajax_csi_cmp_popup_task_status_info',		array( $this , 'csi_cmp_popup_task_status_info'	));
 
 
 }
@@ -360,12 +399,13 @@ public function db_install_data(){
 		$wpdb->insert(
 			$this->tbl_name,
 			array(
-				'id'					=> 1,
-				'code'			=> 'Y',
-				'short_name'			=> 'Planificaci&oacute;n',
+				'code'					=> 'Y',
+				'short_name'			=> 'Propuesta',
+				'value'					=> 1,
 				'icon'					=> 'line-chart',
 				'css_class'				=> 'info',
 				'hex_color'				=> 'ffbb33',
+				'description'			=> '',
 				'creation_user_id'		=> intval(get_current_user_id()),
 				'creation_user_email'	=> $current_user->user_email,
 				'creation_date'			=> date("Y-m-d"),
@@ -375,12 +415,13 @@ public function db_install_data(){
 		$wpdb->insert(
 			$this->tbl_name,
 			array(
-				'id'					=> 2,
-				'code'			=> 'R',
-				'short_name'			=> 'Preparaci&oacute;n',
-				'icon'					=> 'sliders',
-				'css_class'				=> 'warning',
-				'hex_color'				=> 'ff4444',
+				'code'					=> 'Y',
+				'short_name'			=> 'VoBo Cliente',
+				'value'					=> 1,
+				'icon'					=> 'line-chart',
+				'css_class'				=> 'info',
+				'hex_color'				=> 'ffbb33',
+				'description'			=> '',
 				'creation_user_id'		=> intval(get_current_user_id()),
 				'creation_user_email'	=> $current_user->user_email,
 				'creation_date'			=> date("Y-m-d"),
@@ -390,12 +431,93 @@ public function db_install_data(){
 		$wpdb->insert(
 			$this->tbl_name,
 			array(
-				'id'					=> 3,
-				'code'	  			=> 'Z',
-				'short_name'			=> 'Ejecuci&oacute;n',
-				'icon'					=> 'truck',
-				'css_class'				=> 'danger',
-				'hex_color'				=> 'ff4444',
+				'code'					=> 'Y',
+				'short_name'			=> 'Programado',
+				'value'					=> 1,
+				'icon'					=> 'line-chart',
+				'css_class'				=> 'info',
+				'hex_color'				=> 'ffbb33',
+				'description'			=> '',
+				'creation_user_id'		=> intval(get_current_user_id()),
+				'creation_user_email'	=> $current_user->user_email,
+				'creation_date'			=> date("Y-m-d"),
+				'creation_time'			=> date("H:i:s"),
+			)
+		);
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'code'					=> 'Y',
+				'short_name'			=> 'En Ejecución',
+				'value'					=> 1,
+				'icon'					=> 'line-chart',
+				'css_class'				=> 'info',
+				'hex_color'				=> 'ffbb33',
+				'description'			=> '',
+				'creation_user_id'		=> intval(get_current_user_id()),
+				'creation_user_email'	=> $current_user->user_email,
+				'creation_date'			=> date("Y-m-d"),
+				'creation_time'			=> date("H:i:s"),
+			)
+		);
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'code'					=> 'Y',
+				'short_name'			=> 'Suspendida',
+				'value'					=> 1,
+				'icon'					=> 'line-chart',
+				'css_class'				=> 'info',
+				'hex_color'				=> 'ffbb33',
+				'description'			=> '',
+				'creation_user_id'		=> intval(get_current_user_id()),
+				'creation_user_email'	=> $current_user->user_email,
+				'creation_date'			=> date("Y-m-d"),
+				'creation_time'			=> date("H:i:s"),
+			)
+		);
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'code'					=> 'Y',
+				'short_name'			=> 'Ejecutada',
+				'value'					=> 1,
+				'icon'					=> 'line-chart',
+				'css_class'				=> 'info',
+				'hex_color'				=> 'ffbb33',
+				'description'			=> '',
+				'creation_user_id'		=> intval(get_current_user_id()),
+				'creation_user_email'	=> $current_user->user_email,
+				'creation_date'			=> date("Y-m-d"),
+				'creation_time'			=> date("H:i:s"),
+			)
+		);
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'code'					=> 'Y',
+				'short_name'			=> 'Vuelta atrás',
+				'value'					=> 1,
+				'icon'					=> 'line-chart',
+				'css_class'				=> 'info',
+				'hex_color'				=> 'ffbb33',
+				'description'			=> '',
+				'creation_user_id'		=> intval(get_current_user_id()),
+				'creation_user_email'	=> $current_user->user_email,
+				'creation_date'			=> date("Y-m-d"),
+				'creation_time'			=> date("H:i:s"),
+			)
+		);
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'code'					=> 'Y',
+				'short_name'			=> 'Cancelada',
+				'value'					=> 1,
+				'icon'					=> 'line-chart',
+				'css_class'				=> 'info',
+				'hex_color'				=> 'ffbb33',
+				'description'			=> '',
 				'creation_user_id'		=> intval(get_current_user_id()),
 				'creation_user_email'	=> $current_user->user_email,
 				'creation_date'			=> date("Y-m-d"),
@@ -404,7 +526,7 @@ public function db_install_data(){
 		);
 	}
 }
-public function csi_cmp_popup_task_type_info(){
+public function csi_cmp_popup_task_status_info(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
 	//Local Variables
@@ -416,7 +538,7 @@ public function csi_cmp_popup_task_type_info(){
 	$o.='<table class="table table-condensed">';
 	$o.='
 	<tr>
-		<th class="col-xs-3">Tipo de Tarea</th>
+		<th class="col-xs-3">' . $this->name_plural . '</th>
 		<th>Descripci&oacute;n</th>
 	</tr>
 	';
@@ -440,7 +562,7 @@ public function csi_cmp_popup_task_type_info(){
 		'icon'				=> 'fa fa-info text-info',
 		'columnClass'		=> 'large',
 		'content'			=> $o,
-		'title'				=> 'Tipos de Tarea',
+		'title'				=> $this->name_plural,
 		'type'				=> 'blue',
 	);
 
@@ -450,6 +572,6 @@ public function csi_cmp_popup_task_type_info(){
 //END OF CLASS
 }
 
-global $NOVIS_CSI_CMP_TASK_TYPE;
-$NOVIS_CSI_CMP_TASK_TYPE =new NOVIS_CSI_CMP_TASK_TYPE_CLASS();
+global $NOVIS_CSI_CMP_TASK_STATUS;
+$NOVIS_CSI_CMP_TASK_STATUS =new NOVIS_CSI_CMP_TASK_STATUS_CLASS();
 ?>

@@ -23,11 +23,12 @@ var gulpLoadPlugins = require('gulp-load-plugins'),
 // Styles
 gulp.task('templateStyle', function () {
     return gulp.src([
-            // additional packages
-//            './bower_components/jquery-ui-bootstrap/jquery.ui.theme.font-awesome.css',
-//            './bower_components/bootstrap-daterangepicker/daterangepicker.css',
             './assets/less/template/*.less',
+            // additional packages
             './bower_components/select2/dist/css/select2.css',
+			'./bower_components/select2-bootstrap-theme/src/select2-bootstrap.less',
+            './bower_components/jquery-ui-bootstrap/jquery.ui.theme.font-awesome.css',
+            './bower_components/bootstrap-daterangepicker/daterangepicker.css',
         ])
         .pipe($.sourcemaps.init())
         //.pipe(plugins.flatten())
@@ -86,6 +87,8 @@ gulp.task('uglifyVendor', function() {
         './bower_components/bootstrap/dist/js/bootstrap.js',
         './bower_components/jquery-confirm2/js/jquery-confirm.js',
         './bower_components/select2/dist/js/select2.js',
+        './bower_components/moment/moment.js',
+        './bower_components/bootstrap-daterangepicker/daterangepicker.js',
     ])
     .pipe($.sourcemaps.init())
     .pipe($.concat('vendor.js'))

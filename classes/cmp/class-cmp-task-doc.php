@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') or die("No script kiddies please!");
 
-class NOVIS_CSI_CMP_TASK_TYPE_CLASS extends NOVIS_CSI_CLASS{
+class NOVIS_CSI_CMP_TASK_DOC_CLASS extends NOVIS_CSI_CLASS{
 
 /**
 * __construct
@@ -16,11 +16,11 @@ public function __construct(){
 	global $wpdb;
 	global $novis_csi_vars;
 	//como se definió en novis_csi_vars
-	$this->class_name	= 'cmp_task_type';
+	$this->class_name	= 'cmp_task_doc';
 	//Nombre singular para títulos, mensajes a usuario, etc.
-	$this->name_single	= 'Tipo de Tarea';
+	$this->name_single	= 'Documento de Tarea';
 	//Nombre plural para títulos, mensajes a usuario, etc.
-	$this->name_plural	= 'Tipos de Tarea';
+	$this->name_plural	= 'Documentos de Tarea';
 	//Identificador de menú padre
 	$this->parent_slug	= $novis_csi_vars['network_menu_slug'];
 	//Identificador de submenú de la clase
@@ -46,38 +46,56 @@ public function __construct(){
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	$this->crt_tbl_sql_wt	="(
-								id tinyint(2) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-								code varchar(10) not null COMMENT 'Code ID for programming calls',
-								short_name varchar(20) not null COMMENT 'Rating name',
-								icon varchar(50) null COMMENT 'Icon of rating',
-								css_class varchar(100) null COMMENT 'Bootstrap Class',
-								hex_color varchar(6) null COMMENT 'HEX Color of Rating',
-								description text null COMMENT 'Description of this record',
-								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
-								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								creation_date date null COMMENT 'Date of the creation of this record',
-								creation_time time null COMMENT 'Time of the creation of this record',
-								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
-								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								last_modified_date date null COMMENT 'Date of the last modification of this record',
-								last_modified_time time null COMMENT 'Time of the last modification of this record',
+	$this->crt_tbl_sql_wt	="
+		(
+			id int(10) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
+			cmp_id mediumint(8) unsigned not null COMMENT 'Plan ID',
+			doc_description varchar(255) not null COMMENT 'Document description',
+			doc_url varchar(255) not null COMMENT 'Document url',
+			doc_order tinyint(2) unsigned null COMMENT 'Document order',
+			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
+			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			creation_date date null COMMENT 'Date of the creation of this record',
+			creation_time time null COMMENT 'Time of the creation of this record',
+			last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
+			last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			last_modified_date date null COMMENT 'Date of the last modification of this record',
+			last_modified_time time null COMMENT 'Time of the last modification of this record',
 
-								UNIQUE KEY id (id)
-							) $charset_collate;";
+			UNIQUE KEY id (id)
+		) $charset_collate;";
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
-		'id' => array(
-			'type'						=>'id',
+		'cmp_id' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'doc_description' => array(
+			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>true,
 			'data_validation'			=>true,
-			'data_validation_min'		=>1,
+			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxchar'	=>255,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -87,92 +105,35 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'alert_rating' => array(
+		'doc_url' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>true,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>false,
-			'form_input_size'			=>false,
-			'form_label'				=>false,
-			'form_options'				=>false,
-			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
-			'form_show_field'			=>false,
-		),
-		'short_name' => array(
-			'type'						=>'text',
-			'backend_wp_in_table'		=>false,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>true,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>false,
-			'form_input_size'			=>false,
-			'form_label'				=>false,
-			'form_options'				=>false,
-			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
-			'form_show_field'			=>false,
-		),
-		'icon' => array(
-			'type'						=>'text',
-			'backend_wp_in_table'		=>false,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>false,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>false,
-			'form_input_size'			=>false,
-			'form_label'				=>false,
-			'form_options'				=>false,
-			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
-			'form_show_field'			=>false,
-		),
-		'css_class' => array(
-			'type'						=>'text',
-			'backend_wp_in_table'		=>false,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>false,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>false,
-			'form_input_size'			=>false,
-			'form_label'				=>false,
-			'form_options'				=>false,
-			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
-			'form_show_field'			=>false,
-		),
-		'hex_color' => array(
-			'type'						=>'text',
-			'backend_wp_in_table'		=>false,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>false,
 			'data_validation'			=>true,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>6,
+			'data_validation_maxchar'	=>255,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'doc_order' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -336,120 +297,51 @@ public function __construct(){
 		),
 	);
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
-	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install_data'			));
 	//in a new blog creation, create the db for new blog
 	//Applies only for non-network classes
 	if( true != $this->network_class ){
 		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
-		add_action( 'wpmu_new_blog',							array( $this , 'db_install_data'			));
 	}
 	if ( !is_multisite() ) {
 		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
 	}else{
 		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
 	}
-	add_action( 'wp_ajax_csi_cmp_popup_task_type_info',			array( $this , 'csi_cmp_popup_task_type_info'	));
+	//add_action( 'wp_ajax_csi_cmp_popup_task_doc_info',		array( $this , 'csi_cmp_popup_task_doc_info'	));
 
 
 }
-public function db_install_data(){
-	global $wpdb;
-	$count =intval($wpdb->get_var( "SELECT COUNT(*) FROM ".$this->tbl_name));
-	if($count == 0){
-		$current_user = wp_get_current_user();
-		$wpdb->insert(
-			$this->tbl_name,
-			array(
-				'id'					=> 1,
-				'code'			=> 'Y',
-				'short_name'			=> 'Planificaci&oacute;n',
-				'icon'					=> 'line-chart',
-				'css_class'				=> 'info',
-				'hex_color'				=> 'ffbb33',
-				'creation_user_id'		=> intval(get_current_user_id()),
-				'creation_user_email'	=> $current_user->user_email,
-				'creation_date'			=> date("Y-m-d"),
-				'creation_time'			=> date("H:i:s"),
-			)
-		);
-		$wpdb->insert(
-			$this->tbl_name,
-			array(
-				'id'					=> 2,
-				'code'			=> 'R',
-				'short_name'			=> 'Preparaci&oacute;n',
-				'icon'					=> 'sliders',
-				'css_class'				=> 'warning',
-				'hex_color'				=> 'ff4444',
-				'creation_user_id'		=> intval(get_current_user_id()),
-				'creation_user_email'	=> $current_user->user_email,
-				'creation_date'			=> date("Y-m-d"),
-				'creation_time'			=> date("H:i:s"),
-			)
-		);
-		$wpdb->insert(
-			$this->tbl_name,
-			array(
-				'id'					=> 3,
-				'code'	  			=> 'Z',
-				'short_name'			=> 'Ejecuci&oacute;n',
-				'icon'					=> 'truck',
-				'css_class'				=> 'danger',
-				'hex_color'				=> 'ff4444',
-				'creation_user_id'		=> intval(get_current_user_id()),
-				'creation_user_email'	=> $current_user->user_email,
-				'creation_date'			=> date("Y-m-d"),
-				'creation_time'			=> date("H:i:s"),
-			)
-		);
-	}
-}
-public function csi_cmp_popup_task_type_info(){
+public function csi_cmp_task_doc_insert ( $cmp_id = null , $docs_description = array(), $docs_url = array() ) {
 	//Global Variables
-	global $NOVIS_CSI_CUSTOMER;
+	global $wpdb;
 	//Local Variables
-	$response			= array();
-	$o = '';
+	$current_user			= get_userdata ( get_current_user_id() );
+	$current_datetime		= new DateTime();
 
-	$sql = 'SELECT * FROM ' . $this->tbl_name . ' ';
-	$task_types = $this->get_sql($sql);
-	$o.='<table class="table table-condensed">';
-	$o.='
-	<tr>
-		<th class="col-xs-3">Tipo de Tarea</th>
-		<th>Descripci&oacute;n</th>
-	</tr>
-	';
-	foreach ( $task_types as $task_type ){
-		$o.='
-		<tr>
-			<td class="col-xs-3"><code><i class="fa fa-' . $task_type['icon'] . ' hidden-xs"></i> ' . $task_type['short_name'] . '</code></td>
-			<td><p class="text-justify">' . $task_type['description'] . '</p></td>
-		</tr>
-		';
+	if ( null == $cmp_id OR 0 == count ( $docs_description) OR 0 == count ( $docs_url ) ){
+		return false;
+	}else{
+		$insertArray			= array();
+		for ( $i = 0 ; $i < count ( $docs_url ) ; $i++ ){
+			$insertArray['cmp_id']				= intval ( $cmp_id );
+			$insertArray['doc_description']		= $docs_description[$i];
+			$insertArray['doc_url']				= $docs_url[$i];
+			$insertArray['creation_user_id']	= $current_user->ID;
+			$insertArray['creation_user_email']	= $current_user->user_email;
+			$insertArray['creation_date']		= $current_datetime->format('Y-m-d');
+			$insertArray['creation_time']		= $current_datetime->format('H:i:s');
+			if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
+
+			}else{
+				return false;
+			}
+		}
+		return true;
 	}
-	$o.='</table>';
-	$response['notification']=array(
-		'buttons'			=> array(
-			'OK'			=> array(
-				'text'		=> '<small> Gracias por la informaci&oacute;n</small> <i class="fa fa-thumbs-up"></i>',
-				'btnClass'	=> 'btn-info',
-			),
-		),
-		'backgroundDismiss' =>true,
-		'icon'				=> 'fa fa-info text-info',
-		'columnClass'		=> 'large',
-		'content'			=> $o,
-		'title'				=> 'Tipos de Tarea',
-		'type'				=> 'blue',
-	);
-
-	echo json_encode($response);
-	wp_die();
 }
 //END OF CLASS
 }
 
-global $NOVIS_CSI_CMP_TASK_TYPE;
-$NOVIS_CSI_CMP_TASK_TYPE =new NOVIS_CSI_CMP_TASK_TYPE_CLASS();
+global $NOVIS_CSI_CMP_TASK_DOC;
+$NOVIS_CSI_CMP_TASK_DOC =new NOVIS_CSI_CMP_TASK_DOC_CLASS();
 ?>

@@ -126,7 +126,7 @@
 
 
 
-<body class="csi-template">
+<body class="csi-template csi-template-cmp-control-center-body">
 
 
 
@@ -141,7 +141,7 @@
 
 
 
-	<nav class="navbar navbar-inverse navbar-position">
+	<nav class="navbar navbar-inverse navbar-fixed-top">
 		<div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">

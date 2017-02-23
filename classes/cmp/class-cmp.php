@@ -48,12 +48,12 @@ public function __construct(){
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql_wt	="(
 								id mediumint unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-                                customer_id int unsigned not null COMMENT 'Customer ID',
-                                title varchar(100) not null COMMENT 'Title text',
-                                description varchar(255) null COMMENT 'Description text',
-                                manager_user_id bigint(20) unsigned not null COMMENT 'Id of user responsible of this plan',
-                                manager_user_email varchar(100) not null COMMENT 'Email of user. Used to track user if user id is deleted',
-                                source_tags varchar(255) null COMMENT 'Tags to add sources of the plan',
+								customer_id int unsigned not null COMMENT 'Customer ID',
+								title varchar(100) not null COMMENT 'Title text',
+								description varchar(255) null COMMENT 'Description text',
+								manager_user_id bigint(20) unsigned not null COMMENT 'Id of user responsible of this plan',
+								manager_user_email varchar(100) not null COMMENT 'Email of user. Used to track user if user id is deleted',
+								source_tags varchar(255) null COMMENT 'Tags to add sources of the plan',
 								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of each record',
 								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
 								creation_date date null COMMENT 'Date of the creation of this record',
@@ -125,7 +125,7 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-        'description' => array(
+		'description' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
@@ -144,7 +144,7 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-        'source_tags' => array(
+		'source_tags' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
@@ -373,7 +373,8 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_cmp_fetch_filtered_plan_table',	array( $this , 'csi_cmp_fetch_filtered_plan_table'	));
 	add_action( 'wp_ajax_csi_cmp_build_page_show_plan',			array( $this , 'csi_cmp_build_page_show_plan'		));
 	add_action( 'wp_ajax_csi_cmp_fetch_plan_info',				array( $this , 'csi_cmp_fetch_plan_info'			));
-	add_action( 'wp_ajax_csi_cmp_build_page_new_task_form',		array( $this , 'csi_cmp_build_page_new_task_form'	));
+	add_action( 'wp_ajax_csi_cmp_fetch_plan_docs',				array( $this , 'csi_cmp_fetch_plan_docs'			));
+	add_action( 'wp_ajax_csi_cmp_popup_cmp_info',				array( $this , 'csi_cmp_popup_cmp_info'				));
 
 
 
@@ -424,7 +425,6 @@ public function csi_cmp_build_page_show_plan(){
 	global $NOVIS_CSI_PROJECT_STATUS;
 	global $wpdb;
 	//Local Variables
-	$insertArray			= array();
 	$response				= array();
 	$post					= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	# Validate user capability ??
@@ -436,6 +436,7 @@ public function csi_cmp_build_page_show_plan(){
 					*,
 					T00.id as plan_id,
 					T00.title as plan_title,
+					T00.description as plan_description,
 					T00.last_modified_user_id as plan_last_modified_user_id,
 					T00.last_modified_date as plan_last_modified_date,
 					T00.last_modified_time as plan_last_modified_time,
@@ -500,9 +501,17 @@ public function csi_cmp_build_page_show_plan(){
 
 	$o='
 	<div id="csi-template-cmp-control-center-show-plan" class="container">
-		<div class="page-header">
+		<div class="page-header row">
 			<h2>' . $plan->plan_title . ' <small>' . $plan->customer_code . '</small></h2>
 			<p class="text-muted hidden-print"><i class="fa fa-clock-o"></i> ' . $modif_text . ' hace ' . $last_action_time_text . '.</p>
+			<div>
+				<p class="lead front-end-editable"
+
+				data-field="description"
+				data-action="csi_cmp_update_field"
+				data-element-key="' . $plan_id . '"
+			>' . $plan->plan_description . '</p>
+			</div>
 		</div>
 		<div class="row">
 			<div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">
@@ -519,7 +528,7 @@ public function csi_cmp_build_page_show_plan(){
 					</div>
 					<div id="plan-info" class="collapse">
 						<table class="table table-condensed refreshable" style="position:relative;" id="csi-cmp-fetch-plan-info" data-action="csi_cmp_fetch_plan_info" data-plan-id="' . $plan_id . '">
-							<tbody>
+							<tbody style="position:relative;">
 							</tbody>
 						</table>
 					</div>
@@ -530,32 +539,15 @@ public function csi_cmp_build_page_show_plan(){
 					<div class="panel-heading">
 						<i class="fa fa-fw fa-folder-o"></i> Documentos asociados
 						<div class="pull-right">
-							<a href="#"><i class="fa fa-fw fa-refresh"></i></a>
+							<a href="#csi-cmp-fetch-plan-docs" class="refresh-button"><i class="fa fa-fw fa-refresh"></i></a>
 							|
-							<a data-toggle="collapse" href="#plan-3-docs" role="button">
+							<a data-toggle="collapse" href="#csi-cmp-fetch-plan-docs" role="button">
 								<i class="fa fa-fw fa-caret-down"></i>
 							</a>
 						</div>
 					</div>
-					<div class="list-group collapse" id="plan-3-docs">
-						<a class="list-group-item" target="_blank" href="#">
-							Documento 1
-							<div class="pull-right">
-								<span class="fa fa-fw text-info fa-cloud-download"></span>
-							</div>
-						</a>
-						<a class="list-group-item" target="_blank" href="#">
-							Documento 1
-							<div class="pull-right">
-								<span class="fa fa-fw text-info fa-cloud-download"></span>
-							</div>
-						</a>
-						<a class="list-group-item" target="_blank" href="#">
-							Documento 1
-							<div class="pull-right">
-								<span class="fa fa-fw text-info fa-cloud-download"></span>
-							</div>
-						</a>
+					<div class="list-group collapse refreshable" style="position:relative;" id="csi-cmp-fetch-plan-docs" data-action="csi_cmp_fetch_plan_docs" data-plan-id="' . $plan_id . '">
+						<div class="list-group-item">No hay naa</div>
 					</div>
 				</div>
 			</div>
@@ -611,7 +603,7 @@ public function csi_cmp_build_page_show_plan(){
 				</div>
 			</div>
 		</div>
-		<div class="">
+		<div class="row">
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<i class="fa fa-fw fa-book"></i> Logs
@@ -673,62 +665,36 @@ public function csi_cmp_build_page_show_plan(){
 				</div>
 			</div>
 		</div>
-		<div class="panel panel-default">
+		<div class="panel panel-default row">
 			<div class="panel-heading">
-				<p class="text-right">
-					<button class="btn btn-primary btn-xs">
-						<i class="fa fa-filter"></i> Filtrar
-					</button>
-				</p>
+			<i class="fa fa-fw fa-list"></i> Tareas
+			<div class="pull-right">
+				<a href="#csi-cmp-fetch-tasks-table" class="refresh-button"><i class="fa fa-fw fa-refresh"></i></a>
 			</div>
-			<table class="table table condensed">
+			</div>
+			<table class="table table-condensed refreshable" data-action="csi_cmp_fetch_tasks_table" data-plan-id="' . $plan_id . '" style="position:relative;" id="csi-cmp-fetch-tasks-table">
 				<thead>
 					<tr>
-						<th><i class="fa fa-hashtag"></i></th>
-						<th class="hidden-xs">Landscape</th>
-						<th class="hidden-xs">Ambiente</th>
+						<th class="hidden-xs"><i class="fa fa-hashtag"></i></th>
 						<th>SID</th>
-						<th>Ticket</th>
+						<th class="hidden-xs">Ticket</th>
 						<th>Status</th>
 						<th>Inicio</th>
 						<th>Duraci&oacute;n</th>
-						<th>Log</th>
-						<th>Opciones</th>
-					</tr>
-					<tr class="csi-template-table-filter collapse">
-						<th>&nbsp;</th>
-						<th class="hidden-xs">&nbsp;</th>
-						<th class="hidden-xs">&nbsp;</th>
-						<th>&nbsp;</th>
-						<th>&nbsp;</th>
-						<th>&nbsp;</th>
-						<th>&nbsp;</th>
-						<th>&nbsp;</th>
-						<th>&nbsp;</th>
-						<th>&nbsp;</th>
+						<th><i class="fa fa-plus"></i></th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr>
-						<td colspan="999" class="text-center">
-							<a href="#!addtask?plan_id=' . $plan_id . '" class="btn btn-success">
-								<i class="fa fa-plus"></i> Agregar Tarea
-							</a>
-						</td>
-					</tr>
 				</tbody>
 				<tfoot>
 					<tr>
-						<th><i class="fa fa-hashtag"></i></th>
-						<th class="hidden-xs">Landscape</th>
-						<th class="hidden-xs">Ambiente</th>
+						<th class="hidden-xs"><i class="fa fa-hashtag"></i></th>
 						<th>SID</th>
-						<th>Ticket</th>
+						<th class="hidden-xs">Ticket</th>
 						<th>Status</th>
 						<th>Inicio</th>
 						<th>Duraci&oacute;n</th>
-						<th>Log</th>
-						<th>Opciones</th>
+						<th><i class="fa fa-plus"></i></th>
 					</tr>
 				</tfoot>
 			</table>
@@ -743,6 +709,46 @@ public function csi_cmp_build_page_show_plan(){
 	echo json_encode($response);
 	wp_die();
 
+}
+public function csi_cmp_fetch_plan_docs(){
+	//Global Variables
+	global $NOVIS_CSI_CMP_TASK_DOC;
+	global $wpdb;
+	//Local Variables
+	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$response			= array();
+	$plan_id 			= intval ( $post['planId'] );
+	$o					= '';
+	$sql='SELECT
+			*
+		FROM
+			' . $NOVIS_CSI_CMP_TASK_DOC->tbl_name . '
+
+		WHERE
+			cmp_id = "' . $plan_id . '"
+	';
+	$docs = $this->get_sql ( $sql ) ;
+	if ( 0 == count ($docs) ){
+		$o='
+			<div class="list-group-item">
+				No hay documentos asociados <i class="fa fa-thumbs-o-down fa-lg"></i>
+			</div>
+		';
+	}else{
+		foreach ( $docs as $doc ){
+			$o='
+				<a class="list-group-item" target="_blank" href="' . $doc['doc_url'] . '">
+					' . $doc['doc_description'] . '
+					<div class="pull-right">
+						<span class="fa fa-fw text-info fa-cloud-download"></span>
+					</div>
+				</a>
+			';
+		}
+	}
+	$response['message'] = $o;
+	echo json_encode($response);
+	wp_die();
 }
 public function csi_cmp_fetch_plan_info(){
 	//Global Variables
@@ -876,19 +882,19 @@ public function csi_cmp_build_page_list_plans(){
 	$response			= array();
 	$o = '
 	<div id="csi-template-cmp-control-center-list-plans" class="container">
-        <div class="page-header row">
-            <h3 class="col-sm-10">Planes de Corrección o Mantenimiento</h3>
+		<div class="page-header row">
+			<h3 class="col-sm-10">Planes de Corrección o Mantenimiento</h3>
 			<h3 class="col-sm-2">
 				<a href="#!addplan" class="btn btn-success" id="csi-template-cmp-add-new-plan">
 					<i class="fa fa-plus"></i> Nuevo PCM
 				</a>
 			</h3>
-        </div>
+		</div>
 		<div>
 			<h4><i class="fa fa-pie-chart"></i> Infogr&aacute;ficos</h4>
 		</div>
 		<div class="row panel panel-default">
-            <div class="panel-body">
+			<div class="panel-body">
 				<a href="#list-plans-saved-filter" data-toggle="collapse" >
 					<strong class="panel-title">
 						<i class="fa fa-filter"></i>
@@ -900,7 +906,7 @@ public function csi_cmp_build_page_list_plans(){
 						<i class="fa fa-fw fa-plus"></i>
 					</a>
 				</div>
-            </div>
+			</div>
 			<div class="panel-body collapse" id="list-plans-saved-filter">
 				<div class="panel panel-default">
 					<div class="panel-heading">
@@ -1024,7 +1030,7 @@ public function csi_cmp_build_page_list_plans(){
 				</div>
 			</div>
 		</div>
-        <div class="panel panel-default row">
+		<div class="panel panel-default row">
 			<div class="panel-heading">
 				<strong class="">
 					<i class="fa fa-tasks"></i>
@@ -1038,35 +1044,35 @@ public function csi_cmp_build_page_list_plans(){
 			</div>
 			<div class="collapse in">
 			</div>
-            <table id="csi-template-cmp-filtered-plan-table" class="table table condensed refreshable" data-action="csi_cmp_fetch_filtered_plan_table">
-                <thead>
-                    <tr>
-                        <th><small><i class="fa fa-hashtag"></i></small></th>
-                        <th>Pa&iacute;s</th>
-                        <th>Cliente</th>
-                        <th>T&iacute;tulo</th>
-                        <th>Responsable</th>
-                        <th>Tareas</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-                <tfoot>
-                    <tr>
+			<table id="csi-template-cmp-filtered-plan-table" class="table table condensed refreshable" data-action="csi_cmp_fetch_filtered_plan_table" style="position:relative;">
+				<thead>
+					<tr>
 						<th><small><i class="fa fa-hashtag"></i></small></th>
-                        <th>Pa&iacute;s</th>
-                        <th>Cliente</th>
-                        <th>T&iacute;tulo</th>
-                        <th>Responsable</th>
-                        <th>Tareas</th>
-                    </tr>
-                </tfoot>
-            </table>
+						<th>Pa&iacute;s</th>
+						<th>Cliente</th>
+						<th>T&iacute;tulo</th>
+						<th>Responsable</th>
+						<th>Tareas</th>
+					</tr>
+				</thead>
+				<tbody style="position:relative;">
+				</tbody>
+				<tfoot>
+					<tr>
+						<th><small><i class="fa fa-hashtag"></i></small></th>
+						<th>Pa&iacute;s</th>
+						<th>Cliente</th>
+						<th>T&iacute;tulo</th>
+						<th>Responsable</th>
+						<th>Tareas</th>
+					</tr>
+				</tfoot>
+			</table>
 			<div style="position:relative;">
 				<div id="csi-template-cmp-control-center-table-pagination" class="text-center"></div>
 			</div>
-        </div>
-    </div>
+		</div>
+	</div>
 
 	';
 	$response['message'] = $o;
@@ -1077,6 +1083,7 @@ public function csi_cmp_build_page_create_plan(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
 	global $NOVIS_CSI_PROJECT_STATUS;
+	global $NOVIS_CSI_CMP_TASK_DOC;
 	global $wpdb;
 	//Local Variables
 	$insertArray			= array();
@@ -1102,6 +1109,20 @@ public function csi_cmp_build_page_create_plan(){
 		$response['id']=$wpdb->insert_id;
 //		$response['notifMessage']="El nuevo ".$this->name_single." ha sido guardado.";
 		$plan_id = $wpdb->insert_id;
+		if ( 0 < count ( $post['plan_doc_desc'] ) ){
+			if ( false == $NOVIS_CSI_CMP_TASK_DOC->csi_cmp_task_doc_insert ( $plan_id, $post['plan_doc_desc'], $post['plan_doc_url'] ) ){
+				$docs_msg='
+					<p class="text-warning">
+						<i class="fa fa-exclamation-triangle"></i> Sin embargo ha ocurrido un error al agregar los documentos indicados.
+						Por favor edita el Plan para volver a agregar los documentos.
+					</p>
+				';
+			}else{
+				$docs_msg='';
+			}
+		}else{
+			$docs_msg='';
+		}
 		//crear registro de documentos
 		$response['postSubmitAction']	='changeHash';
 		$response['notification']=array(
@@ -1114,7 +1135,7 @@ public function csi_cmp_build_page_create_plan(){
 			'icon'				=> 'fa fa-check fa-sm',
 			'closeIcon'			=> true,
 			'columnClass'		=> 'large',
-			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>#' . $plan_id . '</code>)',
+			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>#' . $plan_id . '</code>)' . $docs_msg,
 			'title'				=> 'Bien!',
 			'type'				=> 'green',
 			'autoClose'			=> 'OK|3000',
@@ -1158,7 +1179,7 @@ public function csi_cmp_build_page_new_plan_form(){
 		<div class="panel-heading">
 		</div>
 		<div class="panel-body">
-			<form class="form-horizontal" data-function="csi_cmp_build_page_create_plan" data-next-page="listplans">
+			<form class="form-horizontal" data-function="csi_cmp_build_page_create_plan" data-next-page="listplans" style="position:relative;">
 				<div class="form-group">
 					<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
 					<div class="col-sm-10">
@@ -1239,21 +1260,9 @@ public function csi_cmp_build_page_new_plan_form(){
 				<div class="form-group">
 					<label for="doc-plus" class="col-sm-2 control-label">Documentos relacionados</label>
 					<div class="col-sm-10">
-						<div class="input-group">
-							<span class="input-group-btn">
-								<button class="btn btn-danger">
-									<i class="fa fa-minus-circle"></i>
-								</button>
-							</span>
-							<span class="input-group-addon"><i class="fa fa-file-text-o"></i></span>
-							<input type="text" class="form-control" placeholder="Descripci&oacute;n del Documento" />
-							<span class="input-group-addon"><i class="fa fa-link"></i></span>
-							<input type="text" class="form-control" placeholder="Doc. URL" />
+						<div class="input-dynamic" data-dynamic-input="plan-doc">
 						</div>
 						<div class="text-center">
-							<button class="btn btn-sm btn-success" id="doc-plus">
-								<i class="fa fa-plus"></i> Agregar documento
-							</button>
 						</div>
 						<span class="help-block">
 							Los documentos relacionados permiten adjuntar enlaces a los documentos en los cuales se reflejan diferentes componentes del plan.<br/>
@@ -1283,250 +1292,130 @@ public function csi_cmp_build_page_new_plan_form(){
 	</div>
 
 	';
+	$dynamic_fields=array(
+		'plan-doc'			=> array(
+			'maxFields'		=> 5,
+			'addButton'		=> '<button class="btn btn-sm btn-success" id="doc-plus"><i class="fa fa-plus"></i> Agregar documento</button>',
+			'fieldBox'		=> '<div class="input-group">
+									<span class="input-group-addon"><i class="fa fa-file-text-o"></i></span>
+									<input type="text" class="form-control" placeholder="Descripci&oacute;n del Documento" name="plan_doc_desc[]" required="true"/>
+									<span class="input-group-addon"><i class="fa fa-link"></i></span>
+									<input type="text" class="form-control" placeholder="Doc. URL" name="plan_doc_url[]"  required="true"/>
+									<span class="input-group-btn">
+										<a href="#" class="btn btn-danger csi-cmp-delete-dynamic-field-button">
+											<i class="fa fa-times"></i>
+										</a>
+									</span>
+								</div>',
+		),
+	);
+	$response['dynamicFields'] = $dynamic_fields;
 	$response['message'] = $o;
 	echo json_encode($response);
 	wp_die();
 }
-public function csi_cmp_build_page_new_task_form(){
+public function csi_cmp_popup_cmp_info(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
-	global $NOVIS_CSI_CUSTOMER_SYSTEM;
-	global $NOVIS_CSI_SAPCUSTNO;
 	global $wpdb;
 	//Local Variables
 	$response			= array();
 	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
-	$plan_id			= intval ( $post['plan_id'] );
 
-	$sql = 'SELECT
-				*,
-				T00.id as plan_id,
-				T00.title as plan_title,
-				T00.manager_user_id as manager_id,
-				T01.short_name as customer_name,
-				T01.code as customer_code,
-				T01.id as customer_id
-
-			FROM
+	$response			= array();
+	$plan_id 			= intval ( $post['planId'] );
+	$sql='SELECT
+			*,
+			T00.title as plan_title,
+			T00.description as plan_description,
+			T00.manager_user_id as plan_manager_user_id,
+			T01.short_name as customer_name,
+			T01.code as customer_code
+		FROM
 			' . $this->tbl_name . ' as T00
 			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T01
-				ON T01.id = T00.customer_id
-			WHERE
-				T00.id = "' . $plan_id . '"
+				ON T00.customer_id = T01.id
+		WHERE
+			T00.id = "' . $plan_id . '"
 	';
 	$plan = $wpdb->get_row($sql);
-	$sql = 'SELECT
-				T00.id as id,
-				T00.sid as sid
-			FROM
-				' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T00
-				LEFT JOIN ' . $NOVIS_CSI_SAPCUSTNO->tbl_name . ' as T01
-					ON T00.sapcustno = T01.sapcustno
-				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T02
-					ON T01.customer_id = T02.id
-			WHERE
-				T02.id = "' . $plan->customer_id . '"
-	';
-	$systems = $this->get_sql ( $sql );
-	$systems_opt = '';
-	foreach ( $systems as $system ){
-		$systems_opt .='<option value="' . $system['id'] . '>' . $system['sid'] . '</option>';
-	}
-	$o='
-	<!-- #AddTask -->
-	<div id="csi-template-cmp-control-center-add-plan" class="container ">
-		<div class="panel panel-default row">
-            <div class="panel-heading">
-				<h3 class="panel-title"><i class="fa fa-plus"></i> Agregar tarea</h3>
-            </div>
-			<div class="panel-body">
-				<form class="form-horizontal">
-					<div class="form-group">
-						<label class="col-sm-2 control-label">
-							Cliente
-						</label>
-						<div class="col-sm-10">
-							<div class="input-group">
-								<span class="input-group-addon">
-									<span class="text-danger">
-										<i class="fa fa-exclamation-circle"></i>
-									</span>
-								</span>
-								<p class="form-control disabled">' . $plan->customer_name . '</p>
-							</div>
-							<span class="help-block">
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-					<label class="col-sm-2 control-label">
-						Plan
-					</label>
-						<div class="col-sm-10">
-							<div class="input-group">
-								<span class="input-group-addon">
-									<span class="text-warning">
-										<i class="fa fa-exclamation-triangle"></i>
-									</span>
-								</span>
-								<p class="form-control">
-									' . $plan->plan_title . '
-									<small>
-										(<a href="#">#' . $plan_id . '</a>)
-									</small>
-								</p>
-							</div>
-							<span class="help-block">
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="system" class="col-sm-2 control-label">Sistema</label>
-						<div class="col-sm-10">
-							<input type="hidden" id="system-id" />
-							<select class="form-control select2" id="system" data-placeholder="Selecciona el sistema" required="true"">
-								<option></option>
-								' . $systems_opt . '
-							</select>
-							<span class="help-block">
-								El sistema involucrado indica el sistema del cliente afectado en la actividad.<br/>
-								En el caso que esta tarea afecte dos sistemas existen diferentes.
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="cmp-task-type" class="col-sm-2 control-label">Tipo de Tarea</label>
-						<div class="col-sm-10">
-							<select class="form-control" id="cmp-task-type" required="true">
-								<option value="0" disabled >Seleccionar Tipo</option>
-							</select>
-							<span class="help-block">
-								El tipo de tarea define el comportamiento de esta tarea en el proceso de evaluación de horas, y calendario <a href="#"><i class="fa fa-question-circle"></i></a>
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="activity-type" class="col-sm-2 control-label">Servicio a ejecutar</label>
-						<div class="col-sm-10">
-							<select  class="form-control select2" id="service-id" data-placeholder="Selecciona el Servicio a ejecutar" required="true">
-								<option></option>
-							</select>
-							<span class="help-block">
-								Si el servicio no aparece en la lista, selecciona <strong>Otros</strong>.
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="activity-availability" class="col-sm-2 control-label">¿Ventana Offline?</label>
-						<div class="col-sm-10">
-							<input type="checkbox" class="form-control" id="activity-availability"/>
-							<span class="help-block">
-								Indica si la actividad impacta la disponibilidad del sistema relacionado.
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="customer-visible" class="col-sm-2 control-label">Visible para Cliente</label>
-						<div class="col-sm-10">
-							<input type="checkbox" class="form-control" id="customer-visible"/>
-							<span class="help-block">
-								Si el campo est&aacute; seleccionado (dependiendo del <label for="cmp-task-type">Tipo de Tarea <i class="fa fa-chevron-circle-up"></i></label>) esta actividad es visible para el calendario del cliente.
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="task-description" class="col-sm-2 control-label">Observaciones</label>
-						<div class="col-sm-10">
-							<textarea class="form-control" id="task-description" placeholder="Observaciones adicionales"></textarea>
-							<span class="help-block">
-								Si el tipo de actividad es sincronizado con el calentadio, este texto aparecerá como contenido adicional en el evento.<br/>
-								Tama&ntilde;o m&aacute;ximo: 255 caracteres.
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="task-status" class="col-sm-2 control-label">Status</label>
-						<div class="col-sm-10">
-							<select class="form-control" id="task-status">
-								<option value="0" disabled="true">Seleccionar Status</option>
-							</select>
-							<span class="help-block">
-								El status de la tarea define el comportamiento de esta esta tarea en el proceso de evaluación de horas, y calendario <a href="#"><i class="fa fa-question-circle"></i></a>
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="task-ticket" class="col-sm-2 control-label">Ticket</label>
-						<div class="col-sm-10">
-							<input type="text" class="form-control" id="task-ticket" placeholder="5000012345" />
-							<span class="help-block">
-								El status de la tarea define el comportamiento de esta esta tarea en el proceso de evaluación de horas, y calendario <a href="#"><i class="fa fa-question-circle"></i></a>
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="manager" class="col-sm-2 control-label">Fecha y hora</label>
-						<div class="col-sm-10">
-							<input type="date" class="hidden" id="filter-date-start"/>
-							<input type="date" class="hidden" id="filter-date-end"/>
-							<div id="filter-date-range" class="text-center form-control text-right">
-								<small><span class=""></span></small>&nbsp;<i class="fa fa-caret-down fa-fw"></i>
-							</div>
-							<span class="help-block">
-								El campo de fecha y hora identifica el lapso de tiempo en el cual se desarrolla la tarea.
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<label for="task-add-executor" class="col-sm-2 control-label">Ejecutores</label>
-						<div class="col-sm-10">
-							<div class="input-group">
-								<span class="input-group-btn">
-									<button class="btn btn-danger">
-										<i class="fa fa-minus-circle"></i>
-									</button>
-								</span>
-								<span class="input-group-addon"><i class="fa fa-user-o"></i></span>
-								<input type="text" class="form-control" placeholder="Cristian Marin" />
-								<span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
-								<input type="number" class="form-control" placeholder="3 hrs" />
-								<span class="input-group-addon">horas</span>
-							</div>
-							<button class="btn btn-block btn-info" id="task-add-executor">
-								<i class="fa fa-plus-circle"></i> Agregar ejecutor
-							</button>
-							<span class="help-block">
-								Los ejecutores de una actividad permiten la notificación previa en el calendario personal.<br/>
-								Si el campo de tiempo de actividad en cada responsable se deja en blanco, el sistema asigna la duración total de la tarea. (<a href="#">Aprender m&aacute;s</a>).
-							</span>
-						</div>
-					</div>
-					<div class="form-group">
-						<div class="col-sm-offset-1 col-sm-10">
-							<p class="text-muted text-justify">
-								La creaci&oacute;n de un Plan de Correcci&oacute;n o Mantenimiento aparecer&aacute; de modo inmediato en los planes del cliente seleccionado.
-							</p>
-						</div>
-					</div>
-					<div class="form-group">
-						<div class="col-sm-offset-2 col-sm-10 text-right">
-							<button type="reset" class="btn btn-danger">Cancelar</button>
-							<button type="submit" class="btn btn-primary">Entiendo, Crear tarea</button>
-						</div>
-					</div>
-				</form>
+	$manager_user = get_userdata ( $plan->plan_manager_user_id);
+	$o='<table class="table table-condensed">
+	<tr>
+		<th class="small">Cliente</th>
+		<td>' . $plan->customer_name . '</td>
+	</tr>
+	<tr>
+		<th class="small">Titulo</th>
+		<td><strong>' . $plan->plan_title . '</strong> <a class="btn btn-success btn-xs pull-right" href="#!showplan?plan_id=' . $plan_id . '"><i class="fa fa-folder-open-o"></i> Ver el Plan</a></td>
+	</tr>
+	<tr>
+		<th class="small">Descripci&oacute;n</th>
+		<td><i>' . $plan->plan_description . '</i></td>
+	</tr>
+	<tr>
+		<th class="small">Responsable</th>
+		<td><a href="#" class="user-data" data-user-id="' . $plan->plan_manager_user_id . '" title="M&aacute;s informaci&oacute;n"><i class="fa fa-id-card-o"></i> ' .  $manager_user->user_nicename . '</a></td>
+	</tr>
+	<tr>
+		<th class="small">Actividad</th>
+		<td>
+			<ul class="list-unstyled">
+				<li><i class="fa fa-fw fa-flag-o"></i> 24 / Febrero / 2017</li>
+				<li><i class="fa fa-fw fa-flag-checkered"></i> 24 / Marzo / 2017</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<th class="small">Esfuerzo</th>
+		<td class="">
+			<ul class="list-unstyled">
+				<li><strong>32</strong> HH - Invertidas</li>
+				<li><strong>58</strong> HH - Planificadas</li>
+				<li><strong>90</strong> HH - Total</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<th class="small">Avance</th>
+		<td>
+			<div class="progress">
+				<div class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
+					60%
+				</div>
 			</div>
-		</div>
-	</div>
-
+		</td>
+	</tr>
+	</table>
 	';
+	$response['notification']=array(
+		'buttons'			=> array(
+			'OK'			=> array(
+				'text'		=> '<small> Gracias por la informaci&oacute;n</small> <i class="fa fa-thumbs-up"></i>',
+				'btnClass'	=> 'btn-info',
+			),
+		),
+		'backgroundDismiss' =>true,
+		'icon'				=> 'fa fa-info text-info',
+		'columnClass'		=> 'large',
+		'content'			=> $o,
+		'title'				=> $this->name_plural,
+		'type'				=> 'blue',
+	);
 
-
-	$response['message'] = $o;
 	echo json_encode($response);
 	wp_die();
 }
+public function csi_cmp_calculate_cmp_percentage( $plan_id = 0 ){
+	//Global Variables
+	//Local Variables
 
+}
+public function csi_cmp_generate_cmp_gantt_chart( $plan_id = 0 ){
+	//Global Variables
+	//Local Variables
+
+}
 //END OF CLASS
 }
 

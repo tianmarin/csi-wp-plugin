@@ -52,7 +52,10 @@ $novis_csi_vars = array(
 	'project'					."_network_class"	=> TRUE,
 	##Correction or Maintenance Plan
 	'cmp'						."_network_class"	=> TRUE,
+	'cmp_task'					."_network_class"	=> TRUE,
+	'cmp_task_doc'				."_network_class"	=> TRUE,
 	'cmp_task_type'				."_network_class"	=> TRUE,
+	'cmp_task_status'			."_network_class"	=> TRUE,
 
 
 //MENU SLUGS
@@ -75,7 +78,10 @@ $novis_csi_vars = array(
 	'project'					."_menu_slug"	=> 'csi_'		.'project',
 	##Correction or Maintenance Plan
 	'cmp'						."_menu_slug"	=> 'csi_'		.'cmp',
+	'cmp_task'					."_menu_slug"	=> 'csi_'		.'cmp_task',
+	'cmp_task_doc'				."_menu_slug"	=> 'csi_'		.'cmp_task_doc',
 	'cmp_task_type'				."_menu_slug"	=> 'csi_'		.'cmp_task_type',
+	'cmp_task_status'			."_menu_slug"	=> 'csi_'		.'cmp_task_status',
 
 //MENU CAPABILITIES
 	'main'						."_menu_cap"		=> 'manage_options',
@@ -97,7 +103,10 @@ $novis_csi_vars = array(
 	'project'					."_menu_cap"		=> 'manage_options',
 	##Correction or Maintenance Plan
 	'cmp'						."_menu_cap"		=> 'manage_options',
+	'cmp_task'					."_menu_cap"		=> 'manage_options',
+	'cmp_task_doc'				."_menu_cap"		=> 'manage_options',
 	'cmp_task_type'				."_menu_cap"		=> 'manage_options',
+	'cmp_task_status'			."_menu_cap"		=> 'manage_options',
 );
 
 
@@ -307,6 +316,10 @@ require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-rating.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa.php");
 
+require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp-task-type.php");
+require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp-task-status.php");
+require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp-task-doc.php");
+require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp-task.php");
 require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp.php");
 
 require_once(CSI_PLUGIN_DIR."/classes/project/class-project-status.php");

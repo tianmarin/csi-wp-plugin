@@ -11,6 +11,9 @@
 a[href="http://www.amcharts.com/javascript-charts/"]{
 	display: none !important;
 }
+html{
+	background-color: @brand-primary;
+}
 body.csi-template{
 
 }
@@ -34,26 +37,9 @@ body.csi-template{
 ::-moz-selection {
   background: @state-danger-bg; /* Gecko Browsers */
 }
-@media (max-width: @screen-xs-max) {
-	.navbar-position {
-		.navbar-fixed-bottom;
-	}
-	body { padding-bottom: 70px; }
-}
-@media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
-	.navbar-position {
-		.navbar-static-top;
-	}
-}
-@media (min-width: @screen-md-min) and (max-width: @screen-md-max) {
-	.navbar-position {
-		.navbar-static-top;
-	}
-}
-@media (min-width: @screen-lg-min) {
-	.navbar-position {
-		.navbar-static-top;
-	}
+body.csi-template-cmp-control-center-body{
+	padding-top: 70px;
+	//background-image: linear-gradient(45deg, #88B0AA, #1E2939);
 }
 
 .ajax-loading{
@@ -86,10 +72,8 @@ body.csi-template{
 	}
 }
 #csi-template-cmp-control-center-main{
+	//background-color : rgba(255,255,255,0.5);
 	min-heignt: 100vh;
-	*{
-	//	position:relative;
-	}
 }
 
 
