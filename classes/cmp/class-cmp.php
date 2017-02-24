@@ -444,15 +444,12 @@ public function csi_cmp_build_page_show_plan(){
 					T00.creation_time as plan_creation_time,
 					T00.manager_user_id as manager_id,
 					T01.short_name as customer_name,
-					T01.code as customer_code,
-					T02.user_login as user_name
+					T01.code as customer_code
 
 				FROM
 				' . $this->tbl_name . ' as T00
 				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T01
 					ON T01.id = T00.customer_id
-				LEFT JOIN ' . $wpdb->prefix . 'users as T02
-					ON T00.manager_user_id = T02.id
 				WHERE
 					T00.id = "' . $plan_id . '"
 
@@ -565,11 +562,7 @@ public function csi_cmp_build_page_show_plan(){
 					<ul class="list-group collapse" id="plan-3-tasks">
 						<li class="list-group-item">
 							<span class="text-center lead">Avance del Plan</span>
-							<div class="progress">
-								<div class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
-									60%
-								</div>
-							</div>
+								' . self::csi_cmp_calculate_cmp_percentage($plan_id)['progress_bar'] . '
 							<small>Este valor refleja el porcentaje de tareas de ejecución efecutadas contra las por ejecutar.</small>
 						</li>
 						<li class="list-group-item">012: Propuestas</li>
@@ -1491,11 +1484,7 @@ public function csi_cmp_popup_cmp_info(){
 	<tr>
 		<th class="small">Avance</th>
 		<td>
-			<div class="progress">
-				<div class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
-					60%
-				</div>
-			</div>
+			' . self::csi_cmp_calculate_cmp_percentage($plan_id)['progress_bar'] . '
 		</td>
 	</tr>
 	</table>
