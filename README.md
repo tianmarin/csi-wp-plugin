@@ -31,6 +31,8 @@ List all branches
 `git branch -a`
 Checkout the branch you want
 `git checkout <name_of_branch>`
+4. to update just execute
+`git pull`
 
 ### Update
 Every once in a while you can check if newer version is available executing `git status`.
@@ -38,11 +40,6 @@ Every once in a while you can check if newer version is available executing `git
 
 If anything goes wrong (you should always take a DB backup before any update), you can rollback to an early version (hash)
 First execute `git hist`:
-```$ git hist
-* fa3c141 2017-02-01 | Added HTML header (HEAD, master) [Cristian Marin]
-* 8c32287 2011-01-09 | Added standard HTML page tags [Cristian Marin]
-* 43628f7 2011-01-05 | Added h1 tag [Cristian Marin]
-```
 then execute `git checkout <hash>`
 
 

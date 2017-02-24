@@ -548,6 +548,7 @@ public function csi_cmp_build_page_new_task_form(){
 	$response			= array();
 	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	$plan_id			= intval ( $post['plan_id'] );
+	$executor_opts		= '';
 
 	$sql = 'SELECT
 				*,
@@ -823,6 +824,11 @@ public function csi_cmp_build_page_new_task_form(){
 	</div>
 
 	';
+	$sql = 'SELECT ID, display_name FROM ' . $wpdb->base_prefix . 'users ORDER BY display_name ASC';
+	$users = $this->get_sql ( $sql );
+	foreach ( $users as $user ){
+		$executor_opts .= '<option value="' . $user['ID'] . '">' . $user['display_name'] . '</option>';
+	}
 	$dynamic_fields=array(
 		'task-executioner'			=> array(
 			'maxFields'		=> 5,
@@ -837,6 +843,7 @@ public function csi_cmp_build_page_new_task_form(){
 										required="true"
 									>
 										<option></option>
+										' . $executor_opts . '
 									</select>
 									<span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
 									<input type="number" class="form-control col-xs-2" placeholder="3" name="task_executor_time[]"

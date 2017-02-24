@@ -1275,7 +1275,10 @@ public function csi_cmp_build_page_create_plan(){
 public function csi_cmp_build_page_new_plan_form(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
+	global $wpdb;
 	//Local Variables
+	$manager_user_opts		= '';
+
 	$sql = 'SELECT id,code,short_name FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' ORDER BY code ASC';
 	$customer_opts = '';
 	$customers = $this->get_sql($sql);
@@ -1283,6 +1286,13 @@ public function csi_cmp_build_page_new_plan_form(){
 		$customer_opts .= '<option value="' . $customer['id'] . '">' . $customer['short_name'] . ' (' . $customer['code'] . ')</option>';
 	}
 	$response			= array();
+
+	$sql = 'SELECT ID, display_name FROM ' . $wpdb->base_prefix . 'users ORDER BY display_name ASC';
+	$users = $this->get_sql ( $sql );
+	foreach ( $users as $user ){
+		$selected = ( $user['ID'] == get_current_user_id() ) ? ' selected ' : '';
+		$manager_user_opts .= '<option value="' . $user['ID'] . '" ' . $selected . '>' . $user['display_name'] . '</option>';
+	}
 	$o	='
 	<div class="panel panel-default row">
 		<div class="panel-heading">
@@ -1334,15 +1344,8 @@ public function csi_cmp_build_page_new_plan_form(){
 						<div class="input-group">
 							<span class="input-group-addon"><i class="fa fa-fw fa-user-o"></i></span>
 							<select class="form-control select2" id="manager_user_id" name="manager_user_id" required="true" >
-								<optgroup label="MXOPN2">
-									<option value="1">Rogelio Roque</option>
-									<option value="incidente">Otro mas</option>
-								</optgroup>
-								<optgroup label="Subdirectores">
-									<option value="1" selected>Cristian Marin</option>
-									<option value="incidente">Ricardo De Acha</option>
-									<option value="incidente">Javier Caballero</option>
-								</optgroup>
+								<option></option>
+								' . $manager_user_opts . '
 							</select>
 						</div>
 						<span class="help-block">
@@ -1536,9 +1539,13 @@ public function csi_cmp_calculate_cmp_percentage( $plan_id = 0 ){
 				T00.cmp_id = ' . $plan_id . '
 	';
 	$data = $wpdb->get_row ( $sql );
-	$success = intval ( $data->finished / $data->total * 100 );
-	$warning = intval ( ( $data->start_delay + $data->end_delay ) / $data->total * 100 );
-	$error = intval ( $data->error / $data->total * 100 );
+	if ( 0 != $data->total){
+		$success = intval ( $data->finished / $data->total * 100 );
+		$warning = intval ( ( $data->start_delay + $data->end_delay ) / $data->total * 100 );
+		$error = intval ( $data->error / $data->total * 100 );
+	}else{
+		$success = $warning = $error = 0;
+	}
 	$progress_bar = '
 		<div class="progress">
 			<div class="progress-bar progress-bar-striped progress-bar-success" style="width: ' . $success . '%"></div>
@@ -1548,6 +1555,7 @@ public function csi_cmp_calculate_cmp_percentage( $plan_id = 0 ){
 	';
 
 	return array(
+		'total'			=> $data->total,
 		'success'		=> $success,
 		'warning'		=> $warning,
 		'error'			=> $error,
