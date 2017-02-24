@@ -375,8 +375,7 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_cmp_fetch_plan_info',				array( $this , 'csi_cmp_fetch_plan_info'			));
 	add_action( 'wp_ajax_csi_cmp_fetch_plan_docs',				array( $this , 'csi_cmp_fetch_plan_docs'			));
 	add_action( 'wp_ajax_csi_cmp_popup_cmp_info',				array( $this , 'csi_cmp_popup_cmp_info'				));
-
-
+	add_action( 'wp_ajax_csi_cmp_build_cmp_gantt',				array( $this , 'csi_cmp_build_cmp_gantt'			));
 
 }
 public function csi_cmp_fetch_filtered_plan_table(){
@@ -398,7 +397,7 @@ public function csi_cmp_fetch_filtered_plan_table(){
 			' . $this->tbl_name . ' as T00
 			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T01
 				ON T01.id = T00.customer_id
-			LEFT JOIN ' . $wpdb->prefix . 'users as T02
+			LEFT JOIN ' . $wpdb->base_prefix . 'users as T02
 				ON T00.manager_user_id = T02.id
 
 	';
@@ -406,12 +405,12 @@ public function csi_cmp_fetch_filtered_plan_table(){
 	foreach ( $plans as $plan ){
 		$tbody .= '
 			<tr>
-				<td>' . $plan['plan_id'] . '</td>
+				<td class="hidden-xs">' . $plan['plan_id'] . '</td>
 				<td>Pais</td>
-				<td>' . $plan['customer_name'] . ' <small>(' . strtoupper ( $plan['customer_code'] ) .')</small></td>
+				<td><span class="hidden-xs">' . $plan['customer_name'] . '</span> <small>(' . strtoupper ( $plan['customer_code'] ) .')</small></td>
 				<td><a href="#!showplan?plan_id=' . $plan['plan_id'] . '&otra=wea"><small>' . $plan['title'] . '<small></a></td>
 				<td><a href="#" class="user-data" data-user-id="' . $plan['manager_id'] . '" title="M&aacute;s informaci&oacute;n"><small><i class="fa fa-id-card-o"></i> ' . $plan['user_name'] . '</a></td>
-				<td>tareas</td>
+				<td>' . self::csi_cmp_calculate_cmp_percentage($plan['plan_id'])['progress_bar'] . '</td>
 			</tr>
 		';
 	}
@@ -665,6 +664,22 @@ public function csi_cmp_build_page_show_plan(){
 				</div>
 			</div>
 		</div>
+		<div class="row">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<i class="fa fa-fw fa-tasks"></i> Gantt
+					<div class="pull-right">
+						<a href="#csi-cmp-fetch-cmp-gantt" class="refresh-button"><i class="fa fa-fw fa-refresh"></i></a>
+						|
+						<a data-toggle="collapse" href="#csi-cmp-fetch-cmp-gantt" role="button">
+							<i class="fa fa-fw fa-caret-down"></i>
+						</a>
+					</div>
+				</div>
+				<div id="csi-cmp-fetch-cmp-gantt" class="collapse refreshable" style="position:relative; min-height: 250px;" data-action="csi_cmp_build_cmp_gantt" data-plan-id="' . $plan_id . '">
+				</div>
+			</div>
+		</div><!-- CMP Gantt -->
 		<div class="panel panel-default row">
 			<div class="panel-heading">
 			<i class="fa fa-fw fa-list"></i> Tareas
@@ -750,6 +765,103 @@ public function csi_cmp_fetch_plan_docs(){
 	echo json_encode($response);
 	wp_die();
 }
+public function csi_cmp_fetch_problem_tasks_by_plan_id ( $plan_id = 0){
+	$response['message'] = $o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_cmp_build_cmp_gantt(){
+	//Global Variables
+	global $NOVIS_CSI_CMP_TASK;
+	global $NOVIS_CSI_CMP_TASK_STATUS;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	//Local Variables
+	$response			= array();
+	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$dataProvider		= array();
+	$plan_id 			= intval ( $post['planId'] );
+
+	$sql='SELECT
+			T02.sid as sid,
+			T00.start_datetime as start_datetime,
+			T00.end_datetime as end_datetime,
+			T01.hex_color as status_color
+		FROM
+			' . $NOVIS_CSI_CMP_TASK->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' as T01
+				ON T01.id = T00.status_id
+			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T02
+				ON T02.id = T00.customer_system_id
+		WHERE
+			T00.cmp_id = "' . $plan_id . '"
+		ORDER BY
+			T00.start_datetime ASC
+	';
+	$tasks = $this->get_sql ( $sql );
+	foreach ( $tasks as $task ) {
+		$index = array_search( $task['sid'], array_column( $dataProvider, 'category' ) );
+		if (FALSE === $index ){
+			array_push ( $dataProvider, array(
+				'category'					=> $task['sid'],
+				'segments'					=> array(
+					array(
+						'start'				=> $task['start_datetime'],
+						'end'				=> $task['end_datetime'],
+						'color'				=> '#' . $task['status_color'],
+					),
+				),
+			) );
+		}else{
+			array_push ( $dataProvider[$index]['segments'], array(
+					'start'					=> $task['start_datetime'],
+					'end'					=> $task['end_datetime'],
+					'color'					=> '#' . $task['status_color'],
+			) );
+		}
+	}
+	$response['dataProvider']			= $dataProvider;
+	$response['graphs']					= null;
+	$response['chart']	= array(
+		'type'							=> 'gantt',
+		'period'						=> 'ss',
+		'dataDateFormat'				=> 'YYYY-MM-DD JJ:NN:SS',
+		'columnWidth'					=> 0.5,
+		'valueAxis'						=> array(
+			'type'						=> 'date'
+		),
+		'brightnessStep'				=> 7,
+		'graph'							=> array(
+			'lineAlpha'					=> 1,
+			'lineColor'					=> '#FFFFFF',
+			'fillAlphas'				=> 0.85,
+			'balloonText'				=> '[[category]]<br />[[start]] - [[end]]',
+		),
+		'rotate'						=> true,
+		'categoryField'					=> 'category',
+		'segmentsField'					=> 'segments',
+		'colorField'					=> 'color',
+		'startDateField'				=> 'start',
+		'endDateField'					=> 'end',
+		'dataProvider'					=> $dataProvider,
+/*		'valueScrollbar'				=> array(
+			'autoGridCount'				=> true,
+		),
+*/
+/*
+		'chartCursor'					=> array(
+			'cursorColor'				=> '#55bb76',
+			'valueBalloonsEnabled'		=> false,
+			'cursorAlpha'				=> 0,
+			'valueLineAlpha'			=> 0.5,
+			'valueLineBalloonEnabled'	=> true,
+			'valueLineEnabled'			=> true,
+			'zoomable'					=> false,
+			'valueZoomable'				=> true,
+		),
+*/	);
+	echo json_encode($response);
+	wp_die();
+}
 public function csi_cmp_fetch_plan_info(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
@@ -772,6 +884,7 @@ public function csi_cmp_fetch_plan_info(){
 	';
 	$plan = $wpdb->get_row($sql);
 	$manager_user = get_userdata ( $plan->plan_manager_user_id);
+	$avance = self::csi_cmp_calculate_cmp_percentage ( $plan_id );
 	$o='
 	<tr>
 		<th class="small">Cliente</th>
@@ -803,11 +916,7 @@ public function csi_cmp_fetch_plan_info(){
 	<tr>
 		<th class="small">Avance</th>
 		<td>
-			<div class="progress">
-				<div class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
-					60%
-				</div>
-			</div>
+			' . $avance['progress_bar'] . '
 		</td>
 	</tr>
 
@@ -1047,11 +1156,11 @@ public function csi_cmp_build_page_list_plans(){
 			<table id="csi-template-cmp-filtered-plan-table" class="table table condensed refreshable" data-action="csi_cmp_fetch_filtered_plan_table" style="position:relative;">
 				<thead>
 					<tr>
-						<th><small><i class="fa fa-hashtag"></i></small></th>
-						<th>Pa&iacute;s</th>
-						<th>Cliente</th>
+						<th class="hidden-xs"><small><i class="fa fa-hashtag"></i></small></th>
+						<th><i class="fa fa-globe"></i> <span class="hidden-xs">Pais</span></th>
+						<th><i class="fa fa-building-o"></i> <span class="hidden-xs">Cliente</span></th>
 						<th>T&iacute;tulo</th>
-						<th>Responsable</th>
+						<th><span class="hidden-xs">Responsable</span><span class="visible-xs">R</span></th>
 						<th>Tareas</th>
 					</tr>
 				</thead>
@@ -1059,11 +1168,11 @@ public function csi_cmp_build_page_list_plans(){
 				</tbody>
 				<tfoot>
 					<tr>
-						<th><small><i class="fa fa-hashtag"></i></small></th>
-						<th>Pa&iacute;s</th>
-						<th>Cliente</th>
+						<th class="hidden-xs"><small><i class="fa fa-hashtag"></i></small></th>
+						<th><i class="fa fa-globe"></i> <span class="hidden-xs">Pais</span></th>
+						<th><i class="fa fa-building-o"></i> <span class="hidden-xs">Cliente</span></th>
 						<th>T&iacute;tulo</th>
-						<th>Responsable</th>
+						<th><span class="hidden-xs">Responsable</span><span class="visible-xs">R</span></th>
 						<th>Tareas</th>
 					</tr>
 				</tfoot>
@@ -1408,11 +1517,47 @@ public function csi_cmp_popup_cmp_info(){
 }
 public function csi_cmp_calculate_cmp_percentage( $plan_id = 0 ){
 	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_CMP_TASK_STATUS;
+	global $NOVIS_CSI_CMP_TASK;
 	//Local Variables
+	$sql = 'SELECT
+				SUM(T01.cmp_total_flag) as total,
+				SUM(IF(T01.cmp_finished_start_flag!=0,IF(T00.start_datetime<NOW(),1,0),0)) as start_delay,
+				SUM(IF(T01.cmp_finished_end_flag!=0,IF(T00.end_datetime<NOW(),1,0),0)) as end_delay,
+				SUM(T01.cmp_finished_flag) as finished,
+				SUM(T01.cmp_error_flag) as error
+
+			FROM
+				' . $NOVIS_CSI_CMP_TASK->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' as T01
+					ON T00.status_id = T01.id
+			WHERE
+				T00.cmp_id = ' . $plan_id . '
+	';
+	$data = $wpdb->get_row ( $sql );
+	$success = intval ( $data->finished / $data->total * 100 );
+	$warning = intval ( ( $data->start_delay + $data->end_delay ) / $data->total * 100 );
+	$error = intval ( $data->error / $data->total * 100 );
+	$progress_bar = '
+		<div class="progress">
+			<div class="progress-bar progress-bar-striped progress-bar-success" style="width: ' . $success . '%"></div>
+			<div class="progress-bar progress-bar-striped progress-bar-warning" style="width: ' . $warning . '%"></div>
+			<div class="progress-bar progress-bar-striped progress-bar-danger" style="width: ' . $error . '%"></div>
+		</div>
+	';
+
+	return array(
+		'success'		=> $success,
+		'warning'		=> $warning,
+		'error'			=> $error,
+		'progress_bar'	=> $progress_bar,
+	);
 
 }
 public function csi_cmp_generate_cmp_gantt_chart( $plan_id = 0 ){
 	//Global Variables
+	global $wpdb;
 	//Local Variables
 
 }

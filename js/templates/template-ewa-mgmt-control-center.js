@@ -6,7 +6,7 @@ Dependencies: jquery, bootstrap, amcharts, amcharts-serial, amcharts-responsive,
 /*global moment*/
 /*global AmCharts*/
 jQuery(document).ready(function($){
-//Global Variables	
+//Global Variables
 var ajaxUrl		=csiTemplateEwaMgmtControlCenter.ajaxurl;
 var $_GET = {};
 
@@ -65,7 +65,7 @@ function fetch_ewas( page_no ){
 	var paginationDiv					= $('#csi-template-ewa-mgmt-pagination');
 	var tbody							= $('#csi-template-ewa-mgmt-control-center-table tbody');
 	var data							= new FormData();
-	
+
 	data.append('action',				'csi_ajax_template_ewa_mgmt_control_center_fetch_alerts'	);
 	data.append('filter_start_date',	$('#filter-date-start').val()								);
 	data.append('filter_end_date',		$('#filter-date-end').val()									);
@@ -106,7 +106,7 @@ function fetch_ewas( page_no ){
 			}
 		},
 		error: aaAjaxError,
-	});// $.ajax	
+	});// $.ajax
 }// function fetch_ewas
 
 function fetchAlertChartData(){
@@ -174,7 +174,7 @@ function fetchAlertChartData(){
 			}
 		},
 		error: aaAjaxError,
-	});// $.ajax	
+	});// $.ajax
 }// function fetchAlertChartData
 
 function fetchEWAStatusChartData(){
@@ -242,7 +242,7 @@ function fetchEWAStatusChartData(){
 			}
 		},
 		error: aaAjaxError,
-	});// $.ajax	
+	});// $.ajax
 }// function fetchEWAStatusChartData
 
 function fetchActionChartData(){
@@ -282,7 +282,7 @@ function fetchActionChartData(){
 			}
 		},
 		error: aaAjaxError,
-	});// $.ajax	
+	});// $.ajax
 }// function fetchActionChartData
 
 function fetchActionAlertPies(){
@@ -322,7 +322,7 @@ function fetchActionAlertPies(){
 			}
 		},
 		error: aaAjaxError,
-	});// $.ajax	
+	});// $.ajax
 }// function fetchActionChartData
 
 function fetchEWAStatusCustomerEWAs(){
@@ -390,8 +390,8 @@ function fetchEWAStatusCustomerEWAs(){
 			}
 		},
 		error: aaAjaxError,
-	});// $.ajax	
-}// function 
+	});// $.ajax
+}// function
 
 function fetchEWAStatusCustomerAlerts(){
 	var parentDiv= $('#csi-template-ewa-mgmt-control-center-infographics-customer-alerts');
@@ -458,8 +458,8 @@ function fetchEWAStatusCustomerAlerts(){
 			}
 		},
 		error: aaAjaxError,
-	});// $.ajax	
-}// function 
+	});// $.ajax
+}// function
 
 
 var aaAjaxError = function(jqXHR, textStatus, errorThrown){
@@ -504,7 +504,7 @@ var aaAjaxError = function(jqXHR, textStatus, errorThrown){
 };
 
 function refreshData(){
-	fetch_ewas();		
+	fetch_ewas();
 	fetchAlertChartData();
 	fetchActionChartData();
 	fetchEWAStatusChartData();

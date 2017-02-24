@@ -89,6 +89,14 @@ gulp.task('uglifyVendor', function() {
         './bower_components/select2/dist/js/select2.js',
         './bower_components/moment/moment.js',
         './bower_components/bootstrap-daterangepicker/daterangepicker.js',
+		'./bower_components/amcharts3/amcharts/amcharts.js',
+		'./bower_components/amcharts3/amcharts/serial.js',
+		'./bower_components/amcharts3/amcharts/funnel.js',
+		'./bower_components/amcharts3/amcharts/gantt.js',
+		'./bower_components/amcharts3/amcharts/gauge.js',
+		'./bower_components/amcharts3/amcharts/pie.js',
+		'./bower_components/amcharts3/amcharts/radar.js',
+		'./bower_components/amcharts3/amcharts/xy.js',
     ])
     .pipe($.sourcemaps.init())
     .pipe($.concat('vendor.js'))

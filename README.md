@@ -21,6 +21,17 @@ This Wordpress Plugin is a personal effort to automate and showcase business inf
 ## Usage
 ### Download
 ### Installation
+
+1. Install git
+`yum install git`
+2. Clone this repo
+`git clone https://github.com/tianmarin/csi-wp-plugin.git`
+3. (optional) change to branch
+List all branches
+`git branch -a`
+Checkout the branch you want
+`git checkout <name_of_branch>`
+
 ### Update
 Every once in a while you can check if newer version is available executing `git status`.
 `git checkout master`

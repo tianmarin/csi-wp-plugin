@@ -196,15 +196,35 @@ function csiTemplateCmpFetchTableContent( tableSelector ){
 			setTimeout(function(){
 				table.removeClass('ajax-loading');
 			}, 500);
-		//	console.log ( response );
 			if ( 0 === response ){
 				//console.log ( table.data('refresh-action') );
 			}else{
-				if ( 'TABLE' === table.prop('tagName') ){
-					table.find('tbody').html(response.tbody);
+				if ( undefined !== response.chart){
+					console.log ( JSON.stringify ( response.chart ) );
+					var allCharts = AmCharts.charts;
+					var chartIndex = null;
+					$.each(allCharts,function(i,val){
+						if (table.attr('id') === val.div.id ) {
+							chartIndex = i;
+							return i;
+						}
+					});
+					if ( null === chartIndex ){
+						AmCharts.makeChart( table.attr('id') , response.chart );
+						table.removeClass('ajax-loading');
+					}else{
+//						allCharts[chartIndex].graphs			= response.graphs;
+						allCharts[chartIndex].dataProvider		= response.dataProvider;
+						allCharts[chartIndex].validateData();
+						allCharts[chartIndex].invalidateSize();
+					}
 				}else{
-					table.html('');
-					table.append(response.message);
+					if ( 'TABLE' === table.prop('tagName') ){
+						table.find('tbody').html(response.tbody);
+					}else{
+						table.html('');
+						table.append(response.message);
+					}
 				}
 			}
 		},
