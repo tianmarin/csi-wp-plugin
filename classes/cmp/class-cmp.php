@@ -467,7 +467,7 @@ public function csi_cmp_build_page_show_plan(){
 	}
 
 	if ( NULL == $last_modified_user ){
-		$modif_text = $creation_user->user_nicename . ' cre&oacute; el plan';
+		$modif_text = $creation_user->display_name . ' cre&oacute; el plan';
 		$modif_datetime = new DateTime($plan->plan_creation_date . ' ' . $plan->plan_creation_time );
 	}else{
 		$modif_text = $last_modified_user->user_nicename . ' modific&oacute; las propiedades del plan';
@@ -858,11 +858,13 @@ public function csi_cmp_build_cmp_gantt(){
 public function csi_cmp_fetch_plan_info(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CMP_TASK;
 	global $wpdb;
 	//Local Variables
 	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	$response			= array();
 	$plan_id 			= intval ( $post['planId'] );
+	//------------------------------------------------------
 	$sql='SELECT
 			*,
 			T00.manager_user_id as plan_manager_user_id,
@@ -876,8 +878,27 @@ public function csi_cmp_fetch_plan_info(){
 			T00.id = "' . $plan_id . '"
 	';
 	$plan = $wpdb->get_row($sql);
-	$manager_user = get_userdata ( $plan->plan_manager_user_id);
-	$avance = self::csi_cmp_calculate_cmp_percentage ( $plan_id );
+	$manager_user = get_userdata ( $plan->plan_manager_user_id );
+	//------------------------------------------------------
+	$sql = '
+		SELECT
+		(SELECT start_datetime FROM ' . $NOVIS_CSI_CMP_TASK->tbl_name . ' WHERE cmp_id = "' . $plan_id . '" ORDER BY start_datetime ASC LIMIT 1) as start,
+		(SELECT end_datetime FROM ' . $NOVIS_CSI_CMP_TASK->tbl_name . ' WHERE cmp_id = "' . $plan_id . '" ORDER BY end_datetime DESC LIMIT 1) as end
+	';
+	$dates = $wpdb->get_row ( $sql );
+	setlocale(LC_ALL, 'es_MX');
+	$first_date = new DateTime ( $dates->start );
+	$last_date = new DateTime ( $dates->end );
+	$time_date = date_diff($first_date, $last_date);
+	self::write_log ( $time_date );
+	//------------------------------------------------------
+	$sql = 'SELECT
+				SUM(TIMESTAMPDIFF(HOUR, start_datetime, end_datetime) ) as hh
+					FROM  ' . $NOVIS_CSI_CMP_TASK->tbl_name . '
+					WHERE cmp_id = "' . $plan_id . '"
+	';
+	$hh = $wpdb->get_var($sql);
+	//------------------------------------------------------
 	$o='
 	<tr>
 		<th class="small">Cliente</th>
@@ -888,11 +909,12 @@ public function csi_cmp_fetch_plan_info(){
 		<td><a href="#" class="user-data" data-user-id="' . $plan->plan_manager_user_id . '" title="M&aacute;s informaci&oacute;n"><i class="fa fa-id-card-o"></i> ' .  $manager_user->user_nicename . '</a></td>
 	</tr>
 	<tr>
-		<th class="small">Actividad</th>
+		<th class="small">Cronolog&iacute;a</th>
 		<td>
 			<ul class="list-unstyled">
-				<li><i class="fa fa-fw fa-flag-o"></i> 24 / Febrero / 2017</li>
-				<li><i class="fa fa-fw fa-flag-checkered"></i> 24 / Marzo / 2017</li>
+				<li><i class="fa fa-fw fa-flag-o"></i> ' . strftime('%d/%b/%g',$first_date->getTimestamp()) . '</li>
+				<li><i class="fa fa-fw fa-flag-checkered"></i> ' . strftime('%d/%b/%g',$last_date->getTimestamp()) . '</li>
+				<li><i class="fa fa-fw fa-calendar"></i> ' . $time_date->days . ' dias</li>
 			</ul>
 		</td>
 	</tr>
@@ -900,16 +922,14 @@ public function csi_cmp_fetch_plan_info(){
 		<th class="small">Esfuerzo</th>
 		<td class="">
 			<ul class="list-unstyled">
-				<li><strong>32</strong> HH - Invertidas</li>
-				<li><strong>58</strong> HH - Planificadas</li>
-				<li><strong>90</strong> HH - Total</li>
+				<li><strong>' . $hh . '</strong> HH - Total</li>
 			</ul>
 		</td>
 	</tr>
 	<tr>
 		<th class="small">Avance</th>
 		<td>
-			' . $avance['progress_bar'] . '
+			' . self::csi_cmp_calculate_cmp_percentage($plan_id)['progress_bar'] . '
 		</td>
 	</tr>
 
