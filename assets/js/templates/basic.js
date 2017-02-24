@@ -226,6 +226,7 @@ function csiTemplateCmpFetchTableContent( tableSelector ){
 						table.append(response.message);
 					}
 				}
+				$('[data-toggle="tooltip"]').tooltip();
 			}
 		},
 		error: aaAjaxError,
@@ -289,6 +290,7 @@ function csiInfoPopup(elementData){
 }
 function csiRefreshEventListener(pageResponse){
 	var response = pageResponse;
+	$('[data-toggle="tooltip"]').tooltip();
 	$('[type="reset"]').click(function(event){
 		event.preventDefault();
 		window.history.back();
@@ -296,6 +298,14 @@ function csiRefreshEventListener(pageResponse){
 
 	$.each ( $('.refreshable'), function(){
 		csiTemplateCmpFetchTableContent ( $(this) );
+	});
+	$.each ( $('.auto-refreshable'), function(){
+		if (undefined !== $(this).data('auto-refresh-timelapse') ){
+			var element = $(this);
+			setInterval(function(){
+				csiTemplateCmpFetchTableContent ( element );
+			}, $(this).data('auto-refresh-timelapse') );
+		}
 	});
 	$('.csi-popup').click( function(event){
 		event.preventDefault();

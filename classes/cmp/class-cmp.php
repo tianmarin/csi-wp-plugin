@@ -499,6 +499,11 @@ public function csi_cmp_build_page_show_plan(){
 	<div id="csi-template-cmp-control-center-show-plan" class="container">
 		<div class="page-header row">
 			<h2>' . $plan->plan_title . ' <small>' . $plan->customer_code . '</small></h2>
+			<div style="margin-top:-5px;height:5px;overflow:hidden;" class="row">
+				<div style="margin-top: -5px;">
+					' . self::csi_cmp_calculate_cmp_percentage($plan_id)['progress_bar'] . '
+				</div>
+			</div>
 			<p class="text-muted hidden-print"><i class="fa fa-clock-o"></i> ' . $modif_text . ' hace ' . $last_action_time_text . '.</p>
 			<div>
 				<p class="lead front-end-editable"
@@ -523,7 +528,7 @@ public function csi_cmp_build_page_show_plan(){
 						</div>
 					</div>
 					<div id="plan-info" class="collapse">
-						<table class="table table-condensed refreshable" style="position:relative;" id="csi-cmp-fetch-plan-info" data-action="csi_cmp_fetch_plan_info" data-plan-id="' . $plan_id . '">
+						<table class="table table-condensed refreshable auto-refreshable" data-auto-refresh-timelapse="60000" style="position:relative;" id="csi-cmp-fetch-plan-info" data-action="csi_cmp_fetch_plan_info" data-plan-id="' . $plan_id . '">
 							<tbody style="position:relative;">
 							</tbody>
 						</table>
@@ -1166,7 +1171,7 @@ public function csi_cmp_build_page_list_plans(){
 			</div>
 			<div class="collapse in">
 			</div>
-			<table id="csi-template-cmp-filtered-plan-table" class="table table condensed refreshable" data-action="csi_cmp_fetch_filtered_plan_table" style="position:relative;">
+			<table id="csi-template-cmp-filtered-plan-table" class="table refreshable" data-action="csi_cmp_fetch_filtered_plan_table" style="position:relative;">
 				<thead>
 					<tr>
 						<th class="hidden-xs"><small><i class="fa fa-hashtag"></i></small></th>
@@ -1527,7 +1532,7 @@ public function csi_cmp_popup_cmp_info(){
 	echo json_encode($response);
 	wp_die();
 }
-public function csi_cmp_calculate_cmp_percentage( $plan_id = 0 ){
+public function csi_cmp_calculate_cmp_percentage ( $plan_id = 0 ) {
 	//Global Variables
 	global $wpdb;
 	global $NOVIS_CSI_CMP_TASK_STATUS;
@@ -1556,10 +1561,10 @@ public function csi_cmp_calculate_cmp_percentage( $plan_id = 0 ){
 		$success = $warning = $error = 0;
 	}
 	$progress_bar = '
-		<div class="progress">
-			<div class="progress-bar progress-bar-striped progress-bar-success" style="width: ' . $success . '%"></div>
-			<div class="progress-bar progress-bar-striped progress-bar-warning" style="width: ' . $warning . '%"></div>
-			<div class="progress-bar progress-bar-striped progress-bar-danger" style="width: ' . $error . '%"></div>
+		<div class="progress" style="margin-bottom:0;">
+			<div class="progress-bar progress-bar-striped progress-bar-success" style="width: ' . $success . '%" data-toggle="tooltip" data-placement="top" title="' . $data->finished . ' Tareas"></div>
+			<div class="progress-bar progress-bar-striped progress-bar-warning" style="width: ' . $warning . '%" data-toggle="tooltip" data-placement="top" title="' . ( $data->start_delay + $data->end_delay ) . ' Tareas"></div>
+			<div class="progress-bar progress-bar-striped progress-bar-danger" style="width: ' . $error . '%" data-toggle="tooltip" data-placement="top" title="' . $data->error . ' Tareas"></div>
 		</div>
 	';
 
