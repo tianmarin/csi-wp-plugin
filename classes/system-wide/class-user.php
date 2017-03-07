@@ -389,6 +389,33 @@ public function __construct(){
 	add_action( 'edit_user_profile',							array( $this, 'user_profile_fields' 		));
 	add_action( 'profile_update',								array( $this, 'save_profile_update' 		));
 	add_action( 'delete_user',									array( $this, 'disable_profile' 			));
+	add_filter('manage_users_columns', 							array( $this, 'add_user_team_column' 		));
+	add_action('manage_users_custom_column',  					array( $this, 'show_user_team_column_content'), 10, 3);
+}
+public function add_user_team_column ( $columns ) {
+	$columns = array_slice($columns, 0, 2, true) + array("user_team" => "Equipo") + array_slice($columns, 3, count($columns)-2, true);
+    return $columns;
+}
+
+//
+function show_user_team_column_content($value, $column_name, $user_id) {
+	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_USER_TEAM;
+	if ( $column_name = 'user_team' ){
+		$sql = 'SELECT
+					T01.short_name as team_name
+				FROM
+					' . $this->tbl_name . ' as T00
+					LEFT JOIN ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' as T01
+						ON T00.team_id = T01.id
+				WHERE
+					T00.id = "' . $user_id . '"';
+		$team = $wpdb->get_var ( $sql );
+		return $team;
+	}else{
+		return $value;
+	}
 }
 
 public function csi_cmp_popup_user_info(){
@@ -580,7 +607,6 @@ public function disable_profile( $user_id ) {
 
 	return;
 }
-
 //END OF CLASS
 }
 
