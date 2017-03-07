@@ -567,7 +567,10 @@ public function csi_cmp_popup_new_step_form(){
 public function csi_cmp_popup_edit_step_form(){
 	//Globa Variables
 	global $wpdb;
+	global $NOVIS_CSI_USER;
+	global $NOVIS_CSI_USER_TEAM;
 	//Local Variables
+	$executor_user_opts	= '';
 	$response			= array();
 	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	$sql ='SELECT * FROM ' . $this->tbl_name . ' WHERE id="' . $post['stepId'] . '"';
@@ -576,6 +579,30 @@ public function csi_cmp_popup_edit_step_form(){
 	$start_datetime = new DateTime ( $step->planned_start_datetime );
 	$end_datetime = new DateTime ( $step->planned_end_datetime );
 	$duration = date_diff ( $end_datetime, $start_datetime );
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id,short_name FROM ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' ';
+	$user_teams = $this->get_sql ( $sql);
+	foreach ( $user_teams as $user_team ){
+		$sql = 'SELECT
+					T00.id as user_id,
+					T01.display_name as display_name,
+					T01.user_email as user_email
+				FROM
+					' . $NOVIS_CSI_USER->tbl_name . ' as T00
+					LEFT JOIN ' . $wpdb->base_prefix . 'users as T01
+						ON T00.id = T01.ID
+				WHERE
+					T00.active_flag = 1 AND
+					T00.team_id = "' . $user_team['id'] . '"
+		';
+		$users = $this->get_sql ( $sql );
+		$executor_user_opts .= '<optgroup label="' . $user_team['short_name'] . '">';
+		foreach ( $users as $user ){
+			$selected = ( 1 == $step->internal_executor_flag && $step->internal_user_id == $user['user_id'] ) ? ' selected ' : '';
+			$executor_user_opts .= '<option value="' . $user['user_id'] . '" ' . $selected . '>' . $user['display_name'] . '</option>';
+		}
+		$executor_user_opts .= '</optgroup>';
+	}
 	//--------------------------------------------------------------------------
 	$o='<div class="clearfix">
 		<form class="in-table-form" data-function="csi_cmp_edit_cmp_task_step">
@@ -595,13 +622,11 @@ public function csi_cmp_popup_edit_step_form(){
 					<div class="input-group select2-bootstrap-append select2-bootstrap-prepend">
 						<span class="input-group-addon"><samp>Ejecutor Interno</samp></span>
 						<span class="input-group-addon">
-							<input type="radio" name="internal_executor_flag" class="csi-switchable-radio-button"  value="1" ' . ( !$step->internal_executor_flag ? 'checked="true"' : '' ). '>
+							<input type="radio" name="internal_executor_flag" class="csi-switchable-radio-button"  value="1" ' . ( $step->internal_executor_flag ? 'checked' : '' ). '>
 						</span>
 						<select name="internal_user_id" class="form-control select2 ' . ( !$step->internal_executor_flag ? 'disabled' : '' ). '" ' . ( !$step->internal_executor_flag ? 'disabled' : '' ). ' required="true" data-placeholder="Selecciona el ejecutor interno">
 							<option></option>
-							<optgroup label="MXOPN2">
-								<option>Cristian</option>
-							</optgroup>
+							' . $executor_user_opts . '
 						</select>
 					</div>
 					<div class="input-group">
@@ -666,7 +691,7 @@ public function csi_cmp_edit_cmp_task_step(){
 	$whereArray['id']						= intval ( $post['cmp_task_step_id'] );
 
 	$editArray['short_name']				= strip_tags(stripslashes( $post['short_name'] ));
-	$editArray['internal_executor_flag']	= ('1' == $post['internal_executor_flag'] ) ? 1 : 0 ;
+	$editArray['internal_executor_flag']	= isset ( $post['internal_executor_flag'] ) ? 1 : 0 ;
 	$editArray['external_executor']			= isset ( $post['external_executor'] ) ? strip_tags(stripslashes( $post['external_executor'] )) : null;
 	$editArray['internal_user_id']			= isset ( $post['internal_user_id'] ) ? intval ( $post['internal_user_id'] ) : null;
 	$editArray['planned_start_datetime']	= $start_datetime->format ( 'Y-m-d H:i:s' );

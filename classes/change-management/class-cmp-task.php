@@ -1728,8 +1728,11 @@ public function csi_cmp_fetch_task_step_list_info(){
 					WHERE
 						T00.id = "' . $task_step['internal_user_id'] . '"
 			';
-			$executor = $wpdb->get_row ( $sql );
-			$executor = '<a href="#" class="user-data" data-user-id="' . $executor->user_id . '" title="Más información"><i class="fa fa-id-card-o"></i> ' . $executor->display_name . '</a>';
+			$executor_data = $wpdb->get_row ( $sql);
+			$executor = '
+				<a href="#" class="user-data" data-user-id="' . $executor_data->user_id . '" title="Más información">
+					<i class="fa fa-id-card-o"></i> ' . $executor_data->display_name . '
+				</a>';
 		}else{
 			$executor = $task_step['external_executor'];
 		}
@@ -2079,6 +2082,8 @@ public function csi_cmp_build_page_show_task(){
 				T00.id = "' . $task_id . '"
 				AND T02.id != ""
 				AND T02.id != "0"
+			GROUP BY
+				T01.internal_user_id
 			';
 	$internal_executors = $this->get_sql ( $sql );
 	$internal_contact = '';
