@@ -40,31 +40,33 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.1.0';
+	$this->db_version	= '0.1.1';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	$this->crt_tbl_sql_wt	="(
-								id mediumint unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-								customer_id int unsigned not null COMMENT 'Customer ID',
-								title varchar(100) not null COMMENT 'Title text',
-								description varchar(255) null COMMENT 'Description text',
-								manager_user_id bigint(20) unsigned not null COMMENT 'Id of user responsible of this plan',
-								manager_user_email varchar(100) not null COMMENT 'Email of user. Used to track user if user id is deleted',
-								source_tags varchar(255) null COMMENT 'Tags to add sources of the plan',
-								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of each record',
-								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								creation_date date null COMMENT 'Date of the creation of this record',
-								creation_time time null COMMENT 'Time of the creation of this record',
-								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
-								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								last_modified_date date null COMMENT 'Date of the last modification of this record',
-								last_modified_time time null COMMENT 'Time of the last modification of this record',
+	$this->crt_tbl_sql_wt	="
+		(
+			id mediumint unsigned not null auto_increment COMMENT 'Unique ID for each entry',
+			customer_id int unsigned not null COMMENT 'Customer ID',
+			title varchar(60) not null COMMENT 'Title text',
+			description varchar(255) null COMMENT 'Description text',
+			manager_user_id bigint(20) unsigned not null COMMENT 'Id of user responsible of this plan',
+			manager_user_email varchar(100) not null COMMENT 'Email of user. Used to track user if user id is deleted',
+			source_tags varchar(255) null COMMENT 'Tags to add sources of the plan',
+			shared_plan_flag tinyint(1) null COMMENT 'Indicates if plan can be shared with other users',
+			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of each record',
+			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			creation_date date null COMMENT 'Date of the creation of this record',
+			creation_time time null COMMENT 'Time of the creation of this record',
+			last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
+			last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			last_modified_date date null COMMENT 'Date of the last modification of this record',
+			last_modified_time time null COMMENT 'Time of the last modification of this record',
 
-								UNIQUE KEY id (id)
-							) $charset_collate;";
+			UNIQUE KEY id (id)
+		) $charset_collate;";
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
@@ -77,7 +79,7 @@ public function __construct(){
 			'data_validation'			=>true,
 			'data_validation_min'		=>1,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -96,7 +98,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -115,7 +117,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -134,7 +136,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -153,7 +155,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -172,7 +174,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -191,7 +193,7 @@ public function __construct(){
 			'data_validation'			=>true,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>100,
+			'data_validation_maxlength'	=>100,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -210,7 +212,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -229,7 +231,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -248,7 +250,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -267,7 +269,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -286,7 +288,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -305,7 +307,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -324,7 +326,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -343,7 +345,7 @@ public function __construct(){
 			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
+			'data_validation_maxlength'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -369,7 +371,7 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_cmp_build_page_intro',				array( $this , 'csi_cmp_build_page_intro'			));
 	add_action( 'wp_ajax_csi_cmp_build_page_list_plans',		array( $this , 'csi_cmp_build_page_list_plans'		));
 	add_action( 'wp_ajax_csi_cmp_build_page_new_plan_form',		array( $this , 'csi_cmp_build_page_new_plan_form'	));
-	add_action( 'wp_ajax_csi_cmp_build_page_create_plan',		array( $this , 'csi_cmp_build_page_create_plan'		));
+	add_action( 'wp_ajax_csi_cmp_create_plan',					array( $this , 'csi_cmp_create_plan'				));
 	add_action( 'wp_ajax_csi_cmp_fetch_filtered_plan_table',	array( $this , 'csi_cmp_fetch_filtered_plan_table'	));
 	add_action( 'wp_ajax_csi_cmp_build_page_show_plan',			array( $this , 'csi_cmp_build_page_show_plan'		));
 	add_action( 'wp_ajax_csi_cmp_fetch_plan_info',				array( $this , 'csi_cmp_fetch_plan_info'			));
@@ -380,6 +382,7 @@ public function __construct(){
 }
 public function csi_cmp_fetch_filtered_plan_table(){
 	//Global Variables
+	global $NOVIS_CSI_COUNTRY;
 	global $NOVIS_CSI_CUSTOMER;
 	global $wpdb;
 	//Local Variables
@@ -391,7 +394,9 @@ public function csi_cmp_fetch_filtered_plan_table(){
 				T00.manager_user_id as manager_id,
 				T01.short_name as customer_name,
 				T01.code as customer_code,
-				T02.user_login as user_name
+				T02.user_login as user_name,
+				T03.code as country_code,
+				T03.short_name as country_short_name
 
 			FROM
 			' . $this->tbl_name . ' as T00
@@ -399,6 +404,8 @@ public function csi_cmp_fetch_filtered_plan_table(){
 				ON T01.id = T00.customer_id
 			LEFT JOIN ' . $wpdb->base_prefix . 'users as T02
 				ON T00.manager_user_id = T02.id
+			LEFT JOIN ' . $NOVIS_CSI_COUNTRY->tbl_name . ' as T03
+				ON T01.country_id = T03.id
 
 	';
 	$plans = $this->get_sql($sql);
@@ -406,7 +413,10 @@ public function csi_cmp_fetch_filtered_plan_table(){
 		$tbody .= '
 			<tr>
 				<td class="hidden-xs">' . $plan['plan_id'] . '</td>
-				<td>Pais</td>
+				<td>
+					<span class="hidden-xs">' . $plan['country_short_name'] . '</span>
+					<span class="visible-xs">' . strtoupper ( $plan['country_code'] ) . '</span>
+				</td>
 				<td><span class="hidden-xs">' . $plan['customer_name'] . '</span> <small>(' . strtoupper ( $plan['customer_code'] ) .')</small></td>
 				<td><a href="#!showplan?plan_id=' . $plan['plan_id'] . '&otra=wea"><small>' . $plan['title'] . '<small></a></td>
 				<td><a href="#" class="user-data" data-user-id="' . $plan['manager_id'] . '" title="M&aacute;s informaci&oacute;n"><small><i class="fa fa-id-card-o"></i> ' . $plan['user_name'] . '</a></td>
@@ -498,15 +508,22 @@ public function csi_cmp_build_page_show_plan(){
 	$o='
 	<div id="csi-template-cmp-control-center-show-plan" class="container">
 		<div class="page-header row">
-			<h2>' . $plan->plan_title . ' <small>' . $plan->customer_code . '</small></h2>
-			<div style="margin-top:-5px;height:5px;overflow:hidden;" class="row">
+			<h2 class="clearfix">
+				<span class="col-sm-10">' . $plan->plan_title . ' <small>' . $plan->customer_code . '</small></span>
+				<p class="col-sm-2 text-right">
+					<button class="btn btn-default">
+						<i class="fa fa-pencil"></i> Editar
+					</button>
+				</p>
+			</h2>
+			<div style="margin-top:-5px;height:5px;overflow:hidden;" class="">
 				<div style="margin-top: -5px;">
 					' . self::csi_cmp_calculate_cmp_percentage($plan_id)['progress_bar'] . '
 				</div>
 			</div>
 			<p class="text-muted hidden-print"><i class="fa fa-clock-o"></i> ' . $modif_text . ' hace ' . $last_action_time_text . '.</p>
 			<div>
-				<p class="lead front-end-editable"
+				<p class="lead"
 
 				data-field="description"
 				data-action="csi_cmp_update_field"
@@ -515,16 +532,14 @@ public function csi_cmp_build_page_show_plan(){
 			</div>
 		</div>
 		<div class="row">
-			<div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">
+			<div class="col-xs-12 col-sm-6">
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<i class="fa fa-fw fa-info"></i> Información del Plan
 						<div class="pull-right">
 							<a href="#csi-cmp-fetch-plan-info" class="refresh-button"><i class="fa fa-fw fa-refresh"></i></a>
 							|
-							<a data-toggle="collapse" href="#plan-info" role="button">
-								<i class="fa fa-fw fa-caret-down"></i>
-							</a>
+							<a data-toggle="collapse" href="#plan-info" role="button"><i class="fa fa-fw fa-caret-down"></i></a>
 						</div>
 					</div>
 					<div id="plan-info" class="collapse">
@@ -535,7 +550,7 @@ public function csi_cmp_build_page_show_plan(){
 					</div>
 				</div>
 			</div>
-			<div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">
+			<div class="col-xs-12 col-sm-6">
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<i class="fa fa-fw fa-folder-o"></i> Documentos asociados
@@ -552,58 +567,11 @@ public function csi_cmp_build_page_show_plan(){
 					</div>
 				</div>
 			</div>
-			<div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<i class="fa fa-fw fa-tasks"></i> Actividades
-						<div class="pull-right">
-							<a href="#"><i class="fa fa-fw fa-refresh"></i></a>
-							|
-							<a data-toggle="collapse" href="#plan-3-tasks" role="button">
-								<i class="fa fa-fw fa-caret-down"></i>
-							</a>
-						</div>
-					</div>
-					<ul class="list-group collapse" id="plan-3-tasks">
-						<li class="list-group-item">
-							<span class="text-center lead">Avance del Plan</span>
-								' . self::csi_cmp_calculate_cmp_percentage($plan_id)['progress_bar'] . '
-							<small>Este valor refleja el porcentaje de tareas de ejecución efecutadas contra las por ejecutar.</small>
-						</li>
-						<li class="list-group-item">012: Propuestas</li>
-						<li class="list-group-item">002: VoBo Cliente</li>
-						<li class="list-group-item">010: Programado</li>
-						<li class="list-group-item">001: En Ejecuci&oacute;n</li>
-						<li class="list-group-item">002: Suspendidas</li>
-						<li class="list-group-item">025: Ejecutadas</li>
-						<li class="list-group-item">000: Vueltra Atrás</li>
-						<li class="list-group-item">001: Canceladas</li>
-					</ul>
-				</div>
-			</div>
-			<div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<i class="fa fa-fw fa-users"></i> Ejecutores
-						<div class="pull-right">
-							<a href="#"><i class="fa fa-fw fa-refresh"></i></a>
-							|
-							<a data-toggle="collapse" href="#plan-3-tasks-type" role="button">
-								<i class="fa fa-fw fa-caret-down"></i>
-							</a>
-						</div>
-					</div>
-					<ul id="plan-3-tasks-type" class="list-group collapse">
-						<li class="list-group-item">Cristian Marin <span class="badge">12</span></li>
-						<li class="list-group-item">Ricardo De Acha <span class="badge">8</span></li>
-					</ul>
-				</div>
-			</div>
 		</div>
 		<div class="row">
 			<div class="panel panel-default">
 				<div class="panel-heading">
-					<i class="fa fa-fw fa-book"></i> Logs
+					<i class="fa fa-fw fa-book"></i> Notas internas
 					<div class="pull-right">
 						<a href="#"><i class="fa fa-fw fa-plus"></i></a>
 						|
@@ -682,34 +650,32 @@ public function csi_cmp_build_page_show_plan(){
 			<div class="panel-heading">
 			<i class="fa fa-fw fa-list"></i> Tareas
 			<div class="pull-right">
+				<!--
+				<a title="Descargar como hoja de c&aacute;lculo" href="#csi-cmp-fetch-tasks-table" data-action="csi_cmp_fetch_editable_tasks_table"><i class="fa fa-fw fa-file-excel-o"></i></a>
+				|
+				<a href="#csi-cmp-fetch-tasks-table" class="edit-table-button" data-action="csi_cmp_fetch_editable_tasks_table" data-old-action="csi_cmp_fetch_tasks_table"><i class="fa fa-fw fa-pencil"></i></a>
+				|
+				-->
 				<a href="#csi-cmp-fetch-tasks-table" class="refresh-button"><i class="fa fa-fw fa-refresh"></i></a>
 			</div>
 			</div>
-			<table class="table table-condensed refreshable" data-action="csi_cmp_fetch_tasks_table" data-plan-id="' . $plan_id . '" style="position:relative;" id="csi-cmp-fetch-tasks-table">
+			<table class="table refreshable" data-action="csi_cmp_fetch_tasks_table" data-plan-id="' . $plan_id . '" style="position:relative;" id="csi-cmp-fetch-tasks-table">
 				<thead>
 					<tr>
-						<th class="hidden-xs"><i class="fa fa-hashtag"></i></th>
-						<th>SID</th>
+						<th class="text-center hidden-xs"><i class="fa fa-hashtag"></i></th>
+						<th class="text-center"><i class="fa fa-exclamation"></i></th>
+						<th class="text-center">SID</th>
 						<th class="hidden-xs">Ticket</th>
+						<th class="text-center hidden">Cambio</th>
 						<th>Status</th>
 						<th>Inicio</th>
-						<th>Duraci&oacute;n</th>
-						<th><i class="fa fa-plus"></i></th>
+						<th class="text-center hidden-xs">Offline</th>
+						<th>Ventana</th>
+						<th class="text-center"><i class="fa fa-window-maximize"></i></th>
 					</tr>
 				</thead>
 				<tbody>
 				</tbody>
-				<tfoot>
-					<tr>
-						<th class="hidden-xs"><i class="fa fa-hashtag"></i></th>
-						<th>SID</th>
-						<th class="hidden-xs">Ticket</th>
-						<th>Status</th>
-						<th>Inicio</th>
-						<th>Duraci&oacute;n</th>
-						<th><i class="fa fa-plus"></i></th>
-					</tr>
-				</tfoot>
 			</table>
 			<div style="position:relative;">
 				<div id="csi-template-cmp-control-center-table-pagination" class="text-center"></div>
@@ -874,7 +840,12 @@ public function csi_cmp_fetch_plan_info(){
 			*,
 			T00.manager_user_id as plan_manager_user_id,
 			T01.short_name as customer_name,
-			T01.code as customer_code
+			T01.code as customer_code,
+			T00.source_tags as plan_source_tags,
+			T00.title as plan_title,
+			T00.description as plan_description,
+			T00.shared_plan_flag as plan_shared_flag
+
 		FROM
 			' . $this->tbl_name . ' as T00
 			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T01
@@ -895,46 +866,110 @@ public function csi_cmp_fetch_plan_info(){
 	$first_date = new DateTime ( $dates->start );
 	$last_date = new DateTime ( $dates->end );
 	$time_date = date_diff($first_date, $last_date);
-	self::write_log ( $time_date );
-	//------------------------------------------------------
+	//--------------------------------------------------------------------------
 	$sql = 'SELECT
 				SUM(TIMESTAMPDIFF(HOUR, start_datetime, end_datetime) ) as hh
 					FROM  ' . $NOVIS_CSI_CMP_TASK->tbl_name . '
 					WHERE cmp_id = "' . $plan_id . '"
+				GROUP BY
+					offline_task_flag
 	';
-	$hh = $wpdb->get_var($sql);
-	//------------------------------------------------------
+	$hh = $wpdb->get_col($sql);
+	//--------------------------------------------------------------------------
+	$progress = self::csi_cmp_calculate_cmp_percentage($plan_id);
+	//--------------------------------------------------------------------------
+	if ( $plan->plan_shared_flag ){
+		$shared = '<span class="text-danger"><i class="fa fa-unlock"></i> Compartido</span>';
+	}else{
+		$shared = '<span class="text-success"><i class="fa fa-lock"></i> No compartido</span>';
+	}
+	//--------------------------------------------------------------------------
 	$o='
 	<tr>
 		<th class="small">Cliente</th>
 		<td>' . $plan->customer_name . '</td>
 	</tr>
 	<tr>
-		<th class="small">Responsable</th>
+		<th class="small">
+			T&iacute;tulo
+			<p class="text-center">
+				<small>
+					<a href="#" class="text-muted in-table-form-button hidden-print" data-action="csi_cmp_popup_edit_cmp_form" data-cmp-id="' . $plan_id . '" data-cmp-field="title">
+						<i class="fa fa-lg fa-pencil-square-o"></i> Editar
+					</a>
+				</small>
+			</p>
+		</th>
+		<td>
+			' . $plan->plan_title . '
+		</td>
+	</tr>
+	<tr>
+		<th class="small">
+			Descripci&oacute;n
+			<p class="text-center"><small><a href="#" class="text-muted"><i class="fa fa-lg fa-pencil-square-o"></i> Editar</a></small></p>
+		</th>
+		<td>
+			<p class="text-justify"<i>' . $plan->plan_description . '</i></p>
+		</td>
+	</tr>
+	<tr>
+		<th class="small">
+			Responsable
+			<p class="text-center"><small><a href="#" class="text-muted"><i class="fa fa-lg fa-pencil-square-o"></i> Editar</a></small></p>
+			</th>
 		<td><a href="#" class="user-data" data-user-id="' . $plan->plan_manager_user_id . '" title="M&aacute;s informaci&oacute;n"><i class="fa fa-id-card-o"></i> ' .  $manager_user->user_nicename . '</a></td>
+	</tr>
+	<tr>
+		<th class="small">
+			Compartido
+		</th>
+		<td>' . $shared . ' <a href="#"><i class="fa fa-question-circle text-info"></i></a></td>
 	</tr>
 	<tr>
 		<th class="small">Cronolog&iacute;a</th>
 		<td>
-			<ul class="list-unstyled">
-				<li><i class="fa fa-fw fa-flag-o"></i> ' . strftime('%d/%b/%g',$first_date->getTimestamp()) . '</li>
-				<li><i class="fa fa-fw fa-flag-checkered"></i> ' . strftime('%d/%b/%g',$last_date->getTimestamp()) . '</li>
-				<li><i class="fa fa-fw fa-calendar"></i> ' . $time_date->days . ' dias</li>
+			<ul class="list-unstyled fa-ul">
+				<li><i class="fa fa-fw fa-li fa-flag-o"></i> ' . strftime('%d/%b/%g',$first_date->getTimestamp()) . '</li>
+				<li><i class="fa fa-fw fa-li fa-flag-checkered"></i> ' . strftime('%d/%b/%g',$last_date->getTimestamp()) . '</li>
+				<li><i class="fa fa-fw fa-li fa-calendar"></i> ' . $time_date->days . ' dias</li>
 			</ul>
 		</td>
 	</tr>
 	<tr>
-		<th class="small">Esfuerzo</th>
+		<th class="small">
+			<i class="fa fa-tags text-muted"></i> Origen
+			<p class="text-center"><small><a href="#" class="text-muted"><i class="fa fa-lg fa-pencil-square-o"></i> Editar</a></small></p>
+		</th>
 		<td class="">
-			<ul class="list-unstyled">
-				<li><strong>' . $hh . '</strong> HH - Total</li>
-			</ul>
+			<small><kbd>' . str_replace ( ',', '</kbd>&nbsp;<kbd>', $plan->source_tags ) . '</kbd></small>
+
+		</td>
+	</tr>
+	<tr>
+		<th class="small">Ventanas</th>
+		<td class="">
+				<strong>' . ( isset ( $hh[0] ) ? $hh[0] : 0 ) . '</strong> Horas - Online<br/>
+				<strong>' . ( isset ( $hh[1] ) ? $hh[1] : 0 ) . '</strong> Horas - Offline<br/>
+				<strong>' . intval ( ( isset ( $hh[0] ) ? $hh[0] : 0 ) + ( isset ( $hh[1] ) ? $hh[1] : 0 ) ) . '</strong> Horas - Total<br/>
+				<small class="muted-text">
+				Solo se contabilizan las ventanas de <i>ejecución</i>
+				<a href="#" class="csi-popup" data-action="csi_cmp_popup_task_type_info">
+					<i class="fa fa-question-circle"></i>
+				</a>
+				</small>
 		</td>
 	</tr>
 	<tr>
 		<th class="small">Avance</th>
 		<td>
-			' . self::csi_cmp_calculate_cmp_percentage($plan_id)['progress_bar'] . '
+			' . $progress['progress_bar'] . '
+			<dl class="">
+				<dt>Avance Planificado</dt>
+				<dd>' . intval ( $progress['success'] + $progress['warning'] + $progress['error']  ) . '%</dd>
+				<dt>Avance Real</dt>
+				<dd>' . intval ( $progress['success'] ) . '%</dd>
+			</dl>
 		</td>
 	</tr>
 
@@ -1206,7 +1241,7 @@ public function csi_cmp_build_page_list_plans(){
 	echo json_encode($response);
 	wp_die();
 }
-public function csi_cmp_build_page_create_plan(){
+public function csi_cmp_create_plan(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
 	global $NOVIS_CSI_PROJECT_STATUS;
@@ -1227,6 +1262,7 @@ public function csi_cmp_build_page_create_plan(){
 	$insertArray['manager_user_id']			= strip_tags(stripslashes( $post['manager_user_id'] ));
 	$insertArray['manager_user_email']		= $manager_user->user_email;
 	$insertArray['source_tags']				= strip_tags(stripslashes( $post['source_tags'] ));
+	$insertArray['shared_plan_flag']		= ('1' == $post['shared_plan_flag'] ) ? 1 : NULL ;
 	$insertArray['creation_user_id']		= $current_user->ID;
 	$insertArray['creation_user_email']		= $current_user->user_email;
 	$insertArray['creation_date']			= $current_datetime->format('Y-m-d');
@@ -1241,7 +1277,7 @@ public function csi_cmp_build_page_create_plan(){
 				$docs_msg='
 					<p class="text-warning">
 						<i class="fa fa-exclamation-triangle"></i> Sin embargo ha ocurrido un error al agregar los documentos indicados.
-						Por favor edita el Plan para volver a agregar los documentos.
+						Visualiza el Plan para agregar documentos.
 					</p>
 				';
 			}else{
@@ -1293,134 +1329,180 @@ public function csi_cmp_build_page_create_plan(){
 public function csi_cmp_build_page_new_plan_form(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_COUNTRY;
+	global $NOVIS_CSI_USER_TEAM;
+	global $NOVIS_CSI_USER;
 	global $wpdb;
 	//Local Variables
 	$manager_user_opts		= '';
-
-	$sql = 'SELECT id,code,short_name FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' ORDER BY code ASC';
-	$customer_opts = '';
-	$customers = $this->get_sql($sql);
-	foreach ( $customers as $customer ){
-		$customer_opts .= '<option value="' . $customer['id'] . '">' . $customer['short_name'] . ' (' . $customer['code'] . ')</option>';
+	$customer_opts			= '';
+	$response				= array();
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id,code,short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' ORDER BY code ASC';
+	$countries = $this->get_sql ( $sql );
+	foreach ( $countries as $country ){
+		$customer_opts .= '<optgroup label="' . $country['short_name'] . '">';
+		$sql = 'SELECT id,code,short_name FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' WHERE country_id="' . $country['id'] . '" ORDER BY code ASC';
+		$customers = $this->get_sql($sql);
+		foreach ( $customers as $customer ){
+			$customer_opts .= '<option value="' . $customer['id'] . '">' . $customer['short_name'] . ' (' . $customer['code'] . ')</option>';
+		}
+		$customer_opts .= '</optgroup>';
 	}
-	$response			= array();
-
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id,short_name FROM ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' ';
+	$user_teams = $this->get_sql ( $sql);
+	foreach ( $user_teams as $user_team ){
+		$sql = 'SELECT
+					T00.id as user_id,
+					T01.display_name as display_name,
+					T01.user_email as user_email
+				FROM
+					' . $NOVIS_CSI_USER->tbl_name . ' as T00
+					LEFT JOIN ' . $wpdb->base_prefix . 'users as T01
+						ON T00.id = T01.ID
+				WHERE
+					T00.active_flag = 1 AND
+					T00.team_id = "' . $user_team['id'] . '"
+		';
+		$users = $this->get_sql ( $sql );
+		$manager_user_opts .= '<optgroup label="' . $user_team['short_name'] . '">';
+		foreach ( $users as $user ){
+			$selected = ( $user['user_id'] == get_current_user_id() ) ? ' selected ' : '';
+			$manager_user_opts .= '<option value="' . $user['user_id'] . '" ' . $selected . '>' . $user['display_name'] . '</option>';
+		}
+		$manager_user_opts .= '</optgroup>';
+	}
+/*
 	$sql = 'SELECT ID, display_name FROM ' . $wpdb->base_prefix . 'users ORDER BY display_name ASC';
 	$users = $this->get_sql ( $sql );
 	foreach ( $users as $user ){
 		$selected = ( $user['ID'] == get_current_user_id() ) ? ' selected ' : '';
 		$manager_user_opts .= '<option value="' . $user['ID'] . '" ' . $selected . '>' . $user['display_name'] . '</option>';
 	}
+*/
+	//--------------------------------------------------------------------------
 	$o	='
-	<div class="panel panel-default row">
-		<div class="panel-heading">
-		</div>
-		<div class="panel-body">
-			<form class="form-horizontal" data-function="csi_cmp_build_page_create_plan" data-next-page="listplans" style="position:relative;">
-				<div class="form-group">
-					<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
-					<div class="col-sm-10">
-						<div class="input-group">
-							<span class="input-group-addon"><i class="fa fa-fw fa-users"></i></span>
-							<select class="form-control select2" id="customer_id" name="customer_id" required="true" data-placeholder="Selecciona el cliente">
-								<option></option>
-								<optgroup label="México">
+	<div class="container">
+		<div class="panel panel-default row">
+			<div class="panel-heading">
+				<h1 class="panel-title">Crea un nuevo Plan de Corrección o Mantenimiento</h1>
+			</div>
+			<div class="panel-body">
+				<form class="form-horizontal" data-function="csi_cmp_create_plan" data-next-page="listplans" style="position:relative;">
+					<div class="form-group">
+						<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<span class="input-group-addon"><i class="fa fa-fw fa-users"></i></span>
+								<select class="form-control select2" id="customer_id" name="customer_id" required="true" data-placeholder="Selecciona el cliente">
+									<option></option>
 									' . $customer_opts . '
-								</optgroup>
+								</select>
+							</div>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Todo <i>Plan de Correcci&oacute;n o Mantenimiento</i> debe ir asociado con un cliente.<br/>
+								En el caso que quieras generar un plan interno debes indicar que el cliente es <strong>Novis</strong>.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="title" name="title" placeholder="T&iacute;tulo" required="true" maxlength="60"/>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Titulo / nombre del Plan.<br/>
+								Frecuentemente se utiliza una descripción sencilla como <small><code>Actualización de Kernel Q3 ' . date( 'Y' ) . '</code></small>.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 60 caracteres.</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Plan compartido</label>
+						<div class="col-sm-10">
+							<input type="checkbox" class="form-control csi-cool-checkbox" id="shared_plan_flag" name="shared_plan_flag" value="1"/>
+							<label for="shared_plan_flag">Plan Compartido</label>
+							<span class="help-block">
+								Si un plan es marcado como <i>compartido</i> cualquier usuario del sistema puede realizar modificaciones al plan, tales como <i>agregar tareas visibles para el cliente</i>. Este tipo de plan deben usarse solo en situaciones de planes complejos. Para la reasignación de un plan, es recomendable reasignar el <i>responsable del plan</i>.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="description" class="col-sm-2 control-label">Descripci&oacute;n</label>
+						<div class="col-sm-10">
+							<textarea class="form-control" id="description" name="description" placeholder="Descripci&oacute;n" maxlength="255"></textarea>
+							<span class="help-block">
+								Descripci&oacute;n breve del Plan de Correcci&oacute;n o Mantenimiento.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 255 caracteres.</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="manager_user_id" class="col-sm-2 control-label">Responsable</label>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<span class="input-group-addon"><i class="fa fa-fw fa-user-o"></i></span>
+								<select class="form-control select2" id="manager_user_id" name="manager_user_id" required="true" data-placeholder="Selecciona el responsable">
+									<option></option>
+									' . $manager_user_opts . '
+								</select>
+							</div>
+							<span class="help-block">
+								Responsable del Plan de Correcci&oacute;n o Mantenimiento.<br/>
+								<small class="text-danger"><i class="fa fa-exclamation-triangle"></i> Solo el responsable del plan puede realizar modificaciones posteriores.</Small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="source_tags" class="col-sm-2 control-label">Etiquetas de Origen</label>
+						<div class="col-sm-10">
+							<select class="form-control select2" data-tags="true" multiple id="source_tags" name="source_tags"  data-placeholder="ewa incidente">
+								<option value="ewa">ewa</option>
+								<option value="incidente">incidente</option>
 							</select>
+							<span class="help-block">
+								Las etiquetas de Origen, permiten indicar las causas que originaron la creación de este plan.<br/>
+								<i class="fa fa-info"></i> Las etiquetas deben estar separadas por espacios.<br/>
+								Opciones comunes son: <small><kbd>ewa</kbd> <kbd>incidente</kbd> <kbd>recomendaciones_sap</kbd></small>.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 100 caracteres.</small>
+							</span>
 						</div>
-						<span class="help-block">
-							Todo <i>Plan de Correcci&oacute;n o Mantenimiento</i> debe ir asociado con un cliente.
-							En el caso que quieras generar un plan interno debes indicar que el cliente es <strong>Novis</strong>.
-						</span>
 					</div>
-				</div>
-				<div class="form-group">
-					<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
-					<div class="col-sm-10">
-						<input type="text" class="form-control" id="title" name="title" placeholder="T&iacute;tulo" required="true" />
-						<span class="help-block">
-							Titulo / nombre del Plan.<br/>
-							Frecuentemente se utiliza una descripción sencilla como <small><code>Actualización de Kernel Q3 ' . date( 'Y' ) . '</code></small>.<br/>
-							<small>Tama&ntilde;o m&aacute;ximo: 100 caracteres.</small>
-						</span>
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="description" class="col-sm-2 control-label">Descripci&oacute;n</label>
-					<div class="col-sm-10">
-						<textarea class="form-control" id="description" name="description" placeholder="Descripci&oacute;n"></textarea>
-						<span class="help-block">
-							Descripci&oacute;n breve del Plan de Correcci&oacute;n o Mantenimiento.<br/>
-							<small>Tama&ntilde;o m&aacute;ximo: 255 caracteres.</small>
-						</span>
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="manager_user_id" class="col-sm-2 control-label">Responsable</label>
-					<div class="col-sm-10">
-						<div class="input-group">
-							<span class="input-group-addon"><i class="fa fa-fw fa-user-o"></i></span>
-							<select class="form-control select2" id="manager_user_id" name="manager_user_id" required="true" >
-								<option></option>
-								' . $manager_user_opts . '
-							</select>
+					<div class="form-group">
+						<label for="doc-plus" class="col-sm-2 control-label">Documentos relacionados</label>
+						<div class="col-sm-10">
+							<div class="input-dynamic" data-dynamic-input="plan-doc">
+							</div>
+							<div class="text-center">
+							</div>
+							<span class="help-block">
+								Los documentos relacionados permiten adjuntar enlaces a los documentos en los cuales se reflejan diferentes componentes del plan. Los siguientes documentos son recomendados:
+								<ul>
+									<li>Documento de Objetivos <i class="fa fa-question-circle text-info"></i></li>
+									<li>Documento de Seguimiento <i class="fa fa-question-circle text-info"></i></li>
+								</ul>
+							</span>
 						</div>
-						<span class="help-block">
-							Responsable del Plan de Correcci&oacute;n o Mantenimiento.<br/>
-							<small class="text-danger"><i class="fa fa-exclamation-triangle"></i> Solo el responsable del plan puede realizar modificaciones posteriores.</Small>
-						</span>
 					</div>
-				</div>
-				<div class="form-group">
-					<label for="source_tags" class="col-sm-2 control-label">Etiquetas de Origen</label>
-					<div class="col-sm-10">
-					<select class="form-control select2" data-tags="true" multiple id="source_tags" name="source_tags" required="true" data-placeholder="ewa incidente">
-						<option value="ewa">ewa</option>
-						<option value="incidente">incidente</option>
-					</select>
-						<span class="help-block">
-							Las etiquetas de Origen, permiten indicar las causas que originaron la creación de este plan.<br/>
-							<i class="fa fa-info"></i> Las etiquetas deben estar separadas por espacios.<br/>
-							Opciones comunes son: <small><kbd>ewa</kbd> <kbd>incidente</kbd> <kbd>recomendaciones_sap</kbd></small>.<br/>
-							<small>Tama&ntilde;o m&aacute;ximo: 100 caracteres.</small>
-						</span>
-					</div>
-				</div>
-				<div class="form-group">
-					<label for="doc-plus" class="col-sm-2 control-label">Documentos relacionados</label>
-					<div class="col-sm-10">
-						<div class="input-dynamic" data-dynamic-input="plan-doc">
+					<div class="form-group">
+						<div class="col-sm-offset-1 col-sm-10">
+							<p class="text-muted text-justify">
+								La creación de un Plan de Corrección o Mantenimiento aparecerá de modo inmediato en los planes del cliente seleccionado.
+							</p>
 						</div>
-						<div class="text-center">
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10 text-right">
+							<button type="reset" class="btn btn-danger">Cancelar</button>
+							<button type="submit" class="btn btn-primary">Entiendo, Crear Plan</button>
 						</div>
-						<span class="help-block">
-							Los documentos relacionados permiten adjuntar enlaces a los documentos en los cuales se reflejan diferentes componentes del plan.<br/>
-							Los siguientes documentos son recomendados:
-							<ul>
-								<li>Documento de Objetivos <i class="fa fa-question-circle text-info"></i></li>
-								<li>Documento de Seguimiento <i class="fa fa-question-circle text-info"></i></li>
-							</ul>
-						</span>
 					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-offset-1 col-sm-10">
-						<p class="text-muted text-justify">
-							La creación de un Plan de Corrección o Mantenimiento aparecerá de modo inmediato en los planes del cliente seleccionado.
-						</p>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-offset-2 col-sm-10 text-right">
-						<button type="reset" class="btn btn-danger">Cancelar</button>
-						<button type="submit" class="btn btn-primary">Entiendo, Crear Plan</button>
-					</div>
-				</div>
-			</form>
+				</form>
+			</div>
 		</div>
 	</div>
-
 	';
 	$dynamic_fields=array(
 		'plan-doc'			=> array(
@@ -1562,9 +1644,9 @@ public function csi_cmp_calculate_cmp_percentage ( $plan_id = 0 ) {
 	}
 	$progress_bar = '
 		<div class="progress" style="margin-bottom:0;">
-			<div class="progress-bar progress-bar-striped progress-bar-success" style="width: ' . $success . '%" data-toggle="tooltip" data-placement="top" title="' . $data->finished . ' Tareas"></div>
-			<div class="progress-bar progress-bar-striped progress-bar-warning" style="width: ' . $warning . '%" data-toggle="tooltip" data-placement="top" title="' . ( $data->start_delay + $data->end_delay ) . ' Tareas"></div>
-			<div class="progress-bar progress-bar-striped progress-bar-danger" style="width: ' . $error . '%" data-toggle="tooltip" data-placement="top" title="' . $data->error . ' Tareas"></div>
+			<div class="progress-bar progress-bar-striped progress-bar-success" style="width: ' . $success . '%" data-toggle="tooltip" data-placement="top" title="' . $data->finished . ' / ' . $data->total . ' Tareas"></div>
+			<div class="progress-bar progress-bar-striped progress-bar-warning" style="width: ' . $warning . '%" data-toggle="tooltip" data-placement="top" title="' . ( $data->start_delay + $data->end_delay ) . ' / ' . $data->total . ' Tareas"></div>
+			<div class="progress-bar progress-bar-striped progress-bar-danger" style="width: ' . $error . '%" data-toggle="tooltip" data-placement="top" title="' . $data->error . ' / ' . $data->total . ' Tareas"></div>
 		</div>
 	';
 
@@ -1575,12 +1657,6 @@ public function csi_cmp_calculate_cmp_percentage ( $plan_id = 0 ) {
 		'error'			=> $error,
 		'progress_bar'	=> $progress_bar,
 	);
-
-}
-public function csi_cmp_generate_cmp_gantt_chart( $plan_id = 0 ){
-	//Global Variables
-	global $wpdb;
-	//Local Variables
 
 }
 //END OF CLASS

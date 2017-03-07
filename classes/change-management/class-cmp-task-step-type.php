@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') or die("No script kiddies please!");
 
-class NOVIS_CSI_CMP_TASK_DOC_CLASS extends NOVIS_CSI_CLASS{
+class NOVIS_CSI_CMP_TASK_STEP_TYPE_CLASS extends NOVIS_CSI_CLASS{
 
 /**
 * __construct
@@ -16,11 +16,11 @@ public function __construct(){
 	global $wpdb;
 	global $novis_csi_vars;
 	//como se definió en novis_csi_vars
-	$this->class_name	= 'cmp_task_doc';
+	$this->class_name	= 'cmp_task_step_type';
 	//Nombre singular para títulos, mensajes a usuario, etc.
-	$this->name_single	= 'Documento de Tarea';
+	$this->name_single	= 'Tipo de Actividad';
 	//Nombre plural para títulos, mensajes a usuario, etc.
-	$this->name_plural	= 'Documentos de Tarea';
+	$this->name_plural	= 'Tipo de Actividad';
 	//Identificador de menú padre
 	$this->parent_slug	= $novis_csi_vars['network_menu_slug'];
 	//Identificador de submenú de la clase
@@ -40,7 +40,7 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.0.2';
+	$this->db_version	= '0.0.1';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -48,11 +48,17 @@ public function __construct(){
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql_wt	="
 		(
-			id int(10) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-			cmp_id mediumint(8) unsigned not null COMMENT 'Plan ID',
-			doc_description varchar(255) not null COMMENT 'Document description',
-			doc_url varchar(255) not null COMMENT 'Document url',
-			doc_order tinyint(2) unsigned null COMMENT 'Document order',
+			id tinyint(2) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
+			code varchar(15) not null COMMENT 'Code ID for programming calls',
+			short_name varchar(20) not null COMMENT 'Status name',
+			execution_window_flag tinyint(1) null COMMENT 'Indicates if step type must be considered to calculate execution window',
+			preparation_window_flag tinyint(1) null COMMENT 'Indicates if step type must be considered to calculate preparation window',
+			error_window_flag tinyint(1) null COMMENT 'Indicates if step type must be considered to calculate error window',
+			description text null COMMENT 'Description of step type',
+			step_type_order tinyint(1) unsigned not null COMMENT 'Order of step type',
+			icon varchar(50) null COMMENT 'Icon of step type',
+			css_class varchar(100) null COMMENT 'Bootstrap class',
+			hex_color varchar(6) null COMMENT 'HEX color of step type',
 			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
 			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
 			creation_date date null COMMENT 'Date of the creation of this record',
@@ -67,8 +73,27 @@ public function __construct(){
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
-		'cmp_id' => array(
-			'type'						=>'nat_number',
+		'id' => array(
+			'type'						=>'id',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'code' => array(
+			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
@@ -86,16 +111,16 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'doc_description' => array(
+		'short_name' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>true,
-			'data_validation'			=>true,
+			'data_validation'			=>false,
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>255,
+			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -105,16 +130,16 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'doc_url' => array(
-			'type'						=>'text',
+		'value' => array(
+			'type'						=>'number',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
 			'data_required'				=>true,
-			'data_validation'			=>true,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>255,
+			'data_validation'			=>false,
+			'data_validation_min'		=>-10,
+			'data_validation_max'		=>10,
+			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -124,8 +149,8 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'doc_order' => array(
-			'type'						=>'nat_number',
+		'icon' => array(
+			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
 			'backend_wp_table_lead'		=>false,
@@ -134,6 +159,63 @@ public function __construct(){
 			'data_validation_min'		=>false,
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'css_class' => array(
+			'type'						=>'text',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>false,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'hex_color' => array(
+			'type'						=>'text',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>true,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>6,
+			'form_disabled'				=>false,
+			'form_help_text'			=>false,
+			'form_input_size'			=>false,
+			'form_label'				=>false,
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>false,
+			'form_show_field'			=>false,
+		),
+		'description' => array(
+			'type'						=>'text',
+			'backend_wp_in_table'		=>false,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>false,
+			'data_validation'			=>true,
+			'data_validation_min'		=>false,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>255,
 			'form_disabled'				=>false,
 			'form_help_text'			=>false,
 			'form_input_size'			=>false,
@@ -297,51 +379,126 @@ public function __construct(){
 		),
 	);
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
+	//self::db_install();
+	//register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install_data'			));
+	add_action('plugins_loaded',		array( $this , 'db_install_data'			));
+
 	//in a new blog creation, create the db for new blog
 	//Applies only for non-network classes
 	if( true != $this->network_class ){
 		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
+		add_action( 'wpmu_new_blog',							array( $this , 'db_install_data'			));
 	}
 	if ( !is_multisite() ) {
 		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"		));
 	}else{
 		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
 	}
-	//add_action( 'wp_ajax_csi_cmp_popup_task_doc_info',		array( $this , 'csi_cmp_popup_task_doc_info'	));
+	add_action( 'wp_ajax_csi_cmp_popup_task_step_type_info',	array( $this , 'csi_cmp_popup_task_step_type_info'	));
 
 
 }
-public function csi_cmp_task_doc_insert ( $cmp_id = null , $docs_description = array(), $docs_url = array() ) {
-	//Global Variables
+public function db_install_data(){
 	global $wpdb;
-	//Local Variables
-	$current_user			= get_userdata ( get_current_user_id() );
-	$current_datetime		= new DateTime();
-
-	if ( null == $cmp_id OR 0 == count ( $docs_description) OR 0 == count ( $docs_url ) ){
-		return false;
-	}else{
-		$insertArray			= array();
-		for ( $i = 0 ; $i < count ( $docs_url ) ; $i++ ){
-			$insertArray['cmp_id']				= intval ( $cmp_id );
-			$insertArray['doc_description']		= $docs_description[$i];
-			$insertArray['doc_url']				= $docs_url[$i];
-			$insertArray['creation_user_id']	= $current_user->ID;
-			$insertArray['creation_user_email']	= $current_user->user_email;
-			$insertArray['creation_date']		= $current_datetime->format('Y-m-d');
-			$insertArray['creation_time']		= $current_datetime->format('H:i:s');
-			if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
-
-			}else{
-				return false;
-			}
-		}
-		return true;
+	$count =intval($wpdb->get_var( "SELECT COUNT(*) FROM ".$this->tbl_name));
+	if($count == 0){
+		$current_user = wp_get_current_user();
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'code'						=> 'preparation',
+				'short_name'				=> 'Preparación',
+				'execution_window_flag'		=> 0,
+				'preparation_window_flag'	=> 1,
+				'error_window_flag'			=> 0,
+				'step_type_order'			=> 1,
+				'css_class'					=> 'success',
+				'creation_user_id'			=> intval(get_current_user_id()),
+				'creation_user_email'		=> $current_user->user_email,
+				'creation_date'				=> date("Y-m-d"),
+				'creation_time'				=> date("H:i:s"),
+			)
+		);
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'code'						=> 'execution',
+				'short_name'				=> 'Ejecución',
+				'execution_window_flag'		=> 1,
+				'preparation_window_flag'	=> 0,
+				'error_window_flag'			=> 0,
+				'step_type_order'			=> 2,
+				'css_class'					=> 'warning',
+				'creation_user_id'			=> intval(get_current_user_id()),
+				'creation_user_email'		=> $current_user->user_email,
+				'creation_date'				=> date("Y-m-d"),
+				'creation_time'				=> date("H:i:s"),
+			)
+		);
+		$wpdb->insert(
+			$this->tbl_name,
+			array(
+				'code'						=> 'rollback',
+				'short_name'				=> 'Vuelta Atrás',
+				'execution_window_flag'		=> 0,
+				'preparation_window_flag'	=> 0,
+				'error_window_flag'			=> 1,
+				'step_type_order'			=> 3,
+				'css_class'					=> 'danger',
+				'creation_user_id'			=> intval(get_current_user_id()),
+				'creation_user_email'		=> $current_user->user_email,
+				'creation_date'				=> date("Y-m-d"),
+				'creation_time'				=> date("H:i:s"),
+			)
+		);
 	}
+}
+public function csi_cmp_popup_task_step_type_info(){
+	//Global Variables
+	global $NOVIS_CSI_CUSTOMER;
+	//Local Variables
+	$response			= array();
+	$o = '';
+
+	$sql = 'SELECT * FROM ' . $this->tbl_name . ' ';
+	$task_types = $this->get_sql($sql);
+	$o.='<table class="table table-condensed">';
+	$o.='
+	<tr>
+		<th class="col-xs-3">' . $this->name_plural . '</th>
+		<th>Descripci&oacute;n</th>
+	</tr>
+	';
+	foreach ( $task_types as $task_type ){
+		$o.='
+		<tr>
+			<td class="col-xs-3"><code><i class="fa fa-' . $task_type['icon'] . ' hidden-xs"></i> ' . $task_type['short_name'] . '</code></td>
+			<td><p class="text-justify">' . $task_type['description'] . '</p></td>
+		</tr>
+		';
+	}
+	$o.='</table>';
+	$response['notification']=array(
+		'buttons'			=> array(
+			'OK'			=> array(
+				'text'		=> '<small> Gracias por la informaci&oacute;n</small> <i class="fa fa-thumbs-up"></i>',
+				'btnClass'	=> 'btn-info',
+			),
+		),
+		'backgroundDismiss' =>true,
+		'icon'				=> 'fa fa-info text-info',
+		'columnClass'		=> 'large',
+		'content'			=> $o,
+		'title'				=> $this->name_plural,
+		'type'				=> 'blue',
+	);
+
+	echo json_encode($response);
+	wp_die();
 }
 //END OF CLASS
 }
 
-global $NOVIS_CSI_CMP_TASK_DOC;
-$NOVIS_CSI_CMP_TASK_DOC =new NOVIS_CSI_CMP_TASK_DOC_CLASS();
+global $NOVIS_CSI_CMP_TASK_STEP_TYPE;
+$NOVIS_CSI_CMP_TASK_STEP_TYPE =new NOVIS_CSI_CMP_TASK_STEP_TYPE_CLASS();
 ?>

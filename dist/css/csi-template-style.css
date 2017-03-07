@@ -13127,7 +13127,12 @@ html {
   
 }
 body.csi-template-cmp-control-center-body {
-  padding-top: 70px;
+  padding-top: 50px;
+}
+@media print {
+  body.csi-template-cmp-control-center-body {
+    padding-top: 0px;
+  }
 }
 .ajax-loading:before {
   z-index: 100;
@@ -13157,6 +13162,575 @@ body.csi-template-cmp-control-center-body {
 }
 #csi-template-cmp-control-center-main {
   min-heignt: 100vh;
+  background-color: #FDFDFD;
+}
+.select2-results__group {
+  padding: inherit !important;
+  font-size: inherit !important;
+  color: inherit !important;
+}
+.panel-primary .panel-heading a {
+  color: #FFFFFF;
+}
+input[type='checkbox'].csi-cool-checkbox {
+  display: none;
+}
+input[type='checkbox'].csi-cool-checkbox + label {
+  display: inline-block;
+  margin-bottom: 0;
+  font-weight: normal;
+  text-align: center;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  background-image: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  border-radius: 4px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  display: block;
+  width: 100%;
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+  position: relative;
+}
+input[type='checkbox'].csi-cool-checkbox + label:focus,
+input[type='checkbox'].csi-cool-checkbox + label:active:focus,
+input[type='checkbox'].csi-cool-checkbox + label.active:focus,
+input[type='checkbox'].csi-cool-checkbox + label.focus,
+input[type='checkbox'].csi-cool-checkbox + label:active.focus,
+input[type='checkbox'].csi-cool-checkbox + label.active.focus {
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+input[type='checkbox'].csi-cool-checkbox + label:hover,
+input[type='checkbox'].csi-cool-checkbox + label:focus,
+input[type='checkbox'].csi-cool-checkbox + label.focus {
+  color: #333;
+  text-decoration: none;
+}
+input[type='checkbox'].csi-cool-checkbox + label:active,
+input[type='checkbox'].csi-cool-checkbox + label.active {
+  outline: 0;
+  background-image: none;
+  -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+input[type='checkbox'].csi-cool-checkbox + label.disabled,
+input[type='checkbox'].csi-cool-checkbox + label[disabled],
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox + label {
+  cursor: not-allowed;
+  opacity: 0.65;
+  filter: alpha(opacity=65);
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+ainput[type='checkbox'].csi-cool-checkbox + label.disabled,
+fieldset[disabled] ainput[type='checkbox'].csi-cool-checkbox + label {
+  pointer-events: none;
+}
+input[type='checkbox'].csi-cool-checkbox + label:focus,
+input[type='checkbox'].csi-cool-checkbox + label.focus {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #8c8c8c;
+}
+input[type='checkbox'].csi-cool-checkbox + label:hover {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+input[type='checkbox'].csi-cool-checkbox + label:active,
+input[type='checkbox'].csi-cool-checkbox + label.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox + label {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+input[type='checkbox'].csi-cool-checkbox + label:active:hover,
+input[type='checkbox'].csi-cool-checkbox + label.active:hover,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox + label:hover,
+input[type='checkbox'].csi-cool-checkbox + label:active:focus,
+input[type='checkbox'].csi-cool-checkbox + label.active:focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox + label:focus,
+input[type='checkbox'].csi-cool-checkbox + label:active.focus,
+input[type='checkbox'].csi-cool-checkbox + label.active.focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox + label.focus {
+  color: #333;
+  background-color: #d4d4d4;
+  border-color: #8c8c8c;
+}
+input[type='checkbox'].csi-cool-checkbox + label:active,
+input[type='checkbox'].csi-cool-checkbox + label.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox + label {
+  background-image: none;
+}
+input[type='checkbox'].csi-cool-checkbox + label.disabled:hover,
+input[type='checkbox'].csi-cool-checkbox + label[disabled]:hover,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox + label:hover,
+input[type='checkbox'].csi-cool-checkbox + label.disabled:focus,
+input[type='checkbox'].csi-cool-checkbox + label[disabled]:focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox + label:focus,
+input[type='checkbox'].csi-cool-checkbox + label.disabled.focus,
+input[type='checkbox'].csi-cool-checkbox + label[disabled].focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox + label.focus {
+  background-color: #fff;
+  border-color: #ccc;
+}
+input[type='checkbox'].csi-cool-checkbox + label .badge {
+  color: #fff;
+  background-color: #333;
+}
+input[type='checkbox'].csi-cool-checkbox + label:after {
+  position: absolute;
+  content: '';
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-bottom-right-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-top-left-radius: 20px;
+  background-color: #EDF1F1;
+  left: 5px;
+  top: 7px;
+  -webkit-box-shadow: "1px 1px 1px rgba(0,0,0,.5)";
+  box-shadow: "1px 1px 1px rgba(0,0,0,.5)";
+  -webkit-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  -o-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  font-family: 'FontAwesome';
+  font-size: 0.8em;
+  line-height: 1.5em;
+  text-align: center;
+  content: "\f00d";
+  border: thin solid rgba(0, 0, 0, 0.3);
+  color: red;
+}
+input[type='checkbox'].csi-cool-checkbox + label:before {
+  position: absolute;
+  content: '' !important;
+  display: block;
+  width: 40px;
+  height: 15px;
+  border-bottom-right-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-top-left-radius: 20px;
+  background-color: #efefef;
+  left: 5px;
+  top: 10px;
+  -webkit-box-shadow: "inset 1px 1px 1px rgba(0,0,0,.25)";
+  box-shadow: "inset 1px 1px 1px rgba(0,0,0,.25)";
+  -webkit-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  -o-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  border: thin solid rgba(0, 0, 0, 0.3);
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label {
+  color: #fff;
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label.focus {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #255625;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:hover {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:active,
+input[type='checkbox'].csi-cool-checkbox:checked + label.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:active:hover,
+input[type='checkbox'].csi-cool-checkbox:checked + label.active:hover,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label:hover,
+input[type='checkbox'].csi-cool-checkbox:checked + label:active:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label.active:focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label:active.focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label.active.focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label.focus {
+  color: #fff;
+  background-color: #398439;
+  border-color: #255625;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:active,
+input[type='checkbox'].csi-cool-checkbox:checked + label.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label {
+  background-image: none;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label.disabled:hover,
+input[type='checkbox'].csi-cool-checkbox:checked + label[disabled]:hover,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox:checked + label:hover,
+input[type='checkbox'].csi-cool-checkbox:checked + label.disabled:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label[disabled]:focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox:checked + label:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label.disabled.focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label[disabled].focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox:checked + label.focus {
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label .badge {
+  color: #5cb85c;
+  background-color: #fff;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:after {
+  border: thin solid rgba(0, 0, 0, 0.3) !important;
+  left: 25px;
+  content: "\f00c" !important;
+  color: white;
+  color: #fff;
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:after:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.focus {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #255625;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:after:hover {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:after:active,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label:after {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:after:active:hover,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.active:hover,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label:after:hover,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after:active:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.active:focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label:after:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after:active.focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.active.focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label:after.focus {
+  color: #fff;
+  background-color: #398439;
+  border-color: #255625;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:after:active,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox:checked + label:after {
+  background-image: none;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.disabled:hover,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after[disabled]:hover,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox:checked + label:after:hover,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.disabled:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after[disabled]:focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox:checked + label:after:focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after.disabled.focus,
+input[type='checkbox'].csi-cool-checkbox:checked + label:after[disabled].focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox:checked + label:after.focus {
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='checkbox'].csi-cool-checkbox:checked + label:after .badge {
+  color: #5cb85c;
+  background-color: #fff;
+}
+input[type='checkbox'].csi-cool-checkbox-lock {
+  display: none;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label {
+  display: inline-block;
+  margin-bottom: 0;
+  font-weight: normal;
+  text-align: center;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  background-image: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  border-radius: 4px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  display: block;
+  width: 100%;
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+  position: relative;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label:active:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label.active:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label.focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label:active.focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label.active.focus {
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:hover,
+input[type='checkbox'].csi-cool-checkbox-lock + label:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label.focus {
+  color: #333;
+  text-decoration: none;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:active,
+input[type='checkbox'].csi-cool-checkbox-lock + label.active {
+  outline: 0;
+  background-image: none;
+  -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label.disabled,
+input[type='checkbox'].csi-cool-checkbox-lock + label[disabled],
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock + label {
+  cursor: not-allowed;
+  opacity: 0.65;
+  filter: alpha(opacity=65);
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+ainput[type='checkbox'].csi-cool-checkbox-lock + label.disabled,
+fieldset[disabled] ainput[type='checkbox'].csi-cool-checkbox-lock + label {
+  pointer-events: none;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label.focus {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #8c8c8c;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:hover {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:active,
+input[type='checkbox'].csi-cool-checkbox-lock + label.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock + label {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:active:hover,
+input[type='checkbox'].csi-cool-checkbox-lock + label.active:hover,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock + label:hover,
+input[type='checkbox'].csi-cool-checkbox-lock + label:active:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label.active:focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock + label:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label:active.focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label.active.focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock + label.focus {
+  color: #333;
+  background-color: #d4d4d4;
+  border-color: #8c8c8c;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:active,
+input[type='checkbox'].csi-cool-checkbox-lock + label.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock + label {
+  background-image: none;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label.disabled:hover,
+input[type='checkbox'].csi-cool-checkbox-lock + label[disabled]:hover,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock + label:hover,
+input[type='checkbox'].csi-cool-checkbox-lock + label.disabled:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label[disabled]:focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock + label:focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label.disabled.focus,
+input[type='checkbox'].csi-cool-checkbox-lock + label[disabled].focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock + label.focus {
+  background-color: #fff;
+  border-color: #ccc;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label .badge {
+  color: #fff;
+  background-color: #333;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:after {
+  position: absolute;
+  content: '';
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-bottom-right-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-top-left-radius: 20px;
+  background-color: #EDF1F1;
+  left: 5px;
+  top: 7px;
+  -webkit-box-shadow: "1px 1px 1px rgba(0,0,0,.5)";
+  box-shadow: "1px 1px 1px rgba(0,0,0,.5)";
+  -webkit-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  -o-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  font-family: 'FontAwesome';
+  font-size: 0.8em;
+  line-height: 1.5em;
+  text-align: center;
+  content: "\f023";
+  border: thin solid rgba(0, 0, 0, 0.3);
+  color: red;
+}
+input[type='checkbox'].csi-cool-checkbox-lock + label:before {
+  position: absolute;
+  content: '' !important;
+  display: block;
+  width: 40px;
+  height: 15px;
+  border-bottom-right-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-top-left-radius: 20px;
+  background-color: #efefef;
+  left: 5px;
+  top: 10px;
+  -webkit-box-shadow: "inset 1px 1px 1px rgba(0,0,0,.25)";
+  box-shadow: "inset 1px 1px 1px rgba(0,0,0,.25)";
+  -webkit-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  -o-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  border: thin solid rgba(0, 0, 0, 0.3);
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label {
+  color: #fff;
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.focus {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #255625;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:hover {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:active,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:active:hover,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.active:hover,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label:hover,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:active:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.active:focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:active.focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.active.focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label.focus {
+  color: #fff;
+  background-color: #398439;
+  border-color: #255625;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:active,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label {
+  background-image: none;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.disabled:hover,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label[disabled]:hover,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock:checked + label:hover,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.disabled:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label[disabled]:focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock:checked + label:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label.disabled.focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label[disabled].focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock:checked + label.focus {
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label .badge {
+  color: #5cb85c;
+  background-color: #fff;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after {
+  border: thin solid rgba(0, 0, 0, 0.3) !important;
+  left: 25px;
+  content: "\f09c" !important;
+  color: white;
+  color: #fff;
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.focus {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #255625;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:hover {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:active,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label:after {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:active:hover,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.active:hover,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:hover,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:active:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.active:focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:active.focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.active.focus,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.focus {
+  color: #fff;
+  background-color: #398439;
+  border-color: #255625;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:active,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.active,
+.open > .dropdown-toggleinput[type='checkbox'].csi-cool-checkbox-lock:checked + label:after {
+  background-image: none;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.disabled:hover,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after[disabled]:hover,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:hover,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.disabled:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after[disabled]:focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after:focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.disabled.focus,
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after[disabled].focus,
+fieldset[disabled] input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after.focus {
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after .badge {
+  color: #5cb85c;
+  background-color: #fff;
 }
 .csi-project-request-welcome {
   min-height: 100vh;

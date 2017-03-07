@@ -1,7 +1,7 @@
 <?php
 defined('ABSPATH') or die("No script kiddies please!");
 
-class NOVIS_CSI_CUSTOMER_CLASS extends NOVIS_CSI_CLASS{
+class NOVIS_CSI_SAPCUSTNO_CLASS extends NOVIS_CSI_CLASS{
 
 /**
 * __construct
@@ -16,11 +16,11 @@ public function __construct(){
 	global $wpdb;
 	global $novis_csi_vars;
 	//como se definió en novis_csi_vars
-	$this->class_name	= 'customer';
+	$this->class_name	= 'sapcustno';
 	//Nombre singular para títulos, mensajes a usuario, etc.
-	$this->name_single	= 'Cliente';
+	$this->name_single	= 'Customer SAP Number';
 	//Nombre plural para títulos, mensajes a usuario, etc.
-	$this->name_plural	= 'Clientes';
+	$this->name_plural	= 'Customer SAP Numbers';
 	//Identificador de menú padre
 	$this->parent_slug	= $novis_csi_vars['network_menu_slug'];
 	//Identificador de submenú de la clase
@@ -40,7 +40,7 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.6.1';
+	$this->db_version	= '0.6.0';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -48,12 +48,9 @@ public function __construct(){
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql_wt	="
 		(
-			id tinyint(3) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-			code varchar(3) not null COMMENT 'Three letter ID',
-			short_name varchar(50) null COMMENT 'Short name of customer',
-			blog_id bigint(20) unsigned null  COMMENT 'Blog id of customer',
-			country_id tinyint(1) unsigned null COMMENT 'Country of customer',
-			timezone_id tinyint(3) unsigned null COMMENT 'Timezone of customer',
+			id mediumint(8) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
+			customer_id tinyint(3) unsigned not null COMMENT 'Customer ID',
+			sapcustno bigint(13) unsigned not null COMMENT 'SAP Customer Number',
 			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
 			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
 			creation_date date null COMMENT 'Date of the creation of this record',
@@ -131,58 +128,39 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
-		'code' => array(
-			'type'						=>'text',
+		'customer_id' => array(
+			'type'						=>'select',
 			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>false,
+			'backend_wp_sp_table'		=>true,
 			'backend_wp_table_lead'		=>true,
 			'data_required'				=>true,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>3,
-			'form_disabled'				=>false,
-			'form_help_text'			=>'El c&oacute;digo de cliente es un identificador &uacute;nico de tres letras.<br/>Tamaño m&aacute;ximo: 3 caracteres.',
-			'form_input_size'			=>false,
-			'form_label'				=>'C&oacute;digo',
-			'form_options'				=>false,
-			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
-			'form_show_field'			=>true,
-		),
-		'short_name' => array(
-			'type'						=>'text',
-			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>true,
-			'data_validation'			=>true,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>50,
-			'form_disabled'				=>false,
-			'form_help_text'			=>"Nombre descriptivo del cliente.<br/>Tamaño m&aacute;ximo: 3 caracteres.",
-			'form_input_size'			=>false,
-			'form_label'				=>"Nombre",
-			'form_options'				=>false,
-			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
-			'form_show_field'			=>true,
-		),
-		'blog_id' => array(
-			'type'						=>'nat_number',
-			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>false,
 			'data_validation'			=>true,
 			'data_validation_min'		=>1,
 			'data_validation_max'		=>false,
 			'data_validation_maxchar'	=>false,
 			'form_disabled'				=>false,
-			'form_help_text'			=>'ID del Blog del cliente. La lista se visualiza aqui: <a href="/wp-admin/network/sites.php">Network Sites</a>',
+			'form_help_text'			=>"Selecciona el cliente para el cual est&aacute;s registrando el SAPCUSTNO",
 			'form_input_size'			=>false,
-			'form_label'				=>'Blog Id',
+			'form_label'				=>'Cliente',
+			'form_options'				=>array(),
+			'form_placeholder'			=>false,
+			'form_special_form'			=>true,
+			'form_show_field'			=>true,
+		),
+		'sapcustno' => array(
+			'type'						=>'nat_number',
+			'backend_wp_in_table'		=>true,
+			'backend_wp_sp_table'		=>false,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>'ID que SAP ha dado al cliente. Este se puede encontrar en SAP Solution Manager',
+			'form_input_size'			=>false,
+			'form_label'				=>'Customer SAP Number',
 			'form_options'				=>false,
 			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
@@ -355,9 +333,22 @@ public function __construct(){
 	}
 
 }
+protected function form_special_form_customer_id(){
+	global $NOVIS_CSI_CUSTOMER;
+	$response = array();
+	foreach($NOVIS_CSI_CUSTOMER->get_all() as $key => $value){
+		$response[$value['id']] = $value['short_name'];
+	}
+	return $response;
+}
+protected function backend_wp_sp_table_customer_id($customer_id){
+	global $NOVIS_CSI_CUSTOMER;
+	return ($NOVIS_CSI_CUSTOMER->get_single($customer_id)['short_name']);
+
+}
 //END OF CLASS
 }
 
-global $NOVIS_CSI_CUSTOMER;
-$NOVIS_CSI_CUSTOMER =new NOVIS_CSI_CUSTOMER_CLASS();
+global $NOVIS_CSI_SAPCUSTNO;
+$NOVIS_CSI_SAPCUSTNO =new NOVIS_CSI_SAPCUSTNO_CLASS();
 ?>

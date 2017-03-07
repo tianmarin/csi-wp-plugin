@@ -215,8 +215,12 @@
 	</nav>
 	<article id="csi-template-cmp-control-center-main" style="min-height:100vh;">
 	</article>
-
-
+	<div style="position:fixed; top:70px;" class="animated bounce">
+		<div class="alert alert-info alert-dismissible visible-xs hidden-print" role="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<strong>Atenci&oacute;n!</strong> Ciertas funcionalidades no pueden ser visibles en un dispositivo m&oacute;vil o una pantalla demasiada peque&ntilde;a. En caso que esto ocurra por favor <a href="#" class="alert-link">notif&iacute;canos</a> y pruba la versión de escritorio.
+		</div>
+	</div>
 	<!-- #ListPlans -->
 
 

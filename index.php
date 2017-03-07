@@ -32,81 +32,107 @@ $novis_csi_vars = array(
 	'DEBUG'										=> TRUE,
 	'plugin_option_name'						=> 'csi_options',							//Plugin Option (Wordpress default) name
 	'plugin_post'								=> 'Y21hcmlu',								//(base64_encode(cmarin) security 'from' request
-	'plugin_shortcode'							=> 'aa',									//used by plugin association in shortcodes
+	'plugin_shortcode'							=> 'csi',									//used by plugin association in shortcodes
 	'table_prefix'								=>'z_csi_',
 //DATABASE TABLES
-	'customer'					."_network_class"	=> TRUE,
-	'sapcustno'					."_network_class"	=> TRUE,
-	'customer_system'			."_network_class"	=> TRUE,
+	'customer'						."_network_class"	=> TRUE,
+	'country'						."_network_class"	=> TRUE,
+	'user'							."_network_class"	=> TRUE,
+	'user_team'						."_network_class"	=> TRUE,
+	##Service Catalog Module
+	'service'						."_network_class"	=> TRUE,
+	##Landscape Module
+	'sapcustno'						."_network_class"	=> TRUE,
+	'customer_system_environment'	."_network_class"	=> TRUE,
+	'customer_system'				."_network_class"	=> TRUE,
 	##EWA Module
-	'ewa_alert_action_party'	."_network_class"	=> TRUE,
-	'ewa_alert_priority'		."_network_class"	=> TRUE,
-	'ewa_alert_rating'			."_network_class"	=> TRUE,
-	'ewa_alert'					."_network_class"	=> TRUE,
-	'ewa_rating'				."_network_class"	=> TRUE,
-	'ewa_status'				."_network_class"	=> TRUE,
-	'ewa'						."_network_class"	=> TRUE,
+	'ewa_alert_action_party'		."_network_class"	=> TRUE,
+	'ewa_alert_priority'			."_network_class"	=> TRUE,
+	'ewa_alert_rating'				."_network_class"	=> TRUE,
+	'ewa_alert'						."_network_class"	=> TRUE,
+	'ewa_rating'					."_network_class"	=> TRUE,
+	'ewa_status'					."_network_class"	=> TRUE,
+	'ewa'							."_network_class"	=> TRUE,
 	##Project Management Module
-	'project_urgency'			."_network_class"	=> TRUE,
-	'project_status'			."_network_class"	=> TRUE,
-	'project'					."_network_class"	=> TRUE,
-	##Correction or Maintenance Plan
-	'cmp'						."_network_class"	=> TRUE,
-	'cmp_task'					."_network_class"	=> TRUE,
-	'cmp_task_doc'				."_network_class"	=> TRUE,
-	'cmp_task_type'				."_network_class"	=> TRUE,
-	'cmp_task_status'			."_network_class"	=> TRUE,
-
+	'project_urgency'				."_network_class"	=> TRUE,
+	'project_status'				."_network_class"	=> TRUE,
+	'project'						."_network_class"	=> TRUE,
+	##Change MAnagement Module
+	'cmp'							."_network_class"	=> TRUE,
+	'cmp_task'						."_network_class"	=> TRUE,
+	'cmp_task_doc'					."_network_class"	=> TRUE,
+	'cmp_task_type'					."_network_class"	=> TRUE,
+	'cmp_task_status'				."_network_class"	=> TRUE,
+	'cmp_task_step'					."_network_class"	=> TRUE,
+	'cmp_task_step_type'			."_network_class"	=> TRUE,
 
 //MENU SLUGS
-	'main'						."_menu_slug"	=> 'csi_'		.'main',
-	'network'					."_menu_slug"	=> 'csi_'		.'network',
-	'customer'					."_menu_slug"	=> 'csi_'		.'customer',
-	'sapcustno'					."_menu_slug"	=> 'csi_'		.'sapcustno',
-	'customer_system'			."_menu_slug"	=> 'csi_'		.'customer_system',
+	'main'							."_menu_slug"	=> 'csi_'		.'main',
+	'network'						."_menu_slug"	=> 'csi_'		.'network',
+	'customer'						."_menu_slug"	=> 'csi_'		.'customer',
+	'country'						."_menu_slug"	=> 'csi_'		.'country',
+	'user'							."_menu_slug"	=> 'csi_'		.'user_team',
+	'user_team'						."_menu_slug"	=> 'csi_'		.'user_team',
+	##Service Catalog Module
+	'service'						."_menu_slug"	=> 'csi_'		.'service',
+	##Landscape Module
+	'sapcustno'						."_menu_slug"	=> 'csi_'		.'sapcustno',
+	'customer_system_environment'	."_menu_slug"	=> 'csi_'		.'customer_system_environment',
+	'customer_system'				."_menu_slug"	=> 'csi_'		.'customer_system',
 	##EWA Module
-	'ewa_alert_action_party'	."_menu_slug"	=> 'csi_'		.'ewa_alert_action_party',
-	'ewa_alert_priority'		."_menu_slug"	=> 'csi_'		.'ewa_alert_priority',
-	'ewa_alert_rating'			."_menu_slug"	=> 'csi_'		.'ewa_alert_rating',
-	'ewa_alert'					."_menu_slug"	=> 'csi_'		.'ewa_alert',
-	'ewa_rating'				."_menu_slug"	=> 'csi_'		.'ewa_rating',
-	'ewa_status'				."_menu_slug"	=> 'csi_'		.'ewa_status',
-	'ewa'						."_menu_slug"	=> 'csi_'		.'ewa',
+	'ewa_alert_action_party'		."_menu_slug"	=> 'csi_'		.'ewa_alert_action_party',
+	'ewa_alert_priority'			."_menu_slug"	=> 'csi_'		.'ewa_alert_priority',
+	'ewa_alert_rating'				."_menu_slug"	=> 'csi_'		.'ewa_alert_rating',
+	'ewa_alert'						."_menu_slug"	=> 'csi_'		.'ewa_alert',
+	'ewa_rating'					."_menu_slug"	=> 'csi_'		.'ewa_rating',
+	'ewa_status'					."_menu_slug"	=> 'csi_'		.'ewa_status',
+	'ewa'							."_menu_slug"	=> 'csi_'		.'ewa',
 	##Project Management Module
-	'project_status'			."_menu_slug"	=> 'csi_'		.'project_status',
-	'project_urgency'			."_menu_slug"	=> 'csi_'		.'project_urgency',
-	'project'					."_menu_slug"	=> 'csi_'		.'project',
-	##Correction or Maintenance Plan
-	'cmp'						."_menu_slug"	=> 'csi_'		.'cmp',
-	'cmp_task'					."_menu_slug"	=> 'csi_'		.'cmp_task',
-	'cmp_task_doc'				."_menu_slug"	=> 'csi_'		.'cmp_task_doc',
-	'cmp_task_type'				."_menu_slug"	=> 'csi_'		.'cmp_task_type',
-	'cmp_task_status'			."_menu_slug"	=> 'csi_'		.'cmp_task_status',
+	'project_status'				."_menu_slug"	=> 'csi_'		.'project_status',
+	'project_urgency'				."_menu_slug"	=> 'csi_'		.'project_urgency',
+	'project'						."_menu_slug"	=> 'csi_'		.'project',
+	##Change Management Module
+	'cmp'							."_menu_slug"	=> 'csi_'		.'cmp',
+	'cmp_task'						."_menu_slug"	=> 'csi_'		.'cmp_task',
+	'cmp_task_doc'					."_menu_slug"	=> 'csi_'		.'cmp_task_doc',
+	'cmp_task_type'					."_menu_slug"	=> 'csi_'		.'cmp_task_type',
+	'cmp_task_status'				."_menu_slug"	=> 'csi_'		.'cmp_task_status',
+	'cmp_task_step'					."_menu_slug"	=> 'csi_'		.'cmp_task_step',
+	'cmp_task_step_type'			."_menu_slug"	=> 'csi_'		.'cmp_task_step_type',
 
 //MENU CAPABILITIES
-	'main'						."_menu_cap"		=> 'manage_options',
-	'network'					."_menu_cap"		=> 'manage_options',
-	'customer'					."_menu_cap"		=> 'manage_options',
-	'sapcustno'					."_menu_cap"		=> 'manage_options',
-	'customer_system'			."_menu_cap"		=> 'manage_options',
+	'main'							."_menu_cap"		=> 'manage_options',
+	'network'						."_menu_cap"		=> 'manage_options',
+	'customer'						."_menu_cap"		=> 'manage_options',
+	'country'						."_menu_cap"		=> 'manage_options',
+	'user'							."_menu_cap"		=> 'manage_options',
+	'user_team'						."_menu_cap"		=> 'manage_options',
+	##Service Catalog Module
+	'service'						."_menu_cap"		=> 'manage_options',
+	##Landscape Module
+	'sapcustno'						."_menu_cap"		=> 'manage_options',
+	'customer_system_environment'	."_menu_cap"		=> 'manage_options',
+	'customer_system'				."_menu_cap"		=> 'manage_options',
 	##EWA Module
-	'ewa_alert_action_party'	."_menu_cap"		=> 'manage_options',
-	'ewa_alert_priority'		."_menu_cap"		=> is_multisite()?'manage_network':'manage_options',
-	'ewa_alert_rating'			."_menu_cap"		=> 'manage_options',
-	'ewa_alert'					."_menu_cap"		=> 'manage_options',
-	'ewa_rating'				."_menu_cap"		=> 'manage_options',
-	'ewa_status'				."_menu_cap"		=> 'manage_options',
-	'ewa'						."_menu_cap"		=> 'manage_options',
+	'ewa_alert_action_party'		."_menu_cap"		=> 'manage_options',
+	'ewa_alert_priority'			."_menu_cap"		=> is_multisite()?'manage_network':'manage_options',
+	'ewa_alert_rating'				."_menu_cap"		=> 'manage_options',
+	'ewa_alert'						."_menu_cap"		=> 'manage_options',
+	'ewa_rating'					."_menu_cap"		=> 'manage_options',
+	'ewa_status'					."_menu_cap"		=> 'manage_options',
+	'ewa'							."_menu_cap"		=> 'manage_options',
 	##Project Management Module
-	'project_status'			."_menu_cap"		=> 'manage_options',
-	'project_urgency'			."_menu_cap"		=> 'manage_options',
-	'project'					."_menu_cap"		=> 'manage_options',
-	##Correction or Maintenance Plan
-	'cmp'						."_menu_cap"		=> 'manage_options',
-	'cmp_task'					."_menu_cap"		=> 'manage_options',
-	'cmp_task_doc'				."_menu_cap"		=> 'manage_options',
-	'cmp_task_type'				."_menu_cap"		=> 'manage_options',
-	'cmp_task_status'			."_menu_cap"		=> 'manage_options',
+	'project_status'				."_menu_cap"		=> 'manage_options',
+	'project_urgency'				."_menu_cap"		=> 'manage_options',
+	'project'						."_menu_cap"		=> 'manage_options',
+	##Change MAnagement Module
+	'cmp'							."_menu_cap"		=> 'manage_options',
+	'cmp_task'						."_menu_cap"		=> 'manage_options',
+	'cmp_task_doc'					."_menu_cap"		=> 'manage_options',
+	'cmp_task_type'					."_menu_cap"		=> 'manage_options',
+	'cmp_task_status'				."_menu_cap"		=> 'manage_options',
+	'cmp_task_step'					."_menu_cap"		=> 'manage_options',
+	'cmp_task_step_type'			."_menu_cap"		=> 'manage_options',
 );
 
 
@@ -303,28 +329,36 @@ require_once(CSI_PLUGIN_DIR."/classes/class-base.php");
 
 # Extended Classes
 ## Cross Module Classes
+require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-country.php");
+require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-user-team.php");
+require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-user.php");
 require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-customer.php");
-require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-sapcustno.php");
-require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-customer-system.php");
+##Service Catalog Module Classes
+require_once(CSI_PLUGIN_DIR."/classes/service-catalog/class-service.php");
 ## Landscape Module Classes
+require_once(CSI_PLUGIN_DIR."/classes/landscape/class-sapcustno.php");
+require_once(CSI_PLUGIN_DIR."/classes/landscape/class-customer-system-environment.php");
+require_once(CSI_PLUGIN_DIR."/classes/landscape/class-customer-system.php");
 ## Alert Module Classes
-require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-alert-action-party.php");
-require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-alert-priority.php");
-require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-alert-rating.php");
-require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-alert.php");
-require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-rating.php");
-require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa-status.php");
-require_once(CSI_PLUGIN_DIR."/classes/ewa-alert/class-ewa.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-alert-action-party.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-alert-priority.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-alert-rating.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-alert.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-rating.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-status.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa.php");
+## Change Management Module Classes
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-step-type.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-step.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-type.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-status.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-doc.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp.php");
 
-require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp-task-type.php");
-require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp-task-status.php");
-require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp-task-doc.php");
-require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp-task.php");
-require_once(CSI_PLUGIN_DIR."/classes/cmp/class-cmp.php");
-
-require_once(CSI_PLUGIN_DIR."/classes/project/class-project-status.php");
-require_once(CSI_PLUGIN_DIR."/classes/project/class-project-urgency.php");
-require_once(CSI_PLUGIN_DIR."/classes/project/class-project.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-status.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-urgency.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project.php");
 
 ##External Classes
 require_once(CSI_PLUGIN_DIR."/pagetemplater.php");
