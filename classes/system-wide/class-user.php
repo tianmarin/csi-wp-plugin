@@ -395,6 +395,7 @@ public function __construct(){
 public function add_user_team_column ( $columns ) {
 	$columns = array_slice($columns, 0, 2, true) + array("user_team" => "Equipo") + array_slice($columns, 3, count($columns)-2, true);
     return $columns;
+	
 }
 
 //
