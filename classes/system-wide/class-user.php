@@ -395,7 +395,7 @@ public function __construct(){
 public function add_user_team_column ( $columns ) {
 	$columns = array_slice($columns, 0, 2, true) + array("user_team" => "Equipo") + array_slice($columns, 3, count($columns)-2, true);
     return $columns;
-	
+
 }
 
 //
@@ -483,9 +483,9 @@ public function user_profile_fields( $user ) {
 
 	//user is admin and has BackWPup rights
 	//if ( $user->has_cap( 'administrator' ) && $user->has_cap( 'backwpup_settings' ) ) {
-	if ( $user->has_cap( 'administrator' ) ) {
-		return;
-	}
+//	if ( $user->has_cap( 'administrator' ) ) {
+	//	return;
+//	}
 	$sql = 'SELECT * FROM ' . $this->tbl_name . ' WHERE id = "' . $user->ID . '"';
 	$csi_user = $wpdb->get_row ( $sql );
 

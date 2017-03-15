@@ -75,6 +75,7 @@ class CSI_PageTemplater {
 			'templates/template-ewa-mgmt-control-center.php'	=> 'CSI Control Center',
 			'templates/template-cmp-control-center.php'			=> 'CSI CMP Control Center',
 			'templates/template-issue-control-center.php'		=> 'CSI Issue Control Center',
+			'templates/template-cmp-calendar.php'				=> 'CSI CMP ical',
         );
 
 	}
