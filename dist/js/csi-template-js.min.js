@@ -12,16 +12,21 @@ jQuery(document).ready(function($){
 /*
 * Global Variables
 */
-var cmpMainContent = $('#csi-template-cmp-control-center-main');
+var cmpMainContent 	=	$('.csi-template-main-content');
 var ajaxPages={
-	'intro'	 	:   'csi_cmp_build_page_intro',
-	'listplans'	:	'csi_cmp_build_page_list_plans',
-	'addplan'	:	'csi_cmp_build_page_new_plan_form',
-	'showplan'  :   'csi_cmp_build_page_show_plan',
-	'addtask'   :   'csi_cmp_build_page_new_task_form',
-	'showtask'	:	'csi_cmp_build_page_show_task',
-	'edittask'	:	'csi_cmp_build_page_edit_task_form'
+	'intro'	 		:   'csi_cmp_build_page_intro',
+	'listplans'		:	'csi_cmp_build_page_list_plans',
+	'addplan'		:	'csi_cmp_build_page_new_plan_form',
+	'showplan'  	:   'csi_cmp_build_page_show_plan',
+	'addtask'   	:   'csi_cmp_build_page_new_task_form',
+	'showtask'		:	'csi_cmp_build_page_show_task',
+	'edittask'		:	'csi_cmp_build_page_edit_task_form',
+	'listservices'	:	'csi_cmp_build_page_list_services',
+	'showservice'	:	'csi_cmp_build_page_show_service',
+	'editservice'	:	'csi_cmp_build_page_edit_service_form',
+	'edittaskplan'	:	'csi_cmp_build_page_task_steps_import'
 };
+ajaxPages['intro']	=	cmpMainContent.data('default-action');
 
 var changeHash = function ( nextPage ) {
 	if ( undefined !== nextPage &&  '' !== nextPage ){
@@ -295,6 +300,51 @@ function csiInfoPopup(elementData){
 		error: aaAjaxError,
 	});
 }
+function csiLoadPopUpPage ( triggerElement ) {
+	var trigger = triggerElement;
+	var data = new FormData();
+	$.each( trigger.data(), function(index,val){
+		data.append(index,val);
+	});
+	jconfirm ({
+		title: trigger.data('title'),
+		backgroundDismiss: trigger.data('background-dismiss'),
+		type: trigger.data('type'),
+		icon: trigger.data('icon'),
+		columnClass: trigger.data('column-class'),
+		containerFluid: trigger.data('container-fluid'),
+		buttons:{
+			ok:{
+
+			},
+			cancel:{
+
+			}
+		},
+		content: function(){
+			var self = this;
+			return  $.ajax({
+			 	url: csiTemplateScript.ajaxUrl,
+			 	type: 'POST',
+			 	data: data,
+			 	cache: false,
+			 	dataType: 'json',
+			 	processData: false,
+			 	contentType: false,
+			 	success: function(response){
+					self.setContent(response.content);
+					self.setTitle(response.title);
+					setTimeout(function(){
+						csiSoftRefreshEventListener(response);
+					}, 300);
+
+			 	},
+			 	error: aaAjaxError,
+			 });
+		},
+	});
+	return true;
+}
 function csiSoftRefreshEventListener(pageResponse){
 	var response = pageResponse;
 	$('[data-toggle="tooltip"]').tooltip();
@@ -310,10 +360,10 @@ function csiSoftRefreshEventListener(pageResponse){
 	$('input.csi-datetime-range-input').daterangepicker({
 		timePicker: true,
 		timePicker24Hour: true,
-		timePickerIncrement: 10,
+		//timePickerIncrement: 10,
 		cancelClass: 'btn-danger',
 		opens: 'center',
-		autoUpdateInput: false,
+		//autoUpdateInput: false,
 		dateLimit: {
 			days: 30
 		},
@@ -411,6 +461,10 @@ function csiSoftRefreshEventListener(pageResponse){
 				$(this).removeClass('disabled').prop('disabled',false);
 			}
 		});
+	});
+	$('.csi-popup-page').off('click').click(function(event){
+		event.preventDefault();
+		csiLoadPopUpPage ( $(this) );
 	});
 	$('.csi-popup').off('click').click(function(event){
 		event.preventDefault();
@@ -562,7 +616,7 @@ function csiSoftRefreshEventListener(pageResponse){
 		data.append('action', form.data('function'));
 //		console.log( $(this).find('input, select, textarea, checkbox') );
 		$(this).find('input, select, textarea, checkbox').each(function(){
-			if ( $(this).is(':checkbox') ) {
+			if ( $(this).is(':checkbox, :radio') ) {
 				if ( $(this).prop('checked') ) {
 					data.append($(this).attr('name'),$(this).val());
 				}
@@ -607,7 +661,18 @@ function csiSoftRefreshEventListener(pageResponse){
 								response.notification.onClose = function(){};
 						}
 						jconfirm ( response.notification );
-					}// response.notification
+					}else{
+						if ( undefined !== response.postSubmitAction ){
+							switch ( response.postSubmitAction ){
+								case 'changeHash':
+									changeHash( form.data('next-page') );
+									break;
+								case 'refreshParent':
+									csiTemplateCmpFetchTableContent( form.closest('.refreshable') );
+									break;
+							}
+						}
+					}
 				}
 			},
 			error: aaAjaxError,

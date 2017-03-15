@@ -13126,11 +13126,13 @@ html {
   background: #f2dede;
   
 }
-body.csi-template-cmp-control-center-body {
+body.csi-template-cmp-control-center-body,
+body.csi-template-issue-control-center-body {
   padding-top: 50px;
 }
 @media print {
-  body.csi-template-cmp-control-center-body {
+  body.csi-template-cmp-control-center-body,
+  body.csi-template-issue-control-center-body {
     padding-top: 0px;
   }
 }
@@ -13171,6 +13173,286 @@ body.csi-template-cmp-control-center-body {
 }
 .panel-primary .panel-heading a {
   color: #FFFFFF;
+}
+input[type='radio'].csi-cool-radio {
+  display: none;
+}
+input[type='radio'].csi-cool-radio + label {
+  display: inline-block;
+  margin-bottom: 0;
+  font-weight: normal;
+  text-align: center;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  background-image: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  border-radius: 4px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  display: block;
+  width: 100%;
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+  position: relative;
+}
+input[type='radio'].csi-cool-radio + label:focus,
+input[type='radio'].csi-cool-radio + label:active:focus,
+input[type='radio'].csi-cool-radio + label.active:focus,
+input[type='radio'].csi-cool-radio + label.focus,
+input[type='radio'].csi-cool-radio + label:active.focus,
+input[type='radio'].csi-cool-radio + label.active.focus {
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+input[type='radio'].csi-cool-radio + label:hover,
+input[type='radio'].csi-cool-radio + label:focus,
+input[type='radio'].csi-cool-radio + label.focus {
+  color: #333;
+  text-decoration: none;
+}
+input[type='radio'].csi-cool-radio + label:active,
+input[type='radio'].csi-cool-radio + label.active {
+  outline: 0;
+  background-image: none;
+  -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+input[type='radio'].csi-cool-radio + label.disabled,
+input[type='radio'].csi-cool-radio + label[disabled],
+fieldset[disabled] input[type='radio'].csi-cool-radio + label {
+  cursor: not-allowed;
+  opacity: 0.65;
+  filter: alpha(opacity=65);
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+ainput[type='radio'].csi-cool-radio + label.disabled,
+fieldset[disabled] ainput[type='radio'].csi-cool-radio + label {
+  pointer-events: none;
+}
+input[type='radio'].csi-cool-radio + label:focus,
+input[type='radio'].csi-cool-radio + label.focus {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #8c8c8c;
+}
+input[type='radio'].csi-cool-radio + label:hover {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+input[type='radio'].csi-cool-radio + label:active,
+input[type='radio'].csi-cool-radio + label.active,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio + label {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+input[type='radio'].csi-cool-radio + label:active:hover,
+input[type='radio'].csi-cool-radio + label.active:hover,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio + label:hover,
+input[type='radio'].csi-cool-radio + label:active:focus,
+input[type='radio'].csi-cool-radio + label.active:focus,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio + label:focus,
+input[type='radio'].csi-cool-radio + label:active.focus,
+input[type='radio'].csi-cool-radio + label.active.focus,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio + label.focus {
+  color: #333;
+  background-color: #d4d4d4;
+  border-color: #8c8c8c;
+}
+input[type='radio'].csi-cool-radio + label:active,
+input[type='radio'].csi-cool-radio + label.active,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio + label {
+  background-image: none;
+}
+input[type='radio'].csi-cool-radio + label.disabled:hover,
+input[type='radio'].csi-cool-radio + label[disabled]:hover,
+fieldset[disabled] input[type='radio'].csi-cool-radio + label:hover,
+input[type='radio'].csi-cool-radio + label.disabled:focus,
+input[type='radio'].csi-cool-radio + label[disabled]:focus,
+fieldset[disabled] input[type='radio'].csi-cool-radio + label:focus,
+input[type='radio'].csi-cool-radio + label.disabled.focus,
+input[type='radio'].csi-cool-radio + label[disabled].focus,
+fieldset[disabled] input[type='radio'].csi-cool-radio + label.focus {
+  background-color: #fff;
+  border-color: #ccc;
+}
+input[type='radio'].csi-cool-radio + label .badge {
+  color: #fff;
+  background-color: #333;
+}
+input[type='radio'].csi-cool-radio + label:after {
+  position: absolute;
+  content: '';
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-bottom-right-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-top-left-radius: 20px;
+  background-color: #EDF1F1;
+  left: 5px;
+  top: 7px;
+  -webkit-box-shadow: "1px 1px 1px rgba(0,0,0,.5)";
+  box-shadow: "1px 1px 1px rgba(0,0,0,.5)";
+  -webkit-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  -o-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  font-family: 'FontAwesome';
+  font-size: 0.8em;
+  line-height: 1.5em;
+  text-align: center;
+  content: "\f00d";
+  border: thin solid rgba(0, 0, 0, 0.3);
+  color: red;
+}
+input[type='radio'].csi-cool-radio + label:before {
+  position: absolute;
+  content: '' !important;
+  display: block;
+  width: 40px;
+  height: 15px;
+  border-bottom-right-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom-left-radius: 20px;
+  border-top-left-radius: 20px;
+  background-color: #efefef;
+  left: 5px;
+  top: 10px;
+  -webkit-box-shadow: "inset 1px 1px 1px rgba(0,0,0,.25)";
+  box-shadow: "inset 1px 1px 1px rgba(0,0,0,.25)";
+  -webkit-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  -o-transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: all 300ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  border: thin solid rgba(0, 0, 0, 0.3);
+}
+input[type='radio'].csi-cool-radio:checked + label {
+  color: #fff;
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='radio'].csi-cool-radio:checked + label:focus,
+input[type='radio'].csi-cool-radio:checked + label.focus {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #255625;
+}
+input[type='radio'].csi-cool-radio:checked + label:hover {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='radio'].csi-cool-radio:checked + label:active,
+input[type='radio'].csi-cool-radio:checked + label.active,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='radio'].csi-cool-radio:checked + label:active:hover,
+input[type='radio'].csi-cool-radio:checked + label.active:hover,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label:hover,
+input[type='radio'].csi-cool-radio:checked + label:active:focus,
+input[type='radio'].csi-cool-radio:checked + label.active:focus,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label:focus,
+input[type='radio'].csi-cool-radio:checked + label:active.focus,
+input[type='radio'].csi-cool-radio:checked + label.active.focus,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label.focus {
+  color: #fff;
+  background-color: #398439;
+  border-color: #255625;
+}
+input[type='radio'].csi-cool-radio:checked + label:active,
+input[type='radio'].csi-cool-radio:checked + label.active,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label {
+  background-image: none;
+}
+input[type='radio'].csi-cool-radio:checked + label.disabled:hover,
+input[type='radio'].csi-cool-radio:checked + label[disabled]:hover,
+fieldset[disabled] input[type='radio'].csi-cool-radio:checked + label:hover,
+input[type='radio'].csi-cool-radio:checked + label.disabled:focus,
+input[type='radio'].csi-cool-radio:checked + label[disabled]:focus,
+fieldset[disabled] input[type='radio'].csi-cool-radio:checked + label:focus,
+input[type='radio'].csi-cool-radio:checked + label.disabled.focus,
+input[type='radio'].csi-cool-radio:checked + label[disabled].focus,
+fieldset[disabled] input[type='radio'].csi-cool-radio:checked + label.focus {
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='radio'].csi-cool-radio:checked + label .badge {
+  color: #5cb85c;
+  background-color: #fff;
+}
+input[type='radio'].csi-cool-radio:checked + label:after {
+  border: thin solid rgba(0, 0, 0, 0.3) !important;
+  left: 25px;
+  content: "\f00c" !important;
+  color: white;
+  color: #fff;
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='radio'].csi-cool-radio:checked + label:after:focus,
+input[type='radio'].csi-cool-radio:checked + label:after.focus {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #255625;
+}
+input[type='radio'].csi-cool-radio:checked + label:after:hover {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='radio'].csi-cool-radio:checked + label:after:active,
+input[type='radio'].csi-cool-radio:checked + label:after.active,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label:after {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+input[type='radio'].csi-cool-radio:checked + label:after:active:hover,
+input[type='radio'].csi-cool-radio:checked + label:after.active:hover,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label:after:hover,
+input[type='radio'].csi-cool-radio:checked + label:after:active:focus,
+input[type='radio'].csi-cool-radio:checked + label:after.active:focus,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label:after:focus,
+input[type='radio'].csi-cool-radio:checked + label:after:active.focus,
+input[type='radio'].csi-cool-radio:checked + label:after.active.focus,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label:after.focus {
+  color: #fff;
+  background-color: #398439;
+  border-color: #255625;
+}
+input[type='radio'].csi-cool-radio:checked + label:after:active,
+input[type='radio'].csi-cool-radio:checked + label:after.active,
+.open > .dropdown-toggleinput[type='radio'].csi-cool-radio:checked + label:after {
+  background-image: none;
+}
+input[type='radio'].csi-cool-radio:checked + label:after.disabled:hover,
+input[type='radio'].csi-cool-radio:checked + label:after[disabled]:hover,
+fieldset[disabled] input[type='radio'].csi-cool-radio:checked + label:after:hover,
+input[type='radio'].csi-cool-radio:checked + label:after.disabled:focus,
+input[type='radio'].csi-cool-radio:checked + label:after[disabled]:focus,
+fieldset[disabled] input[type='radio'].csi-cool-radio:checked + label:after:focus,
+input[type='radio'].csi-cool-radio:checked + label:after.disabled.focus,
+input[type='radio'].csi-cool-radio:checked + label:after[disabled].focus,
+fieldset[disabled] input[type='radio'].csi-cool-radio:checked + label:after.focus {
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+input[type='radio'].csi-cool-radio:checked + label:after .badge {
+  color: #5cb85c;
+  background-color: #fff;
 }
 input[type='checkbox'].csi-cool-checkbox {
   display: none;

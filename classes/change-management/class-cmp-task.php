@@ -623,7 +623,7 @@ public function csi_cmp_build_page_new_task_form(){
 	';
 	$services = $this->get_sql ( $sql );
 	foreach ( $services as $service ){
-		$service_opts .='<option value="' . $service['id'] . '">'. $service['short_name_es'] . '</option>';
+		$service_opts .='<option value="' . $service['id'] . '">'. $service['name'] . '</option>';
 	}
 	//--------------------------------------------------------------------------
 	$o='
@@ -986,7 +986,7 @@ public function csi_cmp_build_page_edit_task_form(){
 	$services = $this->get_sql ( $sql );
 	foreach ( $services as $service ){
 		$selected = ( $task->service_id == $service['id'] ) ? 'selected' : '';
-		$service_opts .='<option value="' . $service['id'] . '" ' . $selected . '>'. $service['short_name_es'] . '</option>';
+		$service_opts .='<option value="' . $service['id'] . '" ' . $selected . '>'. $service['name'] . '</option>';
 	}
 	//--------------------------------------------------------------------------
 	$start_datetime = new DateTime ( $task->start_datetime );
@@ -1206,24 +1206,57 @@ public function csi_cmp_build_page_edit_task_form(){
 				</form>
 			</div>
 		</div>
+		<div class="panel panel-warning row">
+			<div class="panel-heading">
+				<h3 class="panel-title">
+					<a role="button" data-toggle="collapse" href="#csi-cmp-task-' . $task->id . '-edit-additional-options">
+						Actividades Adicionales
+					</a>
+				</h3>
+			</div>
+			<div id="csi-cmp-task-' . $task->id . '-edit-additional-options" class="panel-collapse collapse">
+				<div class="panel-body">
+					<span class="h5">Duplicar esta tarea</span>
+					<form class="">
+						<div class="form-group">
+							<label class="col-sm-2 control-label">Sistemas</label>
+							<div class="col-sm-10">
+								<p class="text-right">
+									<button type="submit" class="btn btn-danger">
+										<i class="fa fa-trash"></i> Eliminar esta tarea
+									</button>
+								</p>
+								<p class="help-block">Al eliminar esta tarea, se perder&aacute; toda la informaci&oacute;n relacionada.</p>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
 		<div class="panel panel-danger row">
 			<div class="panel-heading">
-				<h3 class="panel-title">Zona de peligro</h3>
+			<h3 class="panel-title">
+				<a role="button" data-toggle="collapse" href="#csi-cmp-task-' . $task->id . '-edit-danger-options">
+					Zona de Peligro
+				</a>
+			</h3>
 			</div>
-			<div class="panel-body">
-				<form class="">
-					<div class="form-group">
-						<label class="col-sm-2 control-label">Eliminar esta tarea</label>
-						<div class="col-sm-10">
-							<p class="text-right">
-								<button type="submit" class="btn btn-danger">
-									<i class="fa fa-trash"></i> Eliminar esta tarea
-								</button>
-							</p>
-							<p class="help-block">Al eliminar esta tarea, se perder&aacute; toda la informaci&oacute;n relacionada.</p>
+			<div id="csi-cmp-task-' . $task->id . '-edit-danger-options" class="panel-collapse collapse">
+				<div class="panel-body">
+					<form class="">
+						<div class="form-group">
+							<label class="col-sm-2 control-label">Eliminar esta tarea</label>
+							<div class="col-sm-10">
+								<p class="text-right">
+									<button type="submit" class="btn btn-danger">
+										<i class="fa fa-trash"></i> Eliminar esta tarea
+									</button>
+								</p>
+								<p class="help-block">Al eliminar esta tarea, se perder&aacute; toda la informaci&oacute;n relacionada.</p>
+							</div>
 						</div>
-					</div>
-				</form>
+					</form>
+				</div>
 			</div>
 		</div>
 	</div><!-- #csi-template-cmp-control-center-edit-task -->
@@ -1364,7 +1397,7 @@ public function csi_cmp_edit_cmp_task(){
 	$o						= '';
 	$post					= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	$task_id				= $post['task_id'];
-	self::write_log ( $post );
+	//self::write_log ( $post );
 	$current_user		= get_userdata ( get_current_user_id() );
 	$current_datetime	= new DateTime();
 	$task_datetime		= explode ( ' - ', strip_tags ( stripslashes ( $post['task_datetime'] ) ) );
@@ -1630,7 +1663,7 @@ public function csi_cmp_fetch_tasks_table(){
 			$o.= '
 				<tr>
 					<th class="text-muted small">Tipo de Cambio</th>
-					<td>' . ( NULL == $task['change_urgent_flag'] ? '<span class="text-danger">Urgente</span>' : 'Normal' ) . '</td>
+					<td>' . ( NULL != $task['change_urgent_flag'] ? '<span class="text-danger">Urgente</span>' : 'Normal' ) . '</td>
 				</tr>
 				<tr>
 					<th class="text-muted small">Aprobación</th>
@@ -1754,7 +1787,6 @@ public function csi_cmp_fetch_task_step_list_info(){
 				<td>' . $edit_link . '<samp>' . $task_step['short_name'] . '</samp></td>
 				<td>' . $executor . '</td>
 				<td class="text-center">' . $planned_start_datetime->format('d/m H:i') . ' - ' . $planned_end_datetime->format('d/m H:i') . '</td>
-				<td class="text-center">' . $status . '</td>
 			</tr>
 		';
 	}
@@ -1801,14 +1833,16 @@ public function csi_cmp_build_page_show_task(){
 				T04.short_name as customer_short_name,
 				T02.sid as sid,
 				T01.title as plan_title,
-				T02.id as plan_id,
+				T01.id as plan_id,
 				T00.start_datetime as task_start_datetime,
 				T00.end_datetime as task_end_datetime,
 				T00.comments as task_comments,
+				T00.id as id,
 				T05.short_name as status_short_name,
 				T05.id as status_id,
 				T05.icon as status_icon,
-				T06.short_name_es as service_short_name
+				T06.name as service_name,
+				T06.id as service_id
 			FROM
 				' . $this->tbl_name . ' as T00
 				LEFT JOIN ' . $NOVIS_CSI_CMP->tbl_name . ' as T01
@@ -1847,7 +1881,7 @@ public function csi_cmp_build_page_show_task(){
 		</div>
 		<div class="row">
 			<p class="text-muted hidden-print"><i class="fa fa-clock-o"></i> Cristian Marin solicitó la aprobación CAB Novis hace el 23/04/2017 21:30hrs.</p>
-			<p class="text-right hidden-print">
+			<p class="text-right hidden-print hidden">
 				<a href="#" class="btn btn-default">
 					<i class="fa fa-download"></i> Descargar como documento <i>Change Request</i>
 				</a>
@@ -1904,7 +1938,7 @@ public function csi_cmp_build_page_show_task(){
 											</tr>
 											<tr>
 												<th class="small text-muted">Servicio Relacionado</th>
-												<td><small>' . ( '' != $task->service_short_name ? $task->service_short_name : '--' ) . '</small></td>
+												<td><small>' . ( '' != $task->service_name ? $task->service_name : '--' ) . '</small></td>
 											</tr>
 											<tr>
 												<th class="small text-muted">Ventana de Ejecución</th>
@@ -1982,10 +2016,56 @@ public function csi_cmp_build_page_show_task(){
 				<div role="tabpanel" class="tab-pane" id="csi-cmp-task-' . $task_id . '-step-list">
 					<h3>
 						<i class="fa fa-gear"></i> Plan de Actividades
-						<a href="#" class="btn btn-warning btn-xs hidden-print">
+						<button type="button" data-target="#csi-cmp-task-step-list-importer, #csi-cmp-task-' . $task_id . '-step-list-actual" data-toggle="collapse" class="btn btn-xs btn-warning">
 							<i class="fa fa-magic"></i> Importar
-						</a>
+						</button>
 					</h3>';
+	$o.='
+		<div class="panel alert"><p class="">La Ventana de Ejecución es del ' . $start_datetime->format('d/m H:i') . 'hrs al ' . $end_datetime->format('d/m H:i') . 'hrs <code>' . $duration->h . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</code></p></div>
+	';
+	$o.='
+		<div id="csi-cmp-task-step-list-importer" class="collapse row">
+			<div class="alert alert-warning">
+				<span class="pull-left"><i class="fa fa-fw fa-exclamation-triangle fa-2x"></i></span>
+				Todos los detalles del plan de trabajo actual se perder&aacute;n. Detalle de tareas, responsables, horarios y otros ser&aacute;n integramente reemplazados por el detalle de los pasos del plan o servicio seleccionado. <strong>Este paso no puede deshacerse</strong>
+			</div>
+			<div class="col-sm-6 panel panel-default">
+				<div class="panel-body">
+					<p class="text-center">
+						<a href="#!edittaskplan?task_id=' . $task->id . '&import_source=service"
+							class=" btn btn-primary"
+							data-action="csi_import_service_steps_to_task_preview"
+							data-service-id="' . $task->service_id . '"
+							data-task-id="' . $task->id . '"
+							data-title="Importar Plan de Trabajo estándar"
+							data-background-dismiss="true"
+							data-type="orange"
+							data-icon="fa fa-magic"
+							data-column-class="xlarge"
+							data-container-fluid="true"
+							data-close-icon="true"
+							data-close-icon-class="fa fa-close"
+							>
+							Importar estandar de Servicio
+						</a>
+					</p>
+					<p class="text-center"><strong>' . $task->service_name . '</strong></p>
+					<p class="help-block text-justify">Importar el plan de trabajo est&aacute;ndar del servicio, permite garantizar un flujo de Gesti&oacute;n de Cambio m&aacute;s &aacute;gil ya que se utilizan los pasos propuestos por el equipo l&iacute;der de cada práctica.</p>
+				</div>
+			</div>
+			<div class="col-sm-6 panel panel-default">
+				<div class="panel-body">
+					<p class="text-center">
+						<a href="#" class="btn btn-default" data-task-id="' . $task->id . '">
+							Importar desde un cambio anterior
+						</a>
+					</p>
+					<p class="help-block text-justify">Importar el plan de trabajo de otro cambio, permite homologar los planes de trabajo con pasos adicionales al estándar. De este modo, las particularidades de cada plan de trabjo pueden ser replicadas minimizando los pasos entre un plan de trabajo y otro.</p>
+				</div>
+			</div>
+		</div>
+	';
+	$o.='<div id="csi-cmp-task-' . $task_id . '-step-list-actual" class="collapse in">';
 	foreach ( $step_types as $step_type ){
 		$o.='
 		<div class="panel panel-' . $step_type['css_class'] . '">
@@ -2000,8 +2080,7 @@ public function csi_cmp_build_page_show_task(){
 					<tr>
 						<th class="">Descripci&oacute;n</th>
 						<th class="">Ejecutor</th>
-						<th class=" text-center">Tiempo Plan</th>
-						<th class=" text-center">Status</th>
+						<th class=" text-center">Tiempo</th>
 					</tr>
 				</thead>
 				<tbody style="position:relative;">
@@ -2010,6 +2089,7 @@ public function csi_cmp_build_page_show_task(){
 		</div>
 		';
 	}
+	$o.='</div><!-- #csi-cmp-task-' . $task_id . '-step-list-actual -->';
 	$o.='
 
 				</div><!-- div#csi-cmp-task-' . $task_id . '-step-list -->

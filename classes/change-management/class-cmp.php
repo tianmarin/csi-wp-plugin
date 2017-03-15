@@ -1018,9 +1018,9 @@ public function csi_cmp_build_page_intro(){
 					</a>
 				</div>
 				<div class="list-group col-sm-6 col-md-4">
-					<a href="#" class="list-group-item">
-						<h3><i class="fa fa-user-o"></i> Mis Planes</h3>
-						<p class="text-justify">Accede a los planes que has creado y los planes en los que has participado.</p>
+					<a href="#!listservices" class="list-group-item">
+						<h3><i class="fa fa-bullseye"></i> Servicios</h3>
+						<p class="text-justify">Detalle de los servicios que forman parte del Cat&aacute;logo de Servicios y definen las tareas relacionadas.</p>
 					</a>
 				</div>
 				<div class="list-group col-sm-6 col-md-4">

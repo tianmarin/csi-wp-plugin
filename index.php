@@ -41,6 +41,7 @@ $novis_csi_vars = array(
 	'user_team'						."_network_class"	=> TRUE,
 	##Service Catalog Module
 	'service'						."_network_class"	=> TRUE,
+	'service_step'					."_network_class"	=> TRUE,
 	##Landscape Module
 	'sapcustno'						."_network_class"	=> TRUE,
 	'customer_system_environment'	."_network_class"	=> TRUE,
@@ -59,6 +60,7 @@ $novis_csi_vars = array(
 	'project'						."_network_class"	=> TRUE,
 	##Change MAnagement Module
 	'cmp'							."_network_class"	=> TRUE,
+	'cmp_change_type'				."_network_class"	=> TRUE,
 	'cmp_task'						."_network_class"	=> TRUE,
 	'cmp_task_doc'					."_network_class"	=> TRUE,
 	'cmp_task_type'					."_network_class"	=> TRUE,
@@ -75,6 +77,7 @@ $novis_csi_vars = array(
 	'user_team'						."_menu_slug"	=> 'csi_'		.'user_team',
 	##Service Catalog Module
 	'service'						."_menu_slug"	=> 'csi_'		.'service',
+	'service_step'					."_menu_slug"	=> 'csi_'		.'service_step',
 	##Landscape Module
 	'sapcustno'						."_menu_slug"	=> 'csi_'		.'sapcustno',
 	'customer_system_environment'	."_menu_slug"	=> 'csi_'		.'customer_system_environment',
@@ -93,6 +96,7 @@ $novis_csi_vars = array(
 	'project'						."_menu_slug"	=> 'csi_'		.'project',
 	##Change Management Module
 	'cmp'							."_menu_slug"	=> 'csi_'		.'cmp',
+	'cmp_change_type'				."_menu_slug"	=> 'csi_'		.'cmp_change_type',
 	'cmp_task'						."_menu_slug"	=> 'csi_'		.'cmp_task',
 	'cmp_task_doc'					."_menu_slug"	=> 'csi_'		.'cmp_task_doc',
 	'cmp_task_type'					."_menu_slug"	=> 'csi_'		.'cmp_task_type',
@@ -109,6 +113,7 @@ $novis_csi_vars = array(
 	'user_team'						."_menu_cap"		=> 'manage_options',
 	##Service Catalog Module
 	'service'						."_menu_cap"		=> 'manage_options',
+	'service_step'					."_menu_cap"		=> 'manage_options',
 	##Landscape Module
 	'sapcustno'						."_menu_cap"		=> 'manage_options',
 	'customer_system_environment'	."_menu_cap"		=> 'manage_options',
@@ -127,6 +132,7 @@ $novis_csi_vars = array(
 	'project'						."_menu_cap"		=> 'manage_options',
 	##Change MAnagement Module
 	'cmp'							."_menu_cap"		=> 'manage_options',
+	'cmp_change_type'				."_menu_cap"		=> 'manage_options',
 	'cmp_task'						."_menu_cap"		=> 'manage_options',
 	'cmp_task_doc'					."_menu_cap"		=> 'manage_options',
 	'cmp_task_type'					."_menu_cap"		=> 'manage_options',
@@ -334,6 +340,7 @@ require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-user-team.php");
 require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-user.php");
 require_once(CSI_PLUGIN_DIR."/classes/system-wide/class-customer.php");
 ##Service Catalog Module Classes
+require_once(CSI_PLUGIN_DIR."/classes/service-catalog/class-service-step.php");
 require_once(CSI_PLUGIN_DIR."/classes/service-catalog/class-service.php");
 ## Landscape Module Classes
 require_once(CSI_PLUGIN_DIR."/classes/landscape/class-sapcustno.php");
@@ -348,6 +355,7 @@ require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-rating.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa.php");
 ## Change Management Module Classes
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-change-type.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-step-type.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-step.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-type.php");
