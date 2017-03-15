@@ -1494,6 +1494,7 @@ public function csi_cmp_fetch_tasks_table(){
 	global $NOVIS_CSI_CUSTOMER;
 	global $NOVIS_CSI_CUSTOMER_SYSTEM;
 	global $NOVIS_CSI_CMP_TASK_STATUS;
+	global $NOVIS_CSI_SERVICE;
 	global $wpdb;
 	//Local Variables
 	$insertArray			= array();
@@ -1519,7 +1520,9 @@ public function csi_cmp_fetch_tasks_table(){
 			IF(T02.cmp_finished_start_flag!=0,IF(T00.start_datetime<NOW(),1,0),0) as cmp_start_delay,
 			IF(T02.cmp_finished_end_flag!=0,IF(T00.end_datetime<NOW(),1,0),0) as cmp_end_delay,
 			T02.cmp_error_flag as cmp_error,
-			T00.comments as task_comments
+			T00.comments as task_comments,
+			T03.short_name as service_short_name,
+			T03.name as service_name
 
 		FROM
 			' . $this->tbl_name . ' as T00
@@ -1527,6 +1530,8 @@ public function csi_cmp_fetch_tasks_table(){
 				ON T00.customer_system_id = T01.id
 			LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' as T02
 				ON T00.status_id = T02.id
+			LEFT JOIN ' . $NOVIS_CSI_SERVICE->tbl_name . ' as T03
+				ON T00.service_id = T03.id
 		WHERE
 			T00.cmp_id = "' . $plan_id . '"
 		ORDER BY T00.start_datetime ASC
@@ -1630,7 +1635,7 @@ public function csi_cmp_fetch_tasks_table(){
 								</tr>
 								<tr>
 									<th class="text-muted small">Servicio relacionado</th>
-									<td>Actualización de Parche de Kernen SAP NW</td>
+									<td>' . $task['service_name'] . '</td>
 								</tr>
 								<tr>
 									<th class="text-muted small">Status</th>
