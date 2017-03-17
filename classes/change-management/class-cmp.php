@@ -659,7 +659,7 @@ public function csi_cmp_build_page_show_plan(){
 				<a href="#csi-cmp-fetch-tasks-table" class="refresh-button"><i class="fa fa-fw fa-refresh"></i></a>
 			</div>
 			</div>
-			<table class="table refreshable" data-action="csi_cmp_fetch_tasks_table" data-plan-id="' . $plan_id . '" style="position:relative;" id="csi-cmp-fetch-tasks-table">
+			<table class="table refreshable table-hover" data-action="csi_cmp_fetch_tasks_table" data-plan-id="' . $plan_id . '" style="position:relative;" id="csi-cmp-fetch-tasks-table">
 				<thead>
 					<tr>
 						<th class="text-center hidden-xs"><i class="fa fa-hashtag"></i></th>
@@ -669,8 +669,7 @@ public function csi_cmp_build_page_show_plan(){
 						<th class="text-center hidden">Cambio</th>
 						<th>Status</th>
 						<th>Inicio</th>
-						<th class="text-center hidden-xs">Offline</th>
-						<th>Ventana</th>
+						<th>Duraci&oacute;n</th>
 						<th class="text-center"><i class="fa fa-window-maximize"></i></th>
 					</tr>
 				</thead>

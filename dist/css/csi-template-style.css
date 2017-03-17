@@ -13481,6 +13481,8 @@ input[type='checkbox'].csi-cool-checkbox + label {
   color: #333;
   background-color: #fff;
   border-color: #ccc;
+  padding-left: 50px;
+  white-space: normal;
   position: relative;
 }
 input[type='checkbox'].csi-cool-checkbox + label:focus,

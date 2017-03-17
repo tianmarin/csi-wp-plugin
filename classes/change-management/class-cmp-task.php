@@ -479,8 +479,9 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_cmp_fetch_task_step_list_info',	array( $this , 'csi_cmp_fetch_task_step_list_info'	));
 	add_action( 'wp_ajax_csi_cmp_fetch_task_in_table_info',		array( $this , 'csi_cmp_fetch_task_in_table_info'	));
 	add_action( 'wp_ajax_csi_cmp_build_page_edit_task_form',	array( $this , 'csi_cmp_build_page_edit_task_form'	));
-	add_action( 'wp_ajax_csi_cmp_edit_cmp_task',				array( $this , 'csi_cmp_edit_cmp_task'	));
-
+	add_action( 'wp_ajax_csi_cmp_edit_cmp_task',				array( $this , 'csi_cmp_edit_cmp_task'				));
+	add_action( 'wp_ajax_csi_cmp_build_page_schedule_task',		array( $this , 'csi_cmp_build_page_schedule_task'	));
+	add_action( 'wp_ajax_csi_cmp_schedule_task',				array( $this , 'csi_cmp_schedule_task'				));
 
 }
 public function csi_cmp_popup_task_info(){
@@ -1126,6 +1127,7 @@ public function csi_cmp_build_page_edit_task_form(){
 							</span>
 						</div>
 					</div>
+					<!--
 					<div class="form-group">
 						<label for="task_datetime" class="col-sm-2 control-label">Ventana de Ejecuci&oacute;n</label>
 						<div class="col-sm-10">
@@ -1142,6 +1144,26 @@ public function csi_cmp_build_page_edit_task_form(){
 								<small class="text-warning pull-right">(requerido)</small>
 								El campo de fecha y hora identifica el lapso de tiempo en el cual se desarrolla la tarea.
 							</span>
+						</div>
+					</div>
+					-->
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Ventana de Ejecuci&oacute;n</label>
+						<div class="col-sm-10">
+						<div class="input-group">
+							<span class="input-group-addon" title="Zona horaria Cliente">
+								<a href="#">
+									<i class="fa fa-calendar-check-o fa-fw"></i><i class="fa fa-building fa-fw"></i>
+								</a>
+							</span>
+							<span class="form-control">
+								' . $start_datetime->format('Y/m/d H:i') . ' - ' . $end_datetime->format('Y/m/d H:i') . '
+							</span>
+							<span class="input-group-addon duration ">' . $duration->h . ' horas</span>
+						</div>
+							<p class="text-warning">
+								Dado que la Ventana de Ejecuci&oacute;n afecta al plan de trabajo relacionado, este campo s&oacute;lo puede ser modificado en la programaci&oacute;n de Ventanas.
+							</p>
 						</div>
 					</div>
 					<div class="form-group">
@@ -1400,6 +1422,7 @@ public function csi_cmp_edit_cmp_task(){
 	//self::write_log ( $post );
 	$current_user		= get_userdata ( get_current_user_id() );
 	$current_datetime	= new DateTime();
+	/*
 	$task_datetime		= explode ( ' - ', strip_tags ( stripslashes ( $post['task_datetime'] ) ) );
 	if ( 15 <= strlen ( $task_datetime[0]) ){
 		$task_datetime[0] = substr ( $task_datetime[0], 0, 15);
@@ -1409,6 +1432,7 @@ public function csi_cmp_edit_cmp_task(){
 	}
 	$start_datetime		= new DateTime ( $task_datetime[0] . ':00' );
 	$end_datetime		= new DateTime ( $task_datetime[1] . ':00' );
+	*/
 
 	$whereArray['id']							= intval ( $post['task_id'] );
 
@@ -1418,14 +1442,12 @@ public function csi_cmp_edit_cmp_task(){
 	$editArray['offline_task_flag']				= isset ( $post['offline_task_flag'] )? 1 : NULL ;
 	$editArray['change_flag']					= isset ( $post['change_flag'] )? 1 : NULL ;
 	$editArray['change_urgent_flag']			= isset ( $post['change_urgent_flag'] )? 1 : NULL ;
-//	$editArray['change_requester_user_id']		= isset ( $post['change_requester_user_id'] ) ? intval ( $post['change_requester_user_id'] ) : NULL;
-//	$editArray['change_requester_user_email']	= isset ( $post['change_requester_user_email'] ) ? intval ( $post['change_requester_user_email'] ) : NULL;
 	$editArray['customer_visible_flag']			= isset ( $post['customer_visible_flag'] )? 1 : NULL ;
 	$editArray['comments']						= strip_tags(stripslashes( $post['comments'] ));
 	$editArray['status_id']						= intval ( $post['status_id'] );
 	$editArray['ticket_no']						= strip_tags(stripslashes( $post['ticket_no'] ));
-	$editArray['start_datetime']				= $start_datetime->format ( 'Y-m-d H:i:s' );
-	$editArray['end_datetime']					= $end_datetime->format ( 'Y-m-d H:i:s' );
+	//$editArray['start_datetime']				= $start_datetime->format ( 'Y-m-d H:i:s' );
+	//$editArray['end_datetime']					= $end_datetime->format ( 'Y-m-d H:i:s' );
 	$editArray['last_modified_user_id']			= $current_user->ID;
 	$editArray['last_modified_user_email']		= $current_user->user_email;
 	$editArray['last_modified_date']			= $current_datetime->format('Y-m-d');
@@ -1563,7 +1585,7 @@ public function csi_cmp_fetch_tasks_table(){
 			$offline_flag = '';
 		}else{
 			$offline = '<i class="fa fa-bolt fa-sm text-danger"></i> Offline';
-			$offline_flag = '<i class="fa fa-bolt"></i>';
+			$offline_flag = '<span data-toggle="tooltip" data-placement="top" title="Ventana Offline"><i class="fa fa-bolt"></i></span>';
 		}
 		//----------------------------------------------------------------------
 		if ( '' == $task['ticket_no'] ){
@@ -1575,11 +1597,11 @@ public function csi_cmp_fetch_tasks_table(){
 		$task_status = '';
 		$task_status_msg = '';
 		if ( $task['cmp_start_delay'] ) {
-			$task_status = '<i class="fa fa-exclamation-triangle text-warning"></i>';
+			$task_status = '<span data-toggle="tooltip" data-placement="top" title="Inicio retrasado"><i class="fa fa-exclamation-triangle text-warning"></i></span>';
 			$task_status_msg = '<div class="alert alert-warning" role="alert">Esta tarea est&aacute; atrasada. Debería haber comenzado su ejecuci&oacute;n el <strong>' . $start_datetime->format('d/m') . '</strong> a las ' . $start_datetime->format('H:i') . '</div>';
 		}
 		if ( $task['cmp_end_delay'] ){
-			$task_status = '<i class="fa fa-exclamation-triangle text-warning"></i>';
+			$task_status = '<span data-toggle="tooltip" data-placement="top" title="Ejecuci&oacute;n retrasada"><i class="fa fa-exclamation-triangle text-warning"></i></span>';
 			$task_status_msg = '<div class="alert alert-warning" role="alert">Esta tarea est&aacute; atrasada. Debería haber finalizado su ejecuci&oacute;n el <strong>' . $start_datetime->format('d/m') . '</strong> a las ' . $start_datetime->format('H:i') . '</div>';
 
 		}
@@ -1591,7 +1613,7 @@ public function csi_cmp_fetch_tasks_table(){
 		//border-left: 5px solid rgba(' . $color_r . ',' . $color_g . ',' . $color_b . ',1);
 		$o.='
 			<tr style="position:relative;">
-				<td class="hidden-xs"><small>' . $task['task_id'] . '</small></td>
+				<td class="text-center hidden-xs"><small>' . $task['task_id'] . '</small></td>
 				<td class="text-center">' . $task_status . '</td>
 				<td class="text-center">' . $task['sid'] . '</td>
 				<td class="hidden-xs">' . $ticket . '</td>
@@ -1600,14 +1622,13 @@ public function csi_cmp_fetch_tasks_table(){
 				</td>
 				<td>' . $task['status_name'] . '</td>
 				<td><small>' . $start_datetime->format ('d/m H:i') . '</small></td>
-				<td class="hidden-xs text-center">' . $offline_flag . '</td>
-				<td class="small">' . $duration->h . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</td>
+				<td class="small">' . sprintf ( "%02s", $duration->h ) . ':' . sprintf ( "%02s", $duration->m ) . 'hrs ' . $offline_flag . '</td>
 				<td class="text-center">
 					<a role="button" data-toggle="collapse" href="#show-plan-' . $task['task_id'] . '"><i class="fa fa-window-maximize"></i></a>
 				</td>
 			</tr>
-			<tr class=" collapse" id="show-plan-' . $task['task_id'] . '">
-				<td colspan="999" style="border-top:none;" class="active">
+			<tr class="collapse" id="show-plan-' . $task['task_id'] . '">
+				<td colspan="999" style="border-top:none;" class="">
 					' . $task_status_msg . '
 					<div class="col-sm-6 ">
 						<table class="table table-condensed">
@@ -1650,7 +1671,7 @@ public function csi_cmp_fetch_tasks_table(){
 								<tr>
 									<td colspan="2">
 										<span class="text-muted small">Observaciones</span>
-										<p>' . ( '' != $task['task_comments'] ? $task['task_comments'] : '--' ) . '</p>
+										<p>' . ( '' != $task['task_comments'] ? nl2br(htmlspecialchars($task['task_comments'])) : '--' ) . '</p>
 									</td>
 								</tr>
 							</tbody>
@@ -1688,6 +1709,7 @@ public function csi_cmp_fetch_tasks_table(){
 					</div>
 					<div class="col-xs-12 text-center">
 						<a href="#!edittask?task_id=' . $task['task_id'] . '" class="btn btn-primary"><i class="fa fa-pencil"></i> Editar tarea</a>
+						<a href="#!scheduletask?task_id=' . $task['task_id'] . '" class="btn btn-primary"><i class="fa fa-clock-o"></i> Reprogramar tarea</a>
 					</div>
 				</td>
 			</tr>
@@ -1876,13 +1898,31 @@ public function csi_cmp_build_page_show_task(){
 	//--------------------------------------------------------------------------
 	$o = '
 	<div class="container">
+		<!--
 		<p class="row lead hidden-print">
 			<a href="#!showplan?plan_id=' . $task->plan_id . '">
 				<i class="fa fa-chevron-left"></i> Volver al plan <i>' . $task->plan_title . '</i>
 			</a>
 		</p>
+		-->
 		<div class="page-header row">
-			<h2 class="">Solicitud de Cambio <small>' . $task->customer_short_name . ' - ' . $task->sid . '</small></h2>
+			<h3 class="">
+				' . $task->service_name . '
+				<small>' . $task->customer_short_name . ' - ' . $task->sid . '</small>
+			</h3>
+			<p class="lead">
+				Parte del plan: <a href="#!showplan?plan_id=' . $task->plan_id . '"><i>' . $task->plan_title . '</i></a>
+				<small>
+					(<a href="#" class="csi-popup" data-action="csi_cmp_popup_cmp_info" data-plan-id="' . $task->plan_id . '">#PCM_' . $task->plan_id . '</a>)
+				</small>
+			</p>
+			<p>Ventana de Ejecuci&oacute;n:
+				<time>' . $start_datetime->format ( 'd/m H:i') . 'hrs</time> -
+				<time>' . $end_datetime->format ( 'd/m H:i') . 'hrs</time>
+				<small>
+					(Duraci&oacute;n: <code>' . $duration->h . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</code>)
+				</small>
+			</p>
 		</div>
 		<div class="row">
 			<p class="text-muted hidden-print"><i class="fa fa-clock-o"></i> Cristian Marin solicitó la aprobación CAB Novis hace el 23/04/2017 21:30hrs.</p>
@@ -1946,7 +1986,16 @@ public function csi_cmp_build_page_show_task(){
 												<td><small>' . ( '' != $task->service_name ? $task->service_name : '--' ) . '</small></td>
 											</tr>
 											<tr>
-												<th class="small text-muted">Ventana de Ejecución</th>
+												<th class="small text-muted">
+													Ventana de Ejecución
+													<p class="text-center hidden-print">
+														<small>
+															<a href="#!scheduletask?task_id=' . $task_id . '" class="text-muted ">
+																<i class="fa fa-lg fa-pencil-square-o"></i> Editar
+															</a>
+														</small>
+													</p>
+												</th>
 												<td>
 													' . $start_datetime->format ( 'd/m H:i') . ' hrs<br/>
 													<small>
@@ -2224,6 +2273,209 @@ public function csi_cmp_build_page_show_task(){
 	echo json_encode($response);
 	wp_die();
 }
+
+public function csi_cmp_build_page_schedule_task(){
+	//Globa Variables
+	global $wpdb;
+	global $NOVIS_CSI_CMP_TASK_STEP;
+	//Local Variables
+	$response			= array();
+	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$task_id			= intval ( $post['task_id'] );
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT * FROM ' . $this->tbl_name . ' WHERE id = "' . $task_id . '" ';
+	$task = $wpdb->get_row ( $sql ) ;
+	$task_start_datetime = new DateTime ( $task->start_datetime );
+	$task_end_datetime = new DateTime ( $task->end_datetime );
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT COUNT(id) FROM ' . $NOVIS_CSI_CMP_TASK_STEP->tbl_name . ' WHERE cmp_task_id = "' . $task_id . '" ';
+	$steps = intval( $wpdb->get_var ( $sql ) );
+	//--------------------------------------------------------------------------
+	$o='
+	<div class="container">
+		<br/><br/><br/>
+		<div class="panel panel-default">
+			<div class="panel-heading"><i class="fa fa-clock-o"></i> Reprogramar Tarea</div>
+			<div class="panel-body">
+				<form class="form-horizontal" data-function="csi_cmp_schedule_task" data-next-page="showplan?plan_id=1">
+				<input type="hidden" name="task_id" id="task_id" value="' . $task_id . '"/>
+			';
+	if ( 0 < $steps ){
+		$o.='		<div class="form-group">
+						<label class="col-sm-2 control-label">Pasos de Preparación</label>
+						<div class="col-sm-10">
+							<input type="checkbox" class="form-control csi-cool-checkbox" id="prep_task" name="prep_task" value="1">
+							<label for="prep_task">Ajustar los pasos de preparaci&oacute;n</label>
+							<span class="help-block">
+								Al marcar esta opci&oacute;n, los pasos identificados en la parte de preparación, serán autoajustados al nuevo horario de la Ventana de Ejecución.
+							</span>
+						</div>
+					</div>';
+		$o.='		<div class="form-group">
+						<label class="col-sm-2 control-label">Pasos de Ejecución y Vuelta Atrás</label>
+						<div class="col-sm-10">
+							<span class="help-block">
+								Al marcar esta opci&oacute;n, los pasos identificados en la parte de preparación, serán autoajustados al nuevo horario de la Ventana de Ejecución.
+							</span>
+						</div>
+					</div>';
+	}else{
+		$o.='		<div class="form-group">
+						<label class="col-sm-2 control-label">Pasos de ejecuci&oacute;n</label>
+						<div class="col-sm-10">
+							<p class="text-justify">Esta tarea no tiene Pasos de Ejecuci&oacute;n relacionados. En caso de existir, aquí se mostrarían las opciones para realizar el ajuste en automático del horario de cada paso en relación a la Ventana de Ejecución.</p>
+						</div>
+					</div>';
+	}
+	$o.='			<div class="form-group">
+						<label for="task_datetime" class="col-sm-2 control-label">Ventana de Ejecución</label>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<span class="input-group-addon" title="Zona horaria Cliente">
+									<a href="#">
+										<i class="fa fa-calendar-check-o fa-fw"></i><i class="fa fa-building fa-fw"></i>
+									</a>
+								</span>
+								<input type="text" class="csi-datetime-range-input form-control" name="task_datetime" id="task_datetime" required="true" value="' . $task_start_datetime->format('Y-m-d H:i') . ' - ' . $task_end_datetime->format('Y-m-d H:i') . '">
+								<span class="input-group-addon duration ">X horas</span>
+							</div>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								El campo de fecha y hora identifica el lapso de tiempo en el cual se desarrolla la tarea.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">
+						</label>
+						<div class="col-sm-10 alert alert-info">
+							<p class="text-justify">Al reprogramar una tarea, es importante considerar que lo que se est&aacute; modificando es la Ventana de Ejecuci&oacute;n asociada. Esto implica tener conocimiento de:</p>
+							<ul>
+								<li>La Ventana de Ejecución ya puede estar aprobada por el cliente</li>
+								<li>La Ventana de</li>
+								<li>Las actividades del Calendario serán reajustadas</li>
+							</ul>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10 text-right">
+							<button type="reset" class="btn btn-danger">Cancelar</button>
+							<button type="submit" class="btn btn-primary">Entiendo, ajustar tarea</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	';
+
+	$response['message'] = $o;
+	echo json_encode($response);
+	wp_die();
+}
+
+public function csi_cmp_schedule_task(){
+	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_CMP_TASK_STEP;
+	global $NOVIS_CSI_CMP_TASK_STEP_TYPE;
+	//Local Variables
+	$whereArray				= array();
+	$editArray				= array();
+	$response				= array();
+	$o						= '';
+	//--------------------------------------------------------------------------
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	self::write_log ( $post );
+	$task_id				= $post['task_id'];
+	$task = $wpdb->get_row ( 'SELECT * FROM ' . $this->tbl_name . ' WHERE id = "' . $task_id . '"');
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT COUNT(id) FROM ' . $NOVIS_CSI_CMP_TASK_STEP->tbl_name . ' WHERE cmp_task_id = "' . $task_id . '" ';
+	$steps = intval( $wpdb->get_var ( $sql ) );
+	//--------------------------------------------------------------------------
+	$current_user		= get_userdata ( get_current_user_id() );
+	$current_datetime	= new DateTime();
+	//--------------------------------------------------------------------------
+	$task_datetime		= explode ( ' - ', strip_tags ( stripslashes ( $post['task_datetime'] ) ) );
+	if ( 15 <= strlen ( $task_datetime[0]) ){
+		$task_datetime[0] = substr ( $task_datetime[0], 0, 15);
+	}
+	if ( 15 <= strlen ( $task_datetime[1]) ){
+		$task_datetime[1] = substr ( $task_datetime[1], 0, 15);
+	}
+	$start_datetime		= new DateTime ( $task_datetime[0] . ':00' );
+	$end_datetime		= new DateTime ( $task_datetime[1] . ':00' );
+	//--------------------------------------------------------------------------
+	$whereArray['id']							= intval ( $post['task_id'] );
+	$editArray['start_datetime']				= $start_datetime->format ( 'Y-m-d H:i:s' );
+	$editArray['end_datetime']					= $end_datetime->format ( 'Y-m-d H:i:s' );
+	$editArray['last_modified_user_id']			= $current_user->ID;
+	$editArray['last_modified_user_email']		= $current_user->user_email;
+	$editArray['last_modified_date']			= $current_datetime->format('Y-m-d');
+	$editArray['last_modified_time']			= $current_datetime->format('H:i:s');
+	$result = $wpdb->update ( $this->tbl_name, $editArray, $whereArray );
+	if ( 0 < $steps ){
+		$whereArray = array();
+		$editArray = array();
+		if ( isset ( $post['prep_task'] ) ) {
+			$prep = '';
+		}else{
+			$prep = 'AND T01.code != "preparation"';
+		}
+		//----------------------------------------------------------------------
+		$step_orig_start = new DateTime ( $task->start_datetime );
+		$step_new_start = $start_datetime;
+		$task_diff = date_diff ($step_orig_start, $step_new_start);
+		//----------------------------------------------------------------------
+		$sql = 'SELECT
+					T00.id,
+					T00.planned_start_datetime,
+					T00.planned_end_datetime
+				FROM
+					' . $NOVIS_CSI_CMP_TASK_STEP->tbl_name . ' as T00
+					LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STEP_TYPE->tbl_name . ' as T01
+						ON T00.cmp_task_step_type_id = T01.id
+				WHERE
+					cmp_task_id = "' . $task->id . '"
+					' . $prep . '';
+		$steps = $this->get_sql ( $sql );
+		foreach ( $steps as $step ){
+			$step_start = new DateTime ( $step['planned_start_datetime'] ) ;
+			$step_end = new DateTime ( $step['planned_start_datetime'] ) ;
+			$step_start->add ( $task_diff );
+			$step_end->add ( $task_diff );
+
+			$whereArray['id']							= intval ( $step['id'] );
+			$editArray['planned_start_datetime']		= $step_start->format ( 'Y-m-d H:i:s' );
+			$editArray['planned_end_datetime']			= $step_end->format ( 'Y-m-d H:i:s' );
+			$editArray['last_modified_user_id']			= $current_user->ID;
+			$editArray['last_modified_user_email']		= $current_user->user_email;
+			$editArray['last_modified_date']			= $current_datetime->format('Y-m-d');
+			$editArray['last_modified_time']			= $current_datetime->format('H:i:s');
+			$result = $wpdb->update ( $NOVIS_CSI_CMP_TASK_STEP->tbl_name, $editArray, $whereArray );
+		}
+	}
+	$response['postSubmitAction']	='changeHash';
+	$response['notification']=array(
+		'buttons'			=> array(
+			'OK'			=> array(
+				'text'		=> 'OK',
+				'btnClass'	=> 'btn-success',
+			),
+		),
+		'icon'				=> 'fa fa-exclamation-triangle fa-sm',
+		'closeIcon'			=> true,
+		'columnClass'		=> 'large',
+		'content'			=> $this->name_single . ' editado exitosamente.',
+		'title'				=> 'Bien!',
+		'type'				=> 'green',
+		'autoClose'			=> 'OK|3000',
+	);
+	echo json_encode($response);
+	wp_die();
+}
+
+
 //END OF CLASS
 }
 

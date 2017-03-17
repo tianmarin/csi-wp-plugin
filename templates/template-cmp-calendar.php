@@ -28,6 +28,8 @@ $sql = '
 		T00.creation_user_email as task_organizer_email,
 		T00.ticket_no as ticket_no,
 		T00.zoom_conf_id as zoom_conf_id,
+		T00.last_modified_date as last_modified_date,
+		T00.last_modified_time as last_modified_time,
 		T01.short_name as service_short_name,
 		T01.name as service_name,
 		T02.sid as sid,
@@ -60,7 +62,8 @@ foreach ($tasks as $task){
 		'Ticket: ' . $task['ticket_no'] . '\r\n' .
 		'Observaciones:\n' .
 		'--------------------------\n' .
-		$task['task_comments'] . '\n' .
+		str_replace ( "\\", "\\n", str_replace ( ";" , "\;" , str_replace ( "," , '\,' , $task['task_comments'] ) ) ) . '\n' .
+		//htmlentities ( $task['task_comments'] ) . '\n' .
 		'--------------------------\r\n';
 	if ( $task['zoom_conf_id'] ){
 		$task_description.=
@@ -83,6 +86,7 @@ RESOURCES:' . $task['sid'] . '
 CATEGORIES:Productivo
 CLASS:PRIVATE
 ORGANIZER:MAILTO:' . $task['task_organizer_email'] . '
+LAST-MODIFIED:' . date(DATE_ICAL, strtotime($task['last_modified_date'] . ' ' . $task['last_modified_time'])) . '
 END:VEVENT';
 //ATTENDEE;PARTSTAT=ACCEPTED:MAILTO:cristian.marin@noviscorp.com
 }
