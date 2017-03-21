@@ -27,6 +27,7 @@ var ajaxPages={
 	'edittaskplan'	:	'csi_cmp_build_page_task_steps_import',
 	'scheduletask'	:	'csi_cmp_build_page_schedule_task',
 	'addservice'	:	'csi_cmp_build_page_new_service_form',
+	
 };
 ajaxPages['intro']	=	cmpMainContent.data('default-action');
 
