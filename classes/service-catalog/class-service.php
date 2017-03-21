@@ -399,6 +399,79 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_cmp_fetch_service_step_list_info',	array( $this , 'csi_cmp_fetch_service_step_list_info'	));
 	add_action( 'wp_ajax_csi_cmp_build_page_edit_service_form',	array( $this , 'csi_cmp_build_page_edit_service_form'	));
 	add_action( 'wp_ajax_csi_edit_service',						array( $this , 'csi_edit_service'	));
+	add_action( 'wp_ajax_csi_cmp_build_page_new_service_form',	array( $this , 'csi_cmp_build_page_new_service_form'	));
+	add_action( 'wp_ajax_csi_add_service',						array( $this , 'csi_add_service'	));
+
+}
+public function csi_add_service(){
+	//Global Variables
+	global $wpdb;
+	//Local Variables
+	$insertArray			= array();
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$current_user			= get_userdata ( get_current_user_id() );
+	$current_datetime		= new DateTime();
+	self::write_log ( $post );
+
+
+
+	$insertArray['name']						= strip_tags(stripslashes( $post['name'] ));
+	$insertArray['short_name']					= strip_tags(stripslashes( $post['short_name'] ));
+	$insertArray['lead_time']					= strip_tags(stripslashes( $post['lead_time'] ) );
+	$insertArray['execution_window_time']		= strip_tags(stripslashes( $post['execution_window_time'] ) );
+	$insertArray['offline_service_flag']		= isset ( $post['offline_service_flag'] )? 1 : NULL ;
+	$insertArray['short_description']			= strip_tags(stripslashes( $post['short_description'] ));
+	$insertArray['description']					= strip_tags(stripslashes( $post['description'] ));
+	$insertArray['user_team_id']				= intval ( $post['user_team_id'] );
+	$insertArray['change_type_id']				= intval ( $post['change_type_id'] );
+	$insertArray['service_url']					= strip_tags(stripslashes( $post['service_url'] ));
+	$insertArray['creation_user_id']			= $current_user->ID;
+	$insertArray['creation_user_email']			= $current_user->user_email;
+	$insertArray['creation_date']				= $current_datetime->format('Y-m-d');
+	$insertArray['creation_time']				= $current_datetime->format('H:i:s');
+	//self::write_log ( $post );
+	//self::write_log ( $editArray );
+	if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
+		$response['id']=$wpdb->insert_id;
+		$service_id = $wpdb->insert_id;
+		//crear registro de Ejecutores
+		$response['postSubmitAction']	='changeHash';
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-success',
+				),
+			),
+			'icon'				=> 'fa fa-check fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>#' . $service_id . '</code>)',
+			'title'				=> 'Bien!',
+			'type'				=> 'green',
+			'autoClose'			=> 'OK|3000',
+		);
+	}else{
+		$response['error']=true;
+		$response['notifStopNextPage'] = true;
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-danger',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-triangle fa-sm text-danger',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Hubo un error al agregar el nuevo ' . $this->name_single . '; intenta nuevamente. :)<p><small><code>' . htmlspecialchars( $wpdb->last_error, ENT_QUOTES ) . '</code></small></p>',
+			'title'				=> 'Error!',
+			'type'				=> 'red',
+			'autoClose'			=> 'OK|3000',
+		);
+	}
+	echo json_encode($response);
+	wp_die();
 
 }
 public function csi_edit_service(){
@@ -622,7 +695,7 @@ public function csi_cmp_build_page_edit_service_form(){
 							' . $change_type_opts . '
 							<span class="help-block">
 								<small class="text-warning pull-right">(requerido)</small>
-								El <i>tipo de cambio</i> refleja el mecanismo de aprobación para la ejecuci&oacute;n del servicio. Para más información visita la documentación de <a href="#" target="_blank" >Gesti&oacute;n de Cambio <i class="fa fa-external-link"></i></a> en Novis.
+								El <i>tipo de cambio</i> refleja el mecanismo de aprobación para la ejecuci&oacute;n del servicio. Para más información visita la documentación de <a href="http://intranetmx.noviscorp.com/novis/csi/change-mgmt/" target="_blank" >Gesti&oacute;n de Cambio <i class="fa fa-external-link"></i></a> en Novis.
 							</span>
 						</div>
 					</div>
@@ -630,6 +703,165 @@ public function csi_cmp_build_page_edit_service_form(){
 						<label for="service_url" class="col-sm-2 control-label">Documentaci&oacute;n</label>
 						<div class="col-sm-10">
 							<input type="text" class="form-control" name="service_url" id="service_url" maxlength="15" value="' . $service->service_url . '" maxlength="100"/>
+							<span class="help-block">
+								URL de la documentaci&oacute;n del servicio.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 100 caracteres</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10 text-right">
+							<button type="reset" class="btn btn-default">Cancelar</button>
+							<button type="submit" class="btn btn-primary">Entiendo, Editar servicio</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div><!-- #csi-template-cmp-control-center-edit-service -->
+	';
+
+	$response['message'] = $o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_cmp_build_page_new_service_form(){
+	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_CMP_CHANGE_TYPE;
+	global $NOVIS_CSI_USER_TEAM;
+	//Local Variables
+	$response			= array();
+	$o					= '';
+	$change_type_opts	= '';
+	$user_team_opts	= '';
+	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT * FROM ' . $NOVIS_CSI_CMP_CHANGE_TYPE->tbl_name . ' ';
+	$change_types = $this->get_sql ( $sql );
+	foreach ( $change_types as $change_type ){
+		$change_type_opts.='
+			<div class="">
+				<input type="radio" name="change_type_id" id="change_type_' . $change_type['id'] . '" value="' . $change_type['id'] . '"  class="csi-cool-radio">
+				<label for="change_type_' . $change_type['id'] . '">' . $change_type['short_name'] . '</label>
+			</div>
+		';
+	}
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT * FROM ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' ';
+	$user_teams = $this->get_sql ( $sql );
+	foreach ( $user_teams as $user_team ){
+		$user_team_opts.='<option value="' . $user_team['id'] . '" >' . $user_team['short_name'] . '</option>';
+	}
+	//--------------------------------------------------------------------------
+	$o='
+	<!-- #EditService -->
+	<div id="csi-template-cmp-control-center-edit-service" class="container ">
+		<div class="panel panel-default row">
+			<div class="panel-heading">
+				<h3 class="panel-title"><i class="fa fa-plus"></i> Nuevo Servicio</h3>
+			</div>
+			<div class="panel-body">
+				<form class="form-horizontal" data-function="csi_add_service" data-next-page="listservices">
+					<div class="form-group">
+						<label for="name" class="col-sm-2 control-label">Nombre del Servicio</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" name="name" id="name" required="true" maxlength="100" placeholder="Actualización de Nivel de Parche de Kernel SAP NetWeaver ABAP"/>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Nombre &uacute;nico del servicio.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 100 caracteres</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="short_name" class="col-sm-2 control-label">Nombre Corto</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" name="short_name" id="short_name" required="true" maxlength="20" placeholder="Act. Kernel" />
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								El nombre corto se utiliza para su despliegue en formatos peque&ntilde;os como <i>Eventos de Calendario</i>.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 20 caracteres</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="lead_time" class="col-sm-2 control-label">Tiempo de Antelaci&oacute;n</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" name="lead_time" id="lead_time" required="true" maxlength="20"/>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								El <abbr data-toggle="tooltip" data-placement="top" title="Service Lead Time">tiempo de antelaci&oacute;n</abbr> indica con cuantas horas el solicitante de un servicio debe realizar la <i>Solicitud de Servicio</i>, para que el ejector del servicio pueda preparar la tarea.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 20 caracteres</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="execution_window_time" class="col-sm-2 control-label">Ventana mínima de ejecuci&oacute;n</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" name="execution_window_time" id="execution_window_time" required="true" maxlength="20"/>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								La <i>ventana mínima de ejecuci&oacute;n</i> indica cuantas horas deben ser las mínimas solicitadas para la ejecución de este servicio. Considerando el tiempo que toman los pasos de <i>ejecución</i> y de <i>vuelta atrás</i> es importante considerar que la <i>ventana mínima de ejecuci&oacute;n</i> considere la suma de los peores tiempos.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 20 caracteres</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Ventana Offline</label>
+						<div class="col-sm-10">
+							<input type="checkbox" class="form-control csi-cool-checkbox" id="offline_service_flag" name="offline_service_flag" value="1" />
+							<label for="offline_service_flag">Ventana Offline</label>
+							<span class="help-block">
+								Indica si la actividad impacta la disponibilidad del sistema relacionado.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="short_description" class="col-sm-2 control-label">Descripci&oacute;n breve</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" name="short_description" id="short_description" maxlength="255" maxlength="255" />
+							<span class="help-block">
+								<small>Tama&ntilde;o m&aacute;ximo: 255 caracteres</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="description" class="col-sm-2 control-label">Descripci&oacute;n</label>
+						<div class="col-sm-10">
+							<textarea class="form-control" name="description" id="description"></textarea>
+							<span class="help-block">
+								<small>Tama&ntilde;o m&aacute;ximo: 60,000 caracteres</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="user_team_id" class="col-sm-2 control-label">Equipo responsable</label>
+						<div class="col-sm-10">
+							<select class="form-control select2" name="user_team_id" id="user_team_id" data-placeholder="Selecciona el equipo responsable">
+								<option></option>
+								' . $user_team_opts . '
+							</select>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								El <i>equipo responsable</i> define el equipo responsable de la documentaci&oacute;n del servicio. De igual modo, en caso de inconsistencias en los procedimientos asociados, el equipo puede ser informado mediante un correo electr&oacute;nico que notificar&aacute; a todos los miembros del equipo.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Cambio</label>
+						<div class="col-sm-10">
+							' . $change_type_opts . '
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								El <i>tipo de cambio</i> refleja el mecanismo de aprobación para la ejecuci&oacute;n del servicio. Para más información visita la documentación de <a href="http://intranetmx.noviscorp.com/novis/csi/change-mgmt/" target="_blank" >Gesti&oacute;n de Cambio <i class="fa fa-external-link"></i></a> en Novis.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="service_url" class="col-sm-2 control-label">Documentaci&oacute;n</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" name="service_url" id="service_url" maxlength="15" maxlength="100"/>
 							<span class="help-block">
 								URL de la documentaci&oacute;n del servicio.<br/>
 								<small>Tama&ntilde;o m&aacute;ximo: 100 caracteres</small>

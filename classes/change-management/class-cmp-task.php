@@ -1865,6 +1865,7 @@ public function csi_cmp_build_page_show_task(){
 				T00.end_datetime as task_end_datetime,
 				T00.comments as task_comments,
 				T00.id as id,
+				T00.zoom_conf_id as zoom_conf_id,
 				T05.short_name as status_short_name,
 				T05.id as status_id,
 				T05.icon as status_icon,
@@ -1895,233 +1896,9 @@ public function csi_cmp_build_page_show_task(){
 	//--------------------------------------------------------------------------
 	$sql = 'SELECT * FROM ' . $NOVIS_CSI_CMP_TASK_STEP_TYPE->tbl_name . ' ORDER BY step_type_order ASC';
 	$step_types = $this->get_sql ( $sql );
-	//--------------------------------------------------------------------------
-	$o = '
-	<div class="container">
-		<!--
-		<p class="row lead hidden-print">
-			<a href="#!showplan?plan_id=' . $task->plan_id . '">
-				<i class="fa fa-chevron-left"></i> Volver al plan <i>' . $task->plan_title . '</i>
-			</a>
-		</p>
-		-->
-		<div class="page-header row">
-			<h3 class="">
-				' . $task->service_name . '
-				<small>' . $task->customer_short_name . ' - ' . $task->sid . '</small>
-			</h3>
-			<p class="lead">
-				Parte del plan: <a href="#!showplan?plan_id=' . $task->plan_id . '"><i>' . $task->plan_title . '</i></a>
-				<small>
-					(<a href="#" class="csi-popup" data-action="csi_cmp_popup_cmp_info" data-plan-id="' . $task->plan_id . '">#PCM_' . $task->plan_id . '</a>)
-				</small>
-			</p>
-			<p>Ventana de Ejecuci&oacute;n:
-				<time>' . $start_datetime->format ( 'd/m H:i') . 'hrs</time> -
-				<time>' . $end_datetime->format ( 'd/m H:i') . 'hrs</time>
-				<small>
-					(Duraci&oacute;n: <code>' . $duration->h . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</code>)
-				</small>
-			</p>
-		</div>
-		<div class="row">
-			<p class="text-muted hidden-print"><i class="fa fa-clock-o"></i> Cristian Marin solicitó la aprobación CAB Novis hace el 23/04/2017 21:30hrs.</p>
-			<p class="text-right hidden-print hidden">
-				<a href="#" class="btn btn-default">
-					<i class="fa fa-download"></i> Descargar como documento <i>Change Request</i>
-				</a>
-			</p>
-		</div>
-		<div class="row">
-			<ul class="nav nav-tabs">
-			<li role="presentation" class="active">
-				<a href="#csi-cmp-task-' . $task_id . '-task-info" role="tab" data-toggle="tab">
-					<span class="visible-xs">Cambio</span>
-					<span class="hidden-xs">Información del Cambio</span>
-				</a>
-			</li>
-				<li role="presentation" class="">
-					<a href="#csi-cmp-task-' . $task_id . '-step-list" role="tab" data-toggle="tab">
-						<span class="visible-xs">Act.</span>
-						<span class="hidden-xs">Plan de Actividades</span>
-					</a>
-				</li>
-				<li role="presentation">
-					<a href="#csi-cmp-task-' . $task_id . '-contact-list" role="tab"data-toggle="tab">
-						<span class="visible-xs">Escalamiento</span>
-						<span class="hidden-xs">Matriz de Escalamiento</span>
-					</a>
-				</li>
-			</ul>
-			<div class="tab-content">
-				<div role="tabpanel" class="tab-pane active" id="csi-cmp-task-' . $task_id . '-task-info">
-					<div class="panel panel-default">
-						<div class="panel-heading">
-							<i class="fa fa-fw fa-info"></i> Informaci&oacute;n del Cambio
-						</div>
-						<div class="panel-body row">
-							<div class="col-xs-12 col-sm-6">
-								<div class="panel panel-default">
-									<div class="panel-heading">
-										<i class="fa fa-file-text-o"></i> Descripci&oacute;n detallada
-										<span class="pull-right">
-											<a href="#" class="refresh-button"><i class="fa fa-fw fa-pencil"></i></a>
-										</span>
-									</div>
-									<table class="table table-condensed">
-										<tbody>
-											<tr>
-												<th class="small text-muted">Cliente</th>
-												<td>' . $task->customer_short_name . '</td>
-											</tr>
-											<tr>
-												<th class="small text-muted">Plan</th>
-												<td>
-													' . $task->plan_title . '
-													<small>(<a href="#" class="csi-popup" data-action="csi_cmp_popup_cmp_info" data-plan-id="' . $task->plan_id . '">#PCM_' . $task->plan_id . '</a>)</small>
-												</td>
-											</tr>
-											<tr>
-												<th class="small text-muted">Servicio Relacionado</th>
-												<td><small>' . ( '' != $task->service_name ? $task->service_name : '--' ) . '</small></td>
-											</tr>
-											<tr>
-												<th class="small text-muted">
-													Ventana de Ejecución
-													<p class="text-center hidden-print">
-														<small>
-															<a href="#!scheduletask?task_id=' . $task_id . '" class="text-muted ">
-																<i class="fa fa-lg fa-pencil-square-o"></i> Editar
-															</a>
-														</small>
-													</p>
-												</th>
-												<td>
-													' . $start_datetime->format ( 'd/m H:i') . ' hrs<br/>
-													<small>
-														Duraci&oacute;n: <code>' . $duration->h . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</code>
-													</small>
-												</td>
-											</tr>
-											<tr>
-												<th class="small text-muted">Comentarios</th>
-												<td>' . $task->task_comments . '</td>
-											</tr>
-										</tbody>
-									</table>
-									<div class="panel-body">
-										<p><strong>Descripci&oacute;n del Cambio</strong></p>
-										<samp><small>El sistema BPP tiene la versión de Kernel 7.20-400. El nivel de parche será modificado a 7.20-620.</small></samp>
-									</div>
-									<table class="table table-condensed">
-										<thead>
-											<tr>
-												<th colspan="999" class="">Detalle de Cambio</th>
-											</tr>
-											<tr>
-												<th><a href="#" class="text-success"><i class="fa fa-plus fa-fw"></i></a></th>
-												<th>Elemento BPP</th>
-												<th>Valor actual</th>
-												<th>Valor propuesto</th>
-											</tr>
-										</thead>
-										<tbody>
-											<tr>
-												<td><a href="#" class="text-danger"><i class="fa fa-minus fa-fw"></i></a></td>
-												<td>Kernel Patch Level</td>
-												<td>7.20-400</td>
-												<td>7.20-600</td>
-											</tr>
-										</tbody>
-									</table>
-								</div>
-							</div>
-							<div class="col-xs-12 col-sm-6">
-								<div class="panel panel-default">
-									<div class="panel-heading">
-										<i class="fa fa-flag"></i> Aprobaciones
-									</div>
-									<ul class="list-group">
-										<li class="list-group-item">
-											<p class="text-justify">Este cambio está aún en construcci&oacute;n.<br/>Si ya has terminado de documentar el cambio acorde a las <a href="#" target="_blank"> Reglas de Solcitud de Cambio <i class="fa fa-external-link"></i></a> puedes solicitar la aprobación del CAB NOVIS.</p>
-											<p class="text-center"><a href="#" class="btn btn-default btn-sm disabled">Solicitar aprobación CAB NOVIS</a></p>
-										</li>
-										<!--
-										<li class="list-group-item list-group-item-warning">
-											Solicitud de aprobación CAB NOVIS enviada el 23/04/2017 21:30hrs
-										</li>
-										<li class="list-group-item list-group-item-success">
-											Change Manager
-											<span class="pull-right">
-												<a href="#" class="text-success"><i class="fa fa-comment"></i></a>
-												<span class="label label-success" title="Aprobada el 24/04/2017 09:34hrs">Aprobada</span>
-											</span>
-										</li>
-										<li class="list-group-item">
-											L&iacute;der T&eacute;cnico <span class="label label-default pull-right">Pendiente</span>
-										</li>
-										-->
-									</ul>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div role="tabpanel" class="tab-pane" id="csi-cmp-task-' . $task_id . '-step-list">
-					<h3>
-						<i class="fa fa-gear"></i> Plan de Actividades
-						<button type="button" data-target="#csi-cmp-task-step-list-importer, #csi-cmp-task-' . $task_id . '-step-list-actual" data-toggle="collapse" class="btn btn-xs btn-warning">
-							<i class="fa fa-magic"></i> Importar
-						</button>
-					</h3>';
-	$o.='
-		<div class="panel alert"><p class="">La Ventana de Ejecución es del ' . $start_datetime->format('d/m H:i') . 'hrs al ' . $end_datetime->format('d/m H:i') . 'hrs <code>' . $duration->h . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</code></p></div>
-	';
-	$o.='
-		<div id="csi-cmp-task-step-list-importer" class="collapse row">
-			<div class="alert alert-warning">
-				<span class="pull-left"><i class="fa fa-fw fa-exclamation-triangle fa-2x"></i></span>
-				Todos los detalles del plan de trabajo actual se perder&aacute;n. Detalle de tareas, responsables, horarios y otros ser&aacute;n integramente reemplazados por el detalle de los pasos del plan o servicio seleccionado. <strong>Este paso no puede deshacerse</strong>
-			</div>
-			<div class="col-sm-6 panel panel-default">
-				<div class="panel-body">
-					<p class="text-center">
-						<a href="#!edittaskplan?task_id=' . $task->id . '&import_source=service"
-							class=" btn btn-primary"
-							data-action="csi_import_service_steps_to_task_preview"
-							data-service-id="' . $task->service_id . '"
-							data-task-id="' . $task->id . '"
-							data-title="Importar Plan de Trabajo estándar"
-							data-background-dismiss="true"
-							data-type="orange"
-							data-icon="fa fa-magic"
-							data-column-class="xlarge"
-							data-container-fluid="true"
-							data-close-icon="true"
-							data-close-icon-class="fa fa-close"
-							>
-							Importar estandar de Servicio
-						</a>
-					</p>
-					<p class="text-center"><strong>' . $task->service_name . '</strong></p>
-					<p class="help-block text-justify">Importar el plan de trabajo est&aacute;ndar del servicio, permite garantizar un flujo de Gesti&oacute;n de Cambio m&aacute;s &aacute;gil ya que se utilizan los pasos propuestos por el equipo l&iacute;der de cada práctica.</p>
-				</div>
-			</div>
-			<div class="col-sm-6 panel panel-default">
-				<div class="panel-body">
-					<p class="text-center">
-						<a href="#" class="btn btn-default" data-task-id="' . $task->id . '">
-							Importar desde un cambio anterior
-						</a>
-					</p>
-					<p class="help-block text-justify">Importar el plan de trabajo de otro cambio, permite homologar los planes de trabajo con pasos adicionales al estándar. De este modo, las particularidades de cada plan de trabjo pueden ser replicadas minimizando los pasos entre un plan de trabajo y otro.</p>
-				</div>
-			</div>
-		</div>
-	';
-	$o.='<div id="csi-cmp-task-' . $task_id . '-step-list-actual" class="collapse in">';
+	$step_list='';
 	foreach ( $step_types as $step_type ){
-		$o.='
+		$step_list.='
 		<div class="panel panel-' . $step_type['css_class'] . '">
 			<div class="panel-heading">
 				 Pasos de ' . $step_type['short_name'] . '
@@ -2143,61 +1920,7 @@ public function csi_cmp_build_page_show_task(){
 		</div>
 		';
 	}
-	$o.='</div><!-- #csi-cmp-task-' . $task_id . '-step-list-actual -->';
-	$o.='
-
-				</div><!-- div#csi-cmp-task-' . $task_id . '-step-list -->
-				<div role="tabpanel" class="tab-pane" id="csi-cmp-task-' . $task_id . '-contact-list">
-				<div class="panel panel-primary">
-					<div class="panel-heading">
-						<i class="fa fa-address-book"></i> Matriz de Escalamiento
-					</div>
-					<div class="panel-body">
-						<ul class="list-group">
-							<li class="list-group-item list-group-item-info">
-								<span class="pull-right"><a href="#" class="text-info"><i class="fa fa-pencil"></i></a></span>
-								<i class="fa fa-phone-square fa-lg"></i> Conferencia ZOOM Disponible (874-248-3833)<br/>
-							</li>
-							<li class="list-group-item">
-								Ingresa directamente desde tu navegador o aplicación:
-								 <a class="" href="https://novis.zoom.us/j/8742483833" target="_blank">874-248-3833</a>
-							</li>
-							<li class="list-group-item">
-								M&eacute;xico:
-								<a href="tel:+525541614288,8742483833#" title="Ingresa directamente desde tu dispositivo m&oacute;vil en M&eacute;xico">
-									<i class="fa fa-phone"></i> +52 55 4161-4288 , 874-248-3833#
-								</a>
-							</li>
-							<li class="list-group-item">
-								Chile:
-								<a href="tel:+56412560288,8742483833#" title="Ingresa directamente desde tu dispositivo m&oacute;vil en Chile">
-									<i class="fa fa-phone"></i> +56 41 256-0288 , 874-248-3833#
-								</a>
-							</li>
-							<li class="list-group-item">
-								Per&uacute;:
-								<a href="tel:+5117075788,8742483833#" title="Ingresa directamente desde tu dispositivo m&oacute;vil en Per&uacute;">
-									<i class="fa fa-phone"></i> +51 1 707-5788 , 874-248-3833#
-								</a>
-							</li>
-							<li class="list-group-item">
-								Más números internacionales disponibles en el <a target="_blank" href="https://novis.zoom.us/zoomconference">sitio de zoom <i class="fa fa-external-link"></i></a>
-							</li>
-						</ul>
-					</div>
-					<table class="table table-condensed">
-						<thead>
-							<tr>
-								<th><a href="#" class="text-success"><i class="fa fa-plus fa-fw"></i></a></th>
-								<th>Empresa</th>
-								<th>Nombre</th>
-								<th>Desc</th>
-								<th>EMail</th>
-								<th>Contacto</th>
-							</tr>
-						</thead>
-						<tbody>
-						';
+	//--------------------------------------------------------------------------
 	$sql = 'SELECT
 				T01.internal_user_id as task_executor_id,
 				T02.phone_no as executor_phone,
@@ -2241,30 +1964,265 @@ public function csi_cmp_build_page_show_task(){
 		</tr>
 		';
 	}
-	$o.= $internal_contact;
-	$o.='
-							<tr>
-								<td><a href="#" class="text-danger"><i class="fa fa-minus fa-fw"></i></a></td>
-								<td>IBM</td>
-								<td>Javier Martinez</td>
-								<td>Ejecutor IBM</td>
-								<td>
-									<a href="mailto:javier.martinez@ibm.com">
-										<i class="fa fa-envelope-o"></i> javier.martinez@ibm.com
-									</a>
-								</td>
-								<td>
-									<a href="tel:+5215541902921">
-										<i class="fa fa-phone"></i> +52 1 (55) 4190-2921
-									</a>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+	//--------------------------------------------------------------------------
+	if ( $task->zoom_conf_id ){
+		$zoom_conf = '
+		<ul class="list-group">
+				<li class="list-group-item list-group-item-info">
+					<span class="pull-right"><a href="#" class="text-info"><i class="fa fa-pencil"></i></a></span>
+					<i class="fa fa-phone-square fa-lg"></i> Conferencia ZOOM Disponible (' . $task->zoom_conf_id . ')<br>
+				</li>
+				<li class="list-group-item">
+					Ingresa directamente desde tu navegador o aplicación:
+					 <a class="" href="https://novis.zoom.us/j/' . $task->zoom_conf_id . '" target="_blank">' . $task->zoom_conf_id . '</a>
+				</li>
+				<li class="list-group-item">
+					México:
+					<a href="tel:+525541614288,' . $task->zoom_conf_id . '#" title="Ingresa directamente desde tu dispositivo móvil en México">
+						<i class="fa fa-phone"></i> +52 55 4161-4288 , ' . $task->zoom_conf_id . '#
+					</a>
+				</li>
+				<li class="list-group-item">
+					Chile:
+					<a href="tel:+56412560288,' . $task->zoom_conf_id . '#" title="Ingresa directamente desde tu dispositivo móvil en Chile">
+						<i class="fa fa-phone"></i> +56 41 256-0288 , ' . $task->zoom_conf_id . '#
+					</a>
+				</li>
+				<li class="list-group-item">
+					Perú:
+					<a href="tel:+5117075788,' . $task->zoom_conf_id . '#" title="Ingresa directamente desde tu dispositivo móvil en Perú">
+						<i class="fa fa-phone"></i> +51 1 707-5788 , ' . $task->zoom_conf_id . '#
+					</a>
+				</li>
+				<li class="list-group-item">
+					Más números internacionales disponibles en el <a target="_blank" href="https://novis.zoom.us/zoomconference">sitio de zoom <i class="fa fa-external-link"></i></a>
+				</li>
+			</ul>
+		';
+	}
+	//--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	//--------------------------------------------------------------------------
+	$o = '
+	<div class="container">
+		<div class="page-header row">
+			<h1 class="">Solicitud de Cambio</h1>
+			<p class="lead">
+				Parte del plan: <a href="#!showplan?plan_id=' . $task->plan_id . '"><i>' . $task->plan_title . '</i></a>
+				<small>
+					(<a href="#" class="csi-popup" data-action="csi_cmp_popup_cmp_info" data-plan-id="' . $task->plan_id . '">#PCM_' . $task->plan_id . '</a>)
+				</small>
+			</p>
+			<p>Ventana de Ejecuci&oacute;n:
+				<time>' . $start_datetime->format ( 'd/m H:i') . 'hrs</time> -
+				<time>' . $end_datetime->format ( 'd/m H:i') . 'hrs</time>
+				<small>
+					(Duraci&oacute;n: <code>' . $duration->h . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</code>)
+				</small>
+			</p>
+		</div><!-- .page-header -->
+		<div class="row panel panel-default" id="csi-cmp-task-' . $task_id . '-task-info">
+			<div class="panel-heading">
+				<h4 class="panel-title"><i class="fa fa-file-text-o"></i> Informaci&oacute;n del Cambio</h4>
+			</div>
+			<div class="panel-body">
+				<table class="table table-condensed">
+					<tbody>
+						<tr>
+							<th class="small text-muted">Id. del Cambio</th>
+							<td>' . $task_id . '</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Cliente</th>
+							<td>' . $task->customer_short_name . '</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Plan relacionado</th>
+							<td>
+								' . $task->plan_title . '
+								<small>(<a href="#" class="csi-popup" data-action="csi_cmp_popup_cmp_info" data-plan-id="' . $task->plan_id . '">#PCM_' . $task->plan_id . '</a>)</small>
+							</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Servicio IT</th>
+							<td><small>' . ( '' != $task->service_name ? $task->service_name : '--' ) . '</small></td>
+						</tr>
+						<tr>
+							<th class="small text-muted">
+								Ventana de Ejecución
+								<p class="text-center hidden-print">
+									<small>
+										<a href="#!scheduletask?task_id=' . $task_id . '" class="text-muted ">
+											<i class="fa fa-lg fa-pencil-square-o"></i> Editar
+										</a>
+									</small>
+								</p>
+							</th>
+							<td>
+								' . $start_datetime->format ( 'd/m/Y H:i') . 'hrs
+								 - ' . $end_datetime->format ( 'd/m/Y H:i') . 'hrs
+								 (' . $start_datetime->format ( 'e') . ')
+								<small>
+									Duraci&oacute;n: <code>' . sprintf ( "%02s", $duration->h ) . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</code>
+								</small>
+							</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Comentarios</th>
+							<td>' . $task->task_comments . '</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Descripción del Cambio</th>
+							<td>
+								<samp><small>El sistema BPP tiene la versión de Kernel 7.20-400. El nivel de parche será modificado a 7.20-620.</small></samp>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<h5 class=""><i class="fa fa-file-text-o"></i> Elementos modificados</h5>
+				<table class="table table-condensed">
+					<thead>
+						<tr>
+							<th><a href="#" class="text-success"><i class="fa fa-plus fa-fw"></i></a></th>
+							<th>Elemento BPP</th>
+							<th>Valor actual</th>
+							<th>Valor propuesto</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><a href="#" class="text-danger"><i class="fa fa-minus fa-fw"></i></a></td>
+							<td>Kernel Patch Level</td>
+							<td>7.20-400</td>
+							<td>7.20-600</td>
+						</tr>
+					</tbody>
+				</table>
+				<h5 class=""><i class="fa fa-flag"></i> Aprobaciones</h5>
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Rol</th>
+							<th>Status</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+					<tr>
+						<td>Responsable del Cambio</td>
+						<td>
+							<span title="Solicitada el 24/04/2017 09:34hrs">Aprobación Solicitada</span>
+						</td>
+						<td>
+							<span class="hidden-print">Daniel Flores</span>
+							<span class="visible-print text-handwrite">Daniel Flores</span>
+						</td>
+					</tr>
+						<tr>
+							<td>Change Manager</td>
+							<td><i class="fa fa-check"></i> Aprobado</td>
+							<td>
+								<span class="hidden-print">Cristian Marin</span>
+								<span class="visible-print text-handwrite">Cristian Marin</span>
+							</td>
+						</tr>
+						<tr>
+							<td>KAM</td>
+							<td><i class="fa fa-clock-o"></i> Pendiente</td>
+							<td>
+							</td>
+						</tr>
+						<tr>
+							<td>Líder Técnico</td>
+							<td><i class="fa fa-times"></i> Rechazado</td>
+							<td>
+								<span class="hidden-print">Ricardo De Acha</span>
+								<span class="visible-print text-handwrite">Ricardo De Acha</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div><!-- #csi-cmp-task-' . $task_id . '-task-info -->
+		<div class="row panel panel-default prevent-print-split" id="csi-cmp-task-' . $task_id . '-step-list">
+			<div class="panel-heading">
+				<h4 class="panel-title">
+					<i class="fa fa-gear"></i> Plan de Actividades
+					<button type="button" data-target="#csi-cmp-task-step-list-importer, #csi-cmp-task-' . $task_id . '-step-list-actual" data-toggle="collapse" class="btn btn-xs btn-warning">
+						<i class="fa fa-magic"></i> Importar
+					</button>
+				</h4>
+			</div>
+			<div class="panel-body">
+				<div id="csi-cmp-task-step-list-importer" class="collapse row">
+					<div class="alert alert-warning">
+						<span class="pull-left"><i class="fa fa-fw fa-exclamation-triangle fa-2x"></i></span>
+						Todos los detalles del plan de trabajo actual se perder&aacute;n. Detalle de tareas, responsables, horarios y otros ser&aacute;n integramente reemplazados por el detalle de los pasos del plan o servicio seleccionado. <strong>Este paso no puede deshacerse</strong>
+					</div>
+					<div class="col-sm-6 panel panel-default">
+						<div class="panel-body">
+							<p class="text-center">
+								<a href="#!edittaskplan?task_id=' . $task->id . '&import_source=service" class="btn btn-primary" data-action="csi_import_service_steps_to_task_preview" data-service-id="' . $task->service_id . '" data-task-id="' . $task->id . '">Importar estandar de Servicio</a>
+							</p>
+							<p class="text-center"><strong>' . $task->service_name . '</strong></p>
+							<p class="help-block text-justify">Importar el plan de trabajo est&aacute;ndar del servicio, permite garantizar un flujo de Gesti&oacute;n de Cambio m&aacute;s &aacute;gil ya que se utilizan los pasos propuestos por el equipo l&iacute;der de cada práctica.</p>
+						</div>
+					</div>
+					<div class="col-sm-6 panel panel-default">
+						<div class="panel-body">
+							<p class="text-center">
+								<a href="#" class="btn btn-default" data-task-id="' . $task->id . '">
+									Importar desde un cambio anterior
+								</a>
+							</p>
+							<p class="help-block text-justify">Importar el plan de trabajo de otro cambio, permite homologar los planes de trabajo con pasos adicionales al estándar. De este modo, las particularidades de cada plan de trabjo pueden ser replicadas minimizando los pasos entre un plan de trabajo y otro.</p>
+						</div>
+					</div>
 				</div>
-				</div><!-- div#csi-cmp-task-' . $task_id . '-contact-list -->
-
-		</div>
+				<div id="csi-cmp-task-' . $task_id . '-step-list-actual" class="collapse in">
+				' . $step_list . '
+				</div>
+			</div>
+		</div><!-- #csi-cmp-task-' . $task_id . '-step-list -->
+		<div class="row panel panel-default" id="csi-cmp-task-' . $task_id . '-contact-list">
+			<div class="panel-heading">
+				<h4 class="panel-title"><i class="fa fa-gear"></i> Plan de Comunicaciones</h4>
+			</div>
+			<div class="panel-body">
+				' . $zoom_conf . '
+				<table class="table table-condensed">
+					<thead>
+						<tr>
+							<th><a href="#" class="text-success"><i class="fa fa-plus fa-fw"></i></a></th>
+							<th>Empresa</th>
+							<th>Nombre</th>
+							<th>Desc</th>
+							<th>EMail</th>
+							<th>Contacto</th>
+						</tr>
+					</thead>
+					<tbody>
+						' . $internal_contact . '
+						<tr>
+							<td><a href="#" class="text-danger"><i class="fa fa-minus fa-fw"></i></a></td>
+							<td>IBM</td>
+							<td>Javier Martinez</td>
+							<td>Ejecutor IBM</td>
+							<td>
+								<a href="mailto:javier.martinez@ibm.com">
+									<i class="fa fa-envelope-o"></i> javier.martinez@ibm.com
+								</a>
+							</td>
+							<td>
+								<a href="tel:+5215541902921">
+									<i class="fa fa-phone"></i> +52 1 (55) 4190-2921
+								</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div><!-- div#csi-cmp-task-' . $task_id . '-contact-list -->
 	</div><!-- div.container -->
 
 	';

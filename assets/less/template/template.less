@@ -7,7 +7,21 @@
 @import './bower_components/jquery-confirm2/css/jquery-confirm.less';
 
 @fa-font-path:        "../../dist/fonts";
+@font-face {
+    font-family: 'janeaustennosecret';
+    src: url('@{fa-font-path}/janeausu-webfont.woff2') format('woff2'),
+         url('@{fa-font-path}/janeausu-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
 
+}
+.text-handwrite{
+	font-family: 'janeaustennosecret';
+}
+.prevent-print-split { 
+   page-break-after: always;
+   page-break-inside: avoid;
+}
 a[href="http://www.amcharts.com/javascript-charts/"]{
 	display: none !important;
 }

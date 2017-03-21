@@ -13076,6 +13076,19 @@ body[class*=jconfirm-no-scroll-] {
   margin: 0;
   border-left: solid 1px #ddd;
 }
+@font-face {
+  font-family: 'janeaustennosecret';
+  src: url('../../dist/fonts/janeausu-webfont.woff2') format('woff2'), url('../../dist/fonts/janeausu-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+.text-handwrite {
+  font-family: 'janeaustennosecret';
+}
+.prevent-print-split {
+  page-break-after: always;
+  page-break-inside: avoid;
+}
 a[href="http://www.amcharts.com/javascript-charts/"] {
   display: none !important;
 }
