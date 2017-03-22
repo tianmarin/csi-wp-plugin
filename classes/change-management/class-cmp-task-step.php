@@ -40,7 +40,7 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.0.5';
+	$this->db_version	= '0.0.6';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -55,6 +55,7 @@ public function __construct(){
 			internal_executor_flag tinyint(1) null COMMENT 'Indicates if executor is registered user',
 			external_executor varchar(30) null COMMENT 'External executor name',
 			internal_user_id bigint(20) unsigned null COMMENT 'ID of registered user',
+			internal_user_team tinyint(2) unsigned null COMMENT 'Internal user team',
 			planned_start_datetime datetime not null COMMENT 'Planned start datetime',
 			planned_end_datetime datetime not null COMMENT 'Planned end datetime',
 			execution_status_flag tinyint(1) null COMMENT 'Indicates if step has been executed',
@@ -402,6 +403,7 @@ public function __construct(){
 public function csi_cmp_create_cmp_task_step(){
 	//Globa Variables
 	global $wpdb;
+	global $NOVIS_CSI_USER;
 	//Local Variables
 	$insertArray			= array();
 	$response			= array();
@@ -411,6 +413,10 @@ public function csi_cmp_create_cmp_task_step(){
 	$step_datetime		= explode ( ' - ', strip_tags ( stripslashes ( $post['step_datetime'] ) ) );
 	$start_datetime		= new DateTime ( $step_datetime[0] . ':00' );
 	$end_datetime		= new DateTime ( $step_datetime[1] . ':00' );
+	if ( isset ( $post['internal_user_id'] ) ){
+		$sql = 'SELECT team_id FROM ' . $NOVIS_CSI_USER->tbl_name . ' WHERE id = "' . $post['internal_user_id'] . '"';
+		$team_id = intval ( $wpdb->get_var ( $sql ) );
+	}
 
 	$insertArray['cmp_task_id']				= strip_tags(stripslashes( $post['cmp_task_id'] ));
 	$insertArray['cmp_task_step_type_id']	= strip_tags(stripslashes( $post['cmp_task_step_type_id'] ));
@@ -418,6 +424,7 @@ public function csi_cmp_create_cmp_task_step(){
 	$insertArray['internal_executor_flag']	= isset ( $post['internal_executor_flag'] ) ? 1 : NULL ;
 	$insertArray['external_executor']		= isset ( $post['external_executor'] ) ? strip_tags(stripslashes( $post['external_executor'] )) : null;
 	$insertArray['internal_user_id']		= isset ( $post['internal_user_id'] ) ? intval ( $post['internal_user_id'] ) : null;
+	$insertArray['internal_user_team']		= isset ( $team_id ) ? $team_id : null;
 	$insertArray['planned_start_datetime']	= $start_datetime->format ( 'Y-m-d H:i:s' );
 	$insertArray['planned_end_datetime']	= $end_datetime->format ( 'Y-m-d H:i:s' );
 	$insertArray['creation_user_id']		= $current_user->ID;
@@ -672,13 +679,16 @@ public function csi_cmp_popup_edit_step_form(){
 public function csi_cmp_edit_cmp_task_step(){
 	//Globa Variables
 	global $wpdb;
+	global $NOVIS_CSI_USER;
 	//Local Variables
 	$editArray			= array();
 	$whereArray			= array();
 	$response			= array();
 	$post				= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	//--------------------------------------------------------------------------
 	$current_user		= get_userdata ( get_current_user_id() );
 	$current_datetime	= new DateTime();
+	//--------------------------------------------------------------------------
 	$step_datetime		= explode ( ' - ', strip_tags ( stripslashes ( $post['step_datetime'] ) ) );
 	if ( 15 <= strlen ( $step_datetime[0]) ){
 		$step_datetime[0] = substr ( $step_datetime[0], 0, 15);
@@ -688,6 +698,12 @@ public function csi_cmp_edit_cmp_task_step(){
 	}
 	$start_datetime		= new DateTime ( $step_datetime[0] . ':00' );
 	$end_datetime		= new DateTime ( $step_datetime[1] . ':00' );
+	//--------------------------------------------------------------------------
+	if ( isset ( $post['internal_user_id'] ) ){
+		$sql = 'SELECT team_id FROM ' . $NOVIS_CSI_USER->tbl_name . ' WHERE id = "' . $post['internal_user_id'] . '"';
+		$team_id = intval ( $wpdb->get_var ( $sql ) );
+	}
+	//--------------------------------------------------------------------------
 
 	$whereArray['id']						= intval ( $post['cmp_task_step_id'] );
 
@@ -695,6 +711,7 @@ public function csi_cmp_edit_cmp_task_step(){
 	$editArray['internal_executor_flag']	= isset ( $post['internal_executor_flag'] ) ? 1 : 0 ;
 	$editArray['external_executor']			= isset ( $post['external_executor'] ) ? strip_tags(stripslashes( $post['external_executor'] )) : null;
 	$editArray['internal_user_id']			= isset ( $post['internal_user_id'] ) ? intval ( $post['internal_user_id'] ) : null;
+	$editArray['internal_user_team']		= isset ( $team_id ) ? $team_id : null;
 	$editArray['planned_start_datetime']	= $start_datetime->format ( 'Y-m-d H:i:s' );
 	$editArray['planned_end_datetime']		= $end_datetime->format ( 'Y-m-d H:i:s' );
 	$editArray['last_modified_user_id']		= $current_user->ID;
