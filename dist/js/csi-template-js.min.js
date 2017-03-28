@@ -478,6 +478,21 @@ function csiSoftRefreshEventListener(pageResponse){
 		event.preventDefault();
 		csiTemplateCmpFetchTableContent ( $( $(this).attr('href') ) );
 	});
+	$('.csi-2ble-click').off('dblclick').dblclick(function(event){
+		var element = $(this);
+		if( false === element.hasClass('active') ){
+			element.children().toggle();
+			element.find('select').focus();
+			element.find('select').change(function(){
+				$(this).trigger('blur');
+				$(this).closest('form').submit();
+				element.find('.csi-2ble-click-front').html( $(this).find(':selected').text() );
+			});
+			element.find('select').blur(function(){
+				element.children().toggle();
+			});
+		}
+	});
 	$('.edit-table-button').off('click').click( function(event){
 		event.preventDefault();
 		if (  undefined !== $(this).attr('href') ) {

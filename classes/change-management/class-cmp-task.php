@@ -482,6 +482,7 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_cmp_edit_cmp_task',				array( $this , 'csi_cmp_edit_cmp_task'				));
 	add_action( 'wp_ajax_csi_cmp_build_page_schedule_task',		array( $this , 'csi_cmp_build_page_schedule_task'	));
 	add_action( 'wp_ajax_csi_cmp_schedule_task',				array( $this , 'csi_cmp_schedule_task'				));
+	add_action( 'wp_ajax_csi_cmp_edit_cmp_task_status',			array( $this , 'csi_cmp_edit_cmp_task_status'		));
 
 }
 public function csi_cmp_popup_task_info(){
@@ -1407,6 +1408,72 @@ public function csi_cmp_create_cmp_task(){
 	echo json_encode($response);
 	wp_die();
 }
+public function csi_cmp_edit_cmp_task_status(){
+	//Global Variables
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_CMP_TASK_STATUS;
+	global $wpdb;
+	//Local Variables
+	$insertArray			= array();
+	$response				= array();
+	$o						= '';
+	$post					= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$task_id				= $post['task_id'];
+	//self::write_log ( $post );
+	$current_user		= get_userdata ( get_current_user_id() );
+	$current_datetime	= new DateTime();
+	$whereArray['id']							= intval ( $post['task_id'] );
+
+	$editArray['status_id']						= intval ( $post['status_id'] );
+
+	$editArray['last_modified_user_id']			= $current_user->ID;
+	$editArray['last_modified_user_email']		= $current_user->user_email;
+	$editArray['last_modified_date']			= $current_datetime->format('Y-m-d');
+	$editArray['last_modified_time']			= $current_datetime->format('H:i:s');
+	self::write_log ( $post );
+	self::write_log ( $editArray );
+	$result = $wpdb->update ( $this->tbl_name, $editArray, $whereArray );
+	if( $result === false ){
+		$response['error']=true;
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-danger',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-circle fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Hubo un error al editar el ' . $this->name_single . '; intenta nuevamente. :)',
+			'title'				=> 'Bien!',
+			'type'				=> 'red',
+			'autoClose'			=> 'OK|3000',
+		);
+	}elseif ( $result == 0){
+		$response['error']=true;
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-warning',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-triangle fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Los valores son iguales. ' . $this->name_single . ' no modificado',
+			'title'				=> 'Bien!',
+			'type'				=> 'orange',
+			'autoClose'			=> 'OK|3000',
+		);
+	}else{
+		$response['postSubmitAction']	='refreshParent';
+	}
+	echo json_encode($response);
+	wp_die();
+}
 public function csi_cmp_edit_cmp_task(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
@@ -1522,7 +1589,7 @@ public function csi_cmp_fetch_tasks_table(){
 	$insertArray			= array();
 	$response				= array();
 	$o						= '';
-	$post					= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	$plan_id				= $post['planId'];
 
 	$sql='SELECT
@@ -1536,6 +1603,7 @@ public function csi_cmp_fetch_tasks_table(){
 			T00.change_urgent_flag as change_urgent_flag,
 			UPPER(T01.sid) as sid,
 			T02.short_name as status_name,
+			T02.id as status_id,
 			T02.icon as status_icon,
 			T02.hex_color as status_color,
 			T02.code as status_code,
@@ -1559,6 +1627,9 @@ public function csi_cmp_fetch_tasks_table(){
 		ORDER BY T00.start_datetime ASC
 	';
 	$tasks = $this->get_sql ( $sql );
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' ORDER BY id';
+	$task_status_list = $this->get_sql ( $sql );
 	foreach ( $tasks as $task ){
 		//----------------------------------------------------------------------
 		$start_datetime = new DateTime ( $task['task_start'] );
@@ -1594,6 +1665,12 @@ public function csi_cmp_fetch_tasks_table(){
 			$ticket = '<samp><small>' . $task['ticket_no'] . '</small></samp>';
 		}
 		//----------------------------------------------------------------------
+		$task_status_opts = '';
+		foreach ( $task_status_list as $task_status_opt){
+			$selected = ( $task_status_opt['id'] == $task['status_id'] ) ? ' selected ' : '';
+			$task_status_opts.='<option value="' . $task_status_opt['id'] . '" ' . $selected . '>' . $task_status_opt['short_name'] . '</option>';
+		}
+		//----------------------------------------------------------------------
 		$task_status = '';
 		$task_status_msg = '';
 		if ( $task['cmp_start_delay'] ) {
@@ -1617,10 +1694,17 @@ public function csi_cmp_fetch_tasks_table(){
 				<td class="text-center">' . $task_status . '</td>
 				<td class="text-center">' . $task['sid'] . '</td>
 				<td class="hidden-xs">' . $ticket . '</td>
-				<td class="hidden text-center">
-					' . ( $task['change_flag'] ? '<span class="label label-default">Pendiente</span>' : '' ) . '
+				<td>
+					<span class="csi-2ble-click" style="position:relative;">
+						<span class="csi-2ble-click-front">' . $task['status_name'] . '</span>
+						<form class="csi-2ble-click-back" style="display:none;" data-function="csi_cmp_edit_cmp_task_status" style="position:relative;">
+							<input type="hidden" name="task_id" id="task_id" value="' . $task['task_id'] . '"/>
+							<select class="form-control input-sm" name="status_id" id="status_id">
+							' . $task_status_opts . '
+							</select>
+						</form>
+					</span>
 				</td>
-				<td>' . $task['status_name'] . '</td>
 				<td><small>' . $start_datetime->format ('d/m H:i') . '</small></td>
 				<td class="small">' . sprintf ( "%02s", $duration->h ) . ':' . sprintf ( "%02s", $duration->m ) . 'hrs ' . $offline_flag . '</td>
 				<td class="text-center">
