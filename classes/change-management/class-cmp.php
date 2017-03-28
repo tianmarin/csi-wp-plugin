@@ -372,6 +372,8 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_cmp_build_page_list_plans',		array( $this , 'csi_cmp_build_page_list_plans'		));
 	add_action( 'wp_ajax_csi_cmp_build_page_new_plan_form',		array( $this , 'csi_cmp_build_page_new_plan_form'	));
 	add_action( 'wp_ajax_csi_cmp_create_plan',					array( $this , 'csi_cmp_create_plan'				));
+	add_action( 'wp_ajax_csi_cmp_edit_plan',					array( $this , 'csi_cmp_edit_plan'					));
+	add_action( 'wp_ajax_csi_cmp_build_page_edit_cmp_form', 	array( $this , 'csi_cmp_build_page_edit_cmp_form'	));
 	add_action( 'wp_ajax_csi_cmp_fetch_filtered_plan_table',	array( $this , 'csi_cmp_fetch_filtered_plan_table'	));
 	add_action( 'wp_ajax_csi_cmp_build_page_show_plan',			array( $this , 'csi_cmp_build_page_show_plan'		));
 	add_action( 'wp_ajax_csi_cmp_fetch_plan_info',				array( $this , 'csi_cmp_fetch_plan_info'			));
@@ -380,6 +382,223 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_cmp_build_cmp_gantt',				array( $this , 'csi_cmp_build_cmp_gantt'			));
 
 }
+public function csi_cmp_edit_plan(){
+	//Global Variables
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_CMP_TASK_STATUS;
+	global $wpdb;
+	//Local Variables
+	$insertArray			= array();
+	$response				= array();
+	$o						= '';
+	$post					= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$plan_id				= $post['plan_id'];
+	//self::write_log ( $post );
+	$current_user		= get_userdata ( get_current_user_id() );
+	$current_datetime	= new DateTime();
+	$manager_user			= get_userdata ( $post['manager_user_id'] );
+	$current_datetime		= new DateTime();
+
+	$whereArray['id']							= intval ( $post['plan_id'] );
+
+
+	$editArray['title']							= strip_tags(stripslashes( $post['title'] ));
+	$editArray['shared_plan_flag']				= isset ( $post['shared_plan_flag'] )? 1 : NULL ;
+	$editArray['description']					= strip_tags(stripslashes( $post['description'] ));
+	$editArray['manager_user_id']				= intval ( $post['manager_user_id'] );
+	$editArray['manager_user_email']			= $manager_user->user_email;
+
+	$editArray['last_modified_user_id']			= $current_user->ID;
+	$editArray['last_modified_user_email']		= $current_user->user_email;
+	$editArray['last_modified_date']			= $current_datetime->format('Y-m-d');
+	$editArray['last_modified_time']			= $current_datetime->format('H:i:s');
+	//self::write_log ( $post );
+	//self::write_log ( $editArray );
+	$result = $wpdb->update ( $this->tbl_name, $editArray, $whereArray );
+	if( $result === false ){
+		$response['error']=true;
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-danger',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-circle fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Hubo un error al editar el ' . $this->name_single . '; intenta nuevamente. :)',
+			'title'				=> 'Bien!',
+			'type'				=> 'red',
+			'autoClose'			=> 'OK|3000',
+		);
+	}elseif ( $result == 0){
+		$response['error']=true;
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-warning',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-triangle fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Los valores son iguales. ' . $this->name_single . ' no modificado',
+			'title'				=> 'Bien!',
+			'type'				=> 'orange',
+			'autoClose'			=> 'OK|3000',
+		);
+	}else{
+		$response['postSubmitAction']	='changeHash';
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-success',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-triangle fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> $this->name_single . ' editado exitosamente.',
+			'title'				=> 'Bien!',
+			'type'				=> 'green',
+			'autoClose'			=> 'OK|3000',
+		);
+	}
+
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_cmp_build_page_edit_cmp_form(){
+	//Global Variables
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_COUNTRY;
+	global $NOVIS_CSI_USER_TEAM;
+	global $NOVIS_CSI_USER;
+	global $wpdb;
+	//Local Variables
+	$manager_user_opts		= '';
+	$customer_opts			= '';
+	$response				= array();
+	$post = isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	//--------------------------------------------------------------------------
+	$plan_id = $post['plan_id'];
+	$sql = 'SELECT * FROM ' . $this->tbl_name . ' WHERE id = "' . $plan_id . '"';
+	$cmp = $wpdb->get_row ( $sql );
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id,code,short_name FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' WHERE id="' . $cmp->customer_id . '"';
+	$customer = $wpdb->get_row($sql);
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id,short_name FROM ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' ';
+	$user_teams = $this->get_sql ( $sql);
+	foreach ( $user_teams as $user_team ){
+		$sql = 'SELECT
+					T00.id as user_id,
+					T01.display_name as display_name,
+					T01.user_email as user_email
+				FROM
+					' . $NOVIS_CSI_USER->tbl_name . ' as T00
+					LEFT JOIN ' . $wpdb->base_prefix . 'users as T01
+						ON T00.id = T01.ID
+				WHERE
+					T00.active_flag = 1 AND
+					T00.team_id = "' . $user_team['id'] . '"
+		';
+		$users = $this->get_sql ( $sql );
+		$manager_user_opts .= '<optgroup label="' . $user_team['short_name'] . '">';
+		foreach ( $users as $user ){
+			$selected = ( $user['user_id'] == $cmp->manager_user_id ) ? ' selected ' : '';
+			$manager_user_opts .= '<option value="' . $user['user_id'] . '" ' . $selected . '>' . $user['display_name'] . '</option>';
+		}
+		$manager_user_opts .= '</optgroup>';
+	}
+	//--------------------------------------------------------------------------
+	$o	='
+	<div class="container">
+		<div class="panel panel-default row">
+			<div class="panel-heading">
+				<h1 class="panel-title">Crea un nuevo Plan de Corrección o Mantenimiento</h1>
+			</div>
+			<div class="panel-body">
+				<form class="form-horizontal" data-function="csi_cmp_edit_plan" data-next-page="showplan?plan_id=' . $plan_id . '" style="position:relative;">
+					<input type="hidden" id="plan_id" name="plan_id" value="' . $plan_id . '"/>
+					<div class="form-group">
+						<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
+						<div class="col-sm-10">
+								<p class="form-control disabled">' . $customer->short_name . ' (' . $customer->code . ')</p>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Este campo no puede ser modificado.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="title" name="title" placeholder="T&iacute;tulo" required="true" maxlength="60" value="' . $cmp->title . '"/>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Titulo / nombre del Plan.<br/>
+								Frecuentemente se utiliza una descripción sencilla como <small><code>Actualización de Kernel Q3 ' . date( 'Y' ) . '</code></small>.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 60 caracteres.</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Plan compartido</label>
+						<div class="col-sm-10">
+							<input type="checkbox" class="form-control csi-cool-checkbox" id="shared_plan_flag" name="shared_plan_flag" value="1" ' . ( 1 == $cmp->shared_plan_flag ? 'checked' : '' ) . '/>
+							<label for="shared_plan_flag">Plan Compartido</label>
+							<span class="help-block">
+								Si un plan es marcado como <i>compartido</i> cualquier usuario del sistema puede realizar modificaciones al plan, tales como <i>agregar tareas visibles para el cliente</i>. Este tipo de plan deben usarse solo en situaciones de planes complejos. Para la reasignación de un plan, es recomendable reasignar el <i>responsable del plan</i>.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="description" class="col-sm-2 control-label">Descripci&oacute;n</label>
+						<div class="col-sm-10">
+							<textarea class="form-control" id="description" name="description" placeholder="Descripci&oacute;n" maxlength="255">' . $cmp->description . '</textarea>
+							<span class="help-block">
+								Descripci&oacute;n breve del Plan de Correcci&oacute;n o Mantenimiento.<br/>
+								<small>Tama&ntilde;o m&aacute;ximo: 255 caracteres.</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="manager_user_id" class="col-sm-2 control-label">Responsable</label>
+						<div class="col-sm-10">
+							<div class="input-group">
+								<span class="input-group-addon"><i class="fa fa-fw fa-user-o"></i></span>
+								<select class="form-control select2" id="manager_user_id" name="manager_user_id" required="true" data-placeholder="Selecciona el responsable">
+									<option></option>
+									' . $manager_user_opts . '
+								</select>
+							</div>
+							<span class="help-block">
+								Responsable del Plan de Correcci&oacute;n o Mantenimiento.<br/>
+								<small class="text-danger"><i class="fa fa-exclamation-triangle"></i> Solo el responsable del plan puede realizar modificaciones posteriores.</Small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10 text-right">
+							<button type="reset" class="btn btn-danger">Cancelar</button>
+							<button type="submit" class="btn btn-primary">Entiendo, Crear Plan</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	';
+	$response['message'] = $o;
+	echo json_encode($response);
+	wp_die();
+}
+
 public function csi_cmp_fetch_filtered_plan_table(){
 	//Global Variables
 	global $NOVIS_CSI_COUNTRY;
@@ -511,9 +730,9 @@ public function csi_cmp_build_page_show_plan(){
 			<h2 class="clearfix">
 				<span class="col-sm-10">' . $plan->plan_title . ' <small>' . $plan->customer_code . '</small></span>
 				<p class="col-sm-2 text-right">
-					<button class="btn btn-default">
+					<a href="#!editplan?plan_id=' . $plan_id . '" class="btn btn-default">
 						<i class="fa fa-pencil"></i> Editar
-					</button>
+					</a>
 				</p>
 			</h2>
 			<div style="margin-top:-5px;height:5px;overflow:hidden;" class="">

@@ -17,6 +17,7 @@ var ajaxPages={
 	'intro'	 		:   'csi_cmp_build_page_intro',
 	'listplans'		:	'csi_cmp_build_page_list_plans',
 	'addplan'		:	'csi_cmp_build_page_new_plan_form',
+	'editplan'		:	'csi_cmp_build_page_edit_cmp_form',
 	'showplan'  	:   'csi_cmp_build_page_show_plan',
 	'addtask'   	:   'csi_cmp_build_page_new_task_form',
 	'showtask'		:	'csi_cmp_build_page_show_task',
@@ -27,9 +28,9 @@ var ajaxPages={
 	'edittaskplan'	:	'csi_cmp_build_page_task_steps_import',
 	'scheduletask'	:	'csi_cmp_build_page_schedule_task',
 	'addservice'	:	'csi_cmp_build_page_new_service_form',
-	
+
 };
-ajaxPages['intro']	=	cmpMainContent.data('default-action');
+ajaxPages.intro		=	cmpMainContent.data('default-action');
 
 var changeHash = function ( nextPage ) {
 	if ( undefined !== nextPage &&  '' !== nextPage ){
