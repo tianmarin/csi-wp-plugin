@@ -389,9 +389,9 @@ public function __construct(){
 	add_action( 'edit_user_profile',							array( $this, 'user_profile_fields' 		));
 	add_action( 'profile_update',								array( $this, 'save_profile_update' 		));
 	add_action( 'delete_user',									array( $this, 'disable_profile' 			));
-	add_filter('wpmu_blogs_columns', 							array( $this, 'add_user_team_column' 		));
-	add_filter('manage_users_columns', 							array( $this, 'add_user_team_column' 		));
-	add_action('manage_users_custom_column',  					array( $this, 'show_user_team_column_content'), 10, 3);
+	add_filter( 'manage_users-network_columns',					array( $this, 'add_user_team_column' 		));
+	add_filter( 'manage_users_columns', 						array( $this, 'add_user_team_column' 		));
+	add_action( 'manage_users_custom_column',  					array( $this, 'show_user_team_column_content'), 10, 3);
 }
 public function add_user_team_column ( $columns ) {
 	$columns = array_slice($columns, 0, 2, true) + array("user_team" => "Equipo") + array_slice($columns, 3, count($columns)-2, true);
