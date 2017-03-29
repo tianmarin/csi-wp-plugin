@@ -131,6 +131,25 @@ public function __construct(){
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
 		),
+		'country_id' => array(
+			'type'						=>'select',
+			'backend_wp_in_table'		=>true,
+			'backend_wp_sp_table'		=>true,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>'Pa&iacute;s de origen del cliente',
+			'form_input_size'			=>false,
+			'form_label'				=>'Pa&iacute;s',
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>true,
+			'form_show_field'			=>true,
+		),
 		'code' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>true,
@@ -354,6 +373,22 @@ public function __construct(){
 		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
 	}
 
+}
+public function backend_wp_sp_table_country_id ( $country_id ){
+	global $NOVIS_CSI_COUNTRY;
+	global $wpdb;
+	$sql = 'SELECT short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' WHERE id = "' . $country_id . '"';
+	$country = $wpdb->get_var ( $sql );
+	self::write_log ( $country );
+	return $country;
+}
+public function form_special_form_country_id ( ){
+	global $NOVIS_CSI_COUNTRY;
+	$response = array();
+	foreach ( $NOVIS_CSI_COUNTRY->get_all() as $key => $value){
+		$response [ $value['id'] ] = $value['short_name'];
+	}
+	return $response;
 }
 //END OF CLASS
 }
