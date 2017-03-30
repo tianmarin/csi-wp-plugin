@@ -58,6 +58,7 @@ public function csi_cmp_keynote_fetch_slide(){
 	global $NOVIS_CSI_CMP_TASK;
 	global $NOVIS_CSI_SERVICE;
 	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_CMP_TASK_STATUS;
 	global $wpdb;
 	//Local Variables
 	$response			= array();
@@ -78,43 +79,53 @@ public function csi_cmp_keynote_fetch_slide(){
 			<div class="csi-cmp-keynote-slide-bottom">
 				<img src="' . CSI_PLUGIN_URL . '/img/bg/csi-cmp-keynote-slide-background-bottom.png"/>
 			</div>
-			<div class="col-xs-10">
-				<h1 class="text-danger">' . $plan['title'] . '</h1>
-				<p class="lead">' . $plan['description'] . '</p>
+			<div class="row">
+				<div class="col-xs-10">
+					<h2 class="text-danger">' . $plan['title'] . ' <a href="#!showplan?plan_id=' . $plan['id'] . '" class="hidden-print" target="_blank"><small><i class="fa fa-external-link"></i></small></a></h2>
+					<p class="lead">' . $plan['description'] . '</p>
+				</div>
 			</div>
-			<div class="">
+			<div class="row">
 				<div class="col-sm-4">
-					<h2 class="text-danger">Avance del plan</h2>
+					<h3 class="text-danger">Avance del plan</h3>
 					<div class="row">
 						<div class="col-sm-6">
-							<div>gráfico</div>
-							<p>Plan: ' . intval ( $progress['success'] + $progress['warning'] + $progress['error']  ) . '%</p>
+							<h5 class="text-center">Avance Planificado</h5>
+							<div class="csi-cmp-keynote-slide-gauge" data-value="' . intval ( $progress['success'] + $progress['warning'] + $progress['error']  ) . '" data-end-value="100" data-top-text="' . intval ( $progress['success'] + $progress['warning'] + $progress['error']  ) . '%" data-back-color="#EEE" data-front-color="#337ab7" id="csi-cmp-keynote-slide-gauge-plan-' . $plan['id'] . '"></div>
 						</div>
 						<div class="col-sm-6">
-							<div>gráfico</div>
-							<p>Real: ' . intval ( $progress['success'] ) . '%</p>
+							<h5 class="text-center">Avance Real</h5>
+							<div class="csi-cmp-keynote-slide-gauge" data-value="' . intval ( $progress['success'] ) . '" data-end-value="100" data-top-text="' . intval ( $progress['success'] ) . '%" data-back-color="#EEE" data-front-color="#337ab7" id="csi-cmp-keynote-slide-gauge-real-' . $plan['id'] . '"></div>
 						</div>
 					</div>
+					<br/>
 					' . $progress['progress_bar'] . '
 				</div>
-				<div class="col-sm-8">
-					<h2 class="text-danger">Actividades Ejecutadas</h2>
-					<p class="help-block text-right small">S&oacute;lo se muestran las &uacute;ltimas 5 actividades</p>
-					<ul>';
+				<div class="col-sm-7 col-sm-offset-1">
+					<h3 class="text-danger">Actividades ejecutadas</h3>
+					<p class="help-block small">S&oacute;lo se muestran las &uacute;ltimas 5 actividades</p>
+					<ul class="fa-ul">';
 		$sql = '
 			SELECT
 				T00.*,
 				T01.name as service_name,
-				T02.sid as sid
+				T02.sid as sid,
+				T03.icon as status_icon,
+				T03.hex_color as status_hex_color,
+				T03.short_name as status_short_name
 			FROM
 				' . $NOVIS_CSI_CMP_TASK->tbl_name . ' as T00
 				LEFT JOIN ' . $NOVIS_CSI_SERVICE->tbl_name . ' as T01
 					ON T00.service_id = T01.id
 				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T02
 					ON T00.customer_system_id = T02.id
+				LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' as T03
+					ON T00.status_id = T03.id
 			WHERE
-				cmp_id="' . $plan['id'] . '"
+				T00.cmp_id="' . $plan['id'] . '"
 				AND T00.start_datetime <= "' . $current_datetime->format('Y-m-d H:i:s') . '"
+				AND ( T03.cmp_finished_flag="1" OR T03.cmp_finished_end_flag="1")
+
 			ORDER BY
 				T00.start_datetime
 				DESC
@@ -126,31 +137,37 @@ public function csi_cmp_keynote_fetch_slide(){
 		foreach ( $tasks as $task ){
 			$start_datetime = new DateTime( $task['start_datetime']);
 			$o.='
-							<li><samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-angle-double-right"></i> ' . $task['service_name'] . '</li>
+							<li><i class="fa fa-' . $task['status_icon'] . ' fa-li "></i> <samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-angle-double-right"></i> ' . $task['service_name'] . ' <small class="text-muted">(' . $task['status_short_name'] . ')</small></li>
 			';
 		}
 		$o.='
 					</ul>
 				</div>
 			</div>
+			<br/>
 			<div class="">
 				<div class="col-sm-4">
 				</div>
-				<div class="col-sm-8">
-					<h2 class="text-danger">Actividades Por ejecutar</h2>
-					<p class="help-block text-right small">S&oacute;lo se muestran las pr&oacute;ximas 5 actividades</p>
-					<ul>';
+				<div class="col-sm-7 col-sm-offset-1">
+					<h3 class="text-danger">Siguientes actividades</h3>
+					<p class="help-block small">S&oacute;lo se muestran las pr&oacute;ximas 5 actividades</p>
+					<ul class="fa-ul">';
 		$sql = '
 			SELECT
 				T00.*,
 				T01.name as service_name,
-				T02.sid as sid
+				T02.sid as sid,
+				T03.icon as status_icon,
+				T03.hex_color as status_hex_color,
+				T03.short_name as status_short_name
 			FROM
 				' . $NOVIS_CSI_CMP_TASK->tbl_name . ' as T00
 				LEFT JOIN ' . $NOVIS_CSI_SERVICE->tbl_name . ' as T01
 					ON T00.service_id = T01.id
 				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T02
 					ON T00.customer_system_id = T02.id
+					LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' as T03
+						ON T00.status_id = T03.id
 			WHERE
 				cmp_id="' . $plan['id'] . '"
 				AND T00.start_datetime > "' . $current_datetime->format('Y-m-d H:i:s') . '"
@@ -165,7 +182,7 @@ public function csi_cmp_keynote_fetch_slide(){
 		foreach ( $tasks as $task ){
 			$start_datetime = new DateTime( $task['start_datetime']);
 			$o.='
-							<li><samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-angle-double-right"></i> ' . $task['service_name'] . '</li>
+							<li><i class="fa fa-' . $task['status_icon'] . ' fa-li " ></i> <samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-angle-double-right"></i> ' . $task['service_name'] . ' <small class="text-muted">(' . $task['status_short_name'] . ')</small></li>
 			';
 		}
 		$o.='

@@ -440,6 +440,48 @@ function csiSoftRefreshEventListener(pageResponse){
 			}
 		}
 	});
+	$('.csi-cmp-keynote-slide-gauge').each(function(){
+		var container = $(this);
+		AmCharts.makeChart( $(this).prop('id'), {
+			'type': 'gauge',
+			'theme': 'light',
+			'axes': [ {
+				'axisThickness'				: 0,
+				'axisAlpha'					: 1,
+				'startAngle'				: 0,
+    			'endAngle'					: 360,
+				//'unit'						: '%',
+				//'tickAlpha': 0.2,
+				'valueInterval'				: 100,
+				'radius'					: '125%',
+				'gridInside'				: true,
+				//'bottomText': '0 %',
+				//'bottomTextYOffset': -20,
+				'endValue'					: container.data('end-value'),
+				'tickAlpha'					: 0,
+				//'minorTickInterval'			: 10,
+				'showFirstLabel'			: false,
+				'showLastLabel'				: false,
+				'topText'					: container.data('top-text'),
+				'topTextYOffset'			: 25,
+				//'topTextBold'				: false,
+				'bands'	:[{
+					'color'					: container.data('back-color'),
+      				'startValue'			: 0,
+      				'endValue'				: 100,
+      				'radius'				: '100%',
+      				'innerRadius'			: '80%',
+				},{
+					'color'					: container.data('front-color'),
+      				'startValue'			: 0,
+      				'endValue'				: container.data('value'),
+      				'radius'				: '100%',
+      				'innerRadius'			: '80%',
+				},
+			],
+			} ],
+		});
+	});
 	//Event Handlers
 	$('[type="reset"]').off('click').click(function(event){
 		event.preventDefault();

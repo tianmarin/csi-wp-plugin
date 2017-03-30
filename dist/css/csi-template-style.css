@@ -14079,23 +14079,26 @@ input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after .badge {
 }
 @media (max-width: 767px) {
   .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
-    width: 62.5px;
+    width: 46.875px;
   }
 }
 @media (min-width: 768px) and (max-width: 991px) {
   .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
-    width: 125px;
+    width: 93.75px;
   }
 }
 @media (min-width: 992px) and (max-width: 1199px) {
   .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
-    width: 161.66666667px;
+    width: 121.25px;
   }
 }
 @media (min-width: 1200px) {
   .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
-    width: 195px;
+    width: 146.25px;
   }
+}
+.csi-cmp-keynote-slide .csi-cmp-keynote-slide-gauge {
+  min-height: 100px;
 }
 @media print {
   @page {
