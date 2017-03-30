@@ -154,8 +154,9 @@ gulp.task('watch', function () {
 });
 gulp.task('browser-sync', function() {
     browserSync.init({
-        files: "./**/*.*",
+        files: ["./**/*.php","./dist/**/*.js","./dist/**/*.css"],
         proxy: "localhost",
+		injectChanges: true,
     });
 });
 

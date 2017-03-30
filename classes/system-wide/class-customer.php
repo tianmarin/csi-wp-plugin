@@ -379,7 +379,6 @@ public function backend_wp_sp_table_country_id ( $country_id ){
 	global $wpdb;
 	$sql = 'SELECT short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' WHERE id = "' . $country_id . '"';
 	$country = $wpdb->get_var ( $sql );
-	self::write_log ( $country );
 	return $country;
 }
 public function form_special_form_country_id ( ){

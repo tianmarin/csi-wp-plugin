@@ -530,7 +530,7 @@ public function csi_cmp_build_page_edit_cmp_form(){
 						<div class="col-sm-10">
 								<p class="form-control disabled">' . $customer->short_name . ' (' . $customer->code . ')</p>
 							<span class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
+								<small class="text-muted pull-right">(bloqueado)</small>
 								Este campo no puede ser modificado.
 							</span>
 						</div>
@@ -579,14 +579,14 @@ public function csi_cmp_build_page_edit_cmp_form(){
 							</div>
 							<span class="help-block">
 								Responsable del Plan de Correcci&oacute;n o Mantenimiento.<br/>
-								<small class="text-danger"><i class="fa fa-exclamation-triangle"></i> Solo el responsable del plan puede realizar modificaciones posteriores.</Small>
+								<small class="text-danger"><i class="fa fa-exclamation-triangle"></i> Solo el responsable del plan puede realizar modificaciones posteriores(si el plan no es compartido).</small>
 							</span>
 						</div>
 					</div>
 					<div class="form-group">
 						<div class="col-sm-offset-2 col-sm-10 text-right">
 							<button type="reset" class="btn btn-danger">Cancelar</button>
-							<button type="submit" class="btn btn-primary">Entiendo, Crear Plan</button>
+							<button type="submit" class="btn btn-primary">Editar Plan</button>
 						</div>
 					</div>
 				</form>
@@ -1110,32 +1110,20 @@ public function csi_cmp_fetch_plan_info(){
 	<tr>
 		<th class="small">
 			T&iacute;tulo
-			<p class="text-center">
-				<small>
-					<a href="#" class="text-muted in-table-form-button hidden-print" data-action="csi_cmp_popup_edit_cmp_form" data-cmp-id="' . $plan_id . '" data-cmp-field="title">
-						<i class="fa fa-lg fa-pencil-square-o"></i> Editar
-					</a>
-				</small>
-			</p>
+			<p class="text-center"></p>
 		</th>
 		<td>
 			' . $plan->plan_title . '
 		</td>
 	</tr>
 	<tr>
-		<th class="small">
-			Descripci&oacute;n
-			<p class="text-center"><small><a href="#" class="text-muted"><i class="fa fa-lg fa-pencil-square-o"></i> Editar</a></small></p>
-		</th>
+		<th class="small">Descripci&oacute;n</th>
 		<td>
 			<p class="text-justify"<i>' . $plan->plan_description . '</i></p>
 		</td>
 	</tr>
 	<tr>
-		<th class="small">
-			Responsable
-			<p class="text-center"><small><a href="#" class="text-muted"><i class="fa fa-lg fa-pencil-square-o"></i> Editar</a></small></p>
-			</th>
+		<th class="small">Responsable</th>
 		<td><a href="#" class="user-data" data-user-id="' . $plan->plan_manager_user_id . '" title="M&aacute;s informaci&oacute;n"><i class="fa fa-id-card-o"></i> ' .  $manager_user->user_nicename . '</a></td>
 	</tr>
 	<tr>
@@ -1157,7 +1145,6 @@ public function csi_cmp_fetch_plan_info(){
 	<tr>
 		<th class="small">
 			<i class="fa fa-tags text-muted"></i> Origen
-			<p class="text-center"><small><a href="#" class="text-muted"><i class="fa fa-lg fa-pencil-square-o"></i> Editar</a></small></p>
 		</th>
 		<td class="">
 			<small><kbd>' . str_replace ( ',', '</kbd>&nbsp;<kbd>', $plan->source_tags ) . '</kbd></small>
@@ -1673,6 +1660,7 @@ public function csi_cmp_build_page_new_plan_form(){
 							</span>
 						</div>
 					</div>
+					<!--
 					<div class="form-group">
 						<label for="source_tags" class="col-sm-2 control-label">Etiquetas de Origen</label>
 						<div class="col-sm-10">
@@ -1688,6 +1676,8 @@ public function csi_cmp_build_page_new_plan_form(){
 							</span>
 						</div>
 					</div>
+					-->
+					<!--
 					<div class="form-group">
 						<label for="doc-plus" class="col-sm-2 control-label">Documentos relacionados</label>
 						<div class="col-sm-10">
@@ -1704,6 +1694,7 @@ public function csi_cmp_build_page_new_plan_form(){
 							</span>
 						</div>
 					</div>
+					-->
 					<div class="form-group">
 						<div class="col-sm-offset-1 col-sm-10">
 							<p class="text-muted text-justify">
