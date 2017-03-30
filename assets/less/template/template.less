@@ -302,16 +302,16 @@ input[type='checkbox'].csi-cool-checkbox-lock{
 .csi-cmp-keynote-slide{
 	//background: url(../../img/bg/csi-cmp-keynote-slide-background.png) #FFF no-repeat top right;
 	//background-size: 100% 100%;
+	position: relative;
 	border: solid thin rgba(0,0,0,0.15);
 	background-color: #FFF;
 	.prevent-print-split;
 	margin-top: 3rem;
 	min-height:768px;
-	position: relative;
 	.csi-cmp-keynote-slide-top{
+		position: absolute;
 		top:0;
 		right:0;
-		position: absolute;
 		img{
 			height: auto;
 			@media (max-width: @screen-xs-max) {
@@ -329,9 +329,9 @@ input[type='checkbox'].csi-cool-checkbox-lock{
 		}
 	}
 	.csi-cmp-keynote-slide-bottom{
+		position: absolute;
 		bottom:0;
 		right:0;
-		position: absolute;
 		img{
 			height: auto;
 			@media (max-width: @screen-xs-max) {

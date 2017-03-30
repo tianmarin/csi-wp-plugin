@@ -14033,18 +14033,18 @@ input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after .badge {
   background: url(https://d13yacurqjgara.cloudfront.net/users/25514/screenshots/3195247/racing_event_website_design_ramotion.gif) center center;
 }
 .csi-cmp-keynote-slide {
+  position: relative;
   border: solid thin rgba(0, 0, 0, 0.15);
   background-color: #FFF;
   page-break-after: always;
   page-break-inside: avoid;
   margin-top: 3rem;
   min-height: 768px;
-  position: relative;
 }
 .csi-cmp-keynote-slide .csi-cmp-keynote-slide-top {
+  position: absolute;
   top: 0;
   right: 0;
-  position: absolute;
 }
 .csi-cmp-keynote-slide .csi-cmp-keynote-slide-top img {
   height: auto;
@@ -14070,9 +14070,9 @@ input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after .badge {
   }
 }
 .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom {
+  position: absolute;
   bottom: 0;
   right: 0;
-  position: absolute;
 }
 .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
   height: auto;
