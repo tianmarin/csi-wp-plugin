@@ -70,7 +70,9 @@ public function csi_cmp_keynote_fetch_slide(){
 	$sql = 'SELECT * FROM ' . $NOVIS_CSI_CMP->tbl_name . ' WHERE customer_id = "' . $customer_id . '"';
 	$plans = $this->get_sql ( $sql );
 	foreach ( $plans as $plan ){
-		$progress = $NOVIS_CSI_CMP->csi_cmp_calculate_cmp_percentage($plan['id']);
+		$progress = $NOVIS_CSI_CMP->csi_cmp_calculate_cmp_percentage ( $plan['id'] );
+		$progress_plan_color = '#337AB7';
+		$progress_real_color = ( $progress['warning'] || $progress['error'] ) ? '#f0AD4E' : '#337AB7';
 		$o.='
 		<div class="csi-cmp-keynote-slide col-xs-12">
 			<div class="csi-cmp-keynote-slide-top">
@@ -89,13 +91,14 @@ public function csi_cmp_keynote_fetch_slide(){
 				<div class="col-sm-4">
 					<h3 class="text-danger">Avance del plan</h3>
 					<div class="row">
-						<div class="col-sm-6">
-							<h5 class="text-center">Avance Planificado</h5>
-							<div class="csi-cmp-keynote-slide-gauge" data-value="' . intval ( $progress['success'] + $progress['warning'] + $progress['error']  ) . '" data-end-value="100" data-top-text="' . intval ( $progress['success'] + $progress['warning'] + $progress['error']  ) . '%" data-back-color="#EEE" data-front-color="#337ab7" id="csi-cmp-keynote-slide-gauge-plan-' . $plan['id'] . '"></div>
+						<div class="col-xs-6">
+							<h5 class="text-center">Planificado</h5>
+							<div class="csi-cmp-keynote-slide-gauge" data-value="' . intval ( $progress['success'] + $progress['warning'] + $progress['error']  ) . '" data-end-value="100" data-top-text="' . intval ( $progress['success'] + $progress['warning'] + $progress['error']  ) . '%" id="csi-cmp-keynote-slide-gauge-plan-' . $plan['id'] . '"
+							data-back-color="#EEE" data-front-color="' . $progress_plan_color . '" ></div>
 						</div>
-						<div class="col-sm-6">
-							<h5 class="text-center">Avance Real</h5>
-							<div class="csi-cmp-keynote-slide-gauge" data-value="' . intval ( $progress['success'] ) . '" data-end-value="100" data-top-text="' . intval ( $progress['success'] ) . '%" data-back-color="#EEE" data-front-color="#337ab7" id="csi-cmp-keynote-slide-gauge-real-' . $plan['id'] . '"></div>
+						<div class="col-xs-6">
+							<h5 class="text-center">Real</h5>
+							<div class="csi-cmp-keynote-slide-gauge" data-value="' . intval ( $progress['success'] ) . '" data-end-value="100" data-top-text="' . intval ( $progress['success'] ) . '%" data-back-color="#EEE" data-front-color="' . $progress_real_color . '" id="csi-cmp-keynote-slide-gauge-real-' . $plan['id'] . '"></div>
 						</div>
 					</div>
 					<br/>
@@ -104,7 +107,8 @@ public function csi_cmp_keynote_fetch_slide(){
 				<div class="col-sm-7 col-sm-offset-1">
 					<h3 class="text-danger">Actividades ejecutadas</h3>
 					<p class="help-block small">S&oacute;lo se muestran las &uacute;ltimas 5 actividades</p>
-					<ul class="fa-ul">';
+					<table class="table table-condensed">
+						<tbody>';
 		$sql = '
 			SELECT
 				T00.*,
@@ -137,11 +141,22 @@ public function csi_cmp_keynote_fetch_slide(){
 		foreach ( $tasks as $task ){
 			$start_datetime = new DateTime( $task['start_datetime']);
 			$o.='
-							<li><i class="fa fa-' . $task['status_icon'] . ' fa-li "></i> <samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-angle-double-right"></i> ' . $task['service_name'] . ' <small class="text-muted">(' . $task['status_short_name'] . ')</small></li>
+							<tr>
+								<td><samp class="text-muted">' . $start_datetime->format('D d/m') . '</samp></td>
+								<td><samp>' . $task['sid'] . '</samp></td>
+								<td>' . $task['service_name'] . '</td>
+								<!--
+								<td><small class="text-muted">
+									<i class="fa fa-' . $task['status_icon'] . '"></i>
+									' . $task['status_short_name'] . '
+								</small></td>
+								-->
+							</tr>
 			';
 		}
 		$o.='
-					</ul>
+						</tbody>
+					</table>
 				</div>
 			</div>
 			<br/>
@@ -151,7 +166,8 @@ public function csi_cmp_keynote_fetch_slide(){
 				<div class="col-sm-7 col-sm-offset-1">
 					<h3 class="text-danger">Siguientes actividades</h3>
 					<p class="help-block small">S&oacute;lo se muestran las pr&oacute;ximas 5 actividades</p>
-					<ul class="fa-ul">';
+					<table class="table table-condensed">
+						<tbody>';
 		$sql = '
 			SELECT
 				T00.*,
@@ -182,11 +198,22 @@ public function csi_cmp_keynote_fetch_slide(){
 		foreach ( $tasks as $task ){
 			$start_datetime = new DateTime( $task['start_datetime']);
 			$o.='
-							<li><i class="fa fa-' . $task['status_icon'] . ' fa-li " ></i> <samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-angle-double-right"></i> ' . $task['service_name'] . ' <small class="text-muted">(' . $task['status_short_name'] . ')</small></li>
+							<tr>
+								<td><samp class="text-muted">' . $start_datetime->format('D d/m') . '</samp></td>
+								<td><samp>' . $task['sid'] . '</samp></td>
+								<td>' . $task['service_name'] . '</td>
+								<!--
+								<td><small class="text-muted">
+									<i class="fa fa-' . $task['status_icon'] . '"></i>
+									' . $task['status_short_name'] . '
+								</small></td>
+								-->
+							</tr>
 			';
 		}
 		$o.='
-					</ul>
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div>
