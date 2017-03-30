@@ -1902,7 +1902,7 @@ public function csi_cmp_fetch_task_step_list_info(){
 		';
 	}
 	$o.='
-	<tr style="position:relative;">
+	<tr style="position:relative;" class="hidden-print">
 		<td colspan="999">
 			<a
 				href="#"
@@ -2031,7 +2031,7 @@ public function csi_cmp_build_page_show_task(){
 	foreach ( $internal_executors as $internal_executor ){
 		$internal_contact.='
 		<tr class="active">
-			<td>&nbsp;</td>
+			<td class="hidden-print">&nbsp;</td>
 			<td>NOVIS</td>
 			<td>' . $internal_executor['executor_display_name'] . '</td>
 			<td>Ejecutor</td>
@@ -2090,7 +2090,8 @@ public function csi_cmp_build_page_show_task(){
 	$o = '
 	<div class="container">
 		<div class="page-header row">
-			<h1 class="">Solicitud de Cambio</h1>
+			<h1 class="">Formato de Solicitud de Cambio</h1>
+			<!--
 			<p class="lead">
 				Parte del plan: <a href="#!showplan?plan_id=' . $task->plan_id . '"><i>' . $task->plan_title . '</i></a>
 				<small>
@@ -2104,6 +2105,7 @@ public function csi_cmp_build_page_show_task(){
 					(Duraci&oacute;n: <code>' . $duration->h . ':' . sprintf ( "%02s", $duration->m ) . 'hrs</code>)
 				</small>
 			</p>
+			-->
 		</div><!-- .page-header -->
 		<div class="row panel panel-default" id="csi-cmp-task-' . $task_id . '-task-info">
 			<div class="panel-heading">
@@ -2129,15 +2131,15 @@ public function csi_cmp_build_page_show_task(){
 						</tr>
 						<tr>
 							<th class="small text-muted">Servicio IT</th>
-							<td><small>' . ( '' != $task->service_name ? $task->service_name : '--' ) . '</small></td>
+							<td>' . ( '' != $task->service_name ? $task->service_name : '--' ) . '</td>
 						</tr>
 						<tr>
 							<th class="small text-muted">
 								Ventana de Ejecución
-								<p class="text-center hidden-print">
+								<p class="hidden-print">
 									<small>
 										<a href="#!scheduletask?task_id=' . $task_id . '" class="text-muted ">
-											<i class="fa fa-lg fa-pencil-square-o"></i> Editar
+											<i class="fa fa-lg fa-clock-o"></i> Reprogramar
 										</a>
 									</small>
 								</p>
@@ -2164,24 +2166,41 @@ public function csi_cmp_build_page_show_task(){
 					</tbody>
 				</table>
 				<h5 class=""><i class="fa fa-file-text-o"></i> Elementos modificados</h5>
-				<table class="table table-condensed">
-					<thead>
-						<tr>
-							<th><a href="#" class="text-success"><i class="fa fa-plus fa-fw"></i></a></th>
-							<th>Elemento BPP</th>
-							<th>Valor actual</th>
-							<th>Valor propuesto</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td><a href="#" class="text-danger"><i class="fa fa-minus fa-fw"></i></a></td>
-							<td>Kernel Patch Level</td>
-							<td>7.20-400</td>
-							<td>7.20-600</td>
-						</tr>
-					</tbody>
-				</table>
+				<form class="csi-no-submit-form" data-function="csi-cmp-change-element-add">
+					<table class="table table-condensed">
+						<thead>
+							<tr>
+								<th><a href="#csi-cmp-change-element-form" data-toggle="collapse"  class="text-success"><i class="fa fa-plus fa-fw"></i></a></th>
+								<th>Elemento a modificar en ' . $task->sid . '</th>
+								<th>Valor actual</th>
+								<th>Valor propuesto</th>
+							</tr>
+							<tr class="collapse hidden-print" id="csi-cmp-change-element-form">
+								<td>&nbsp;</td>
+								<td><input class="form-control input-sm" required="true" type="text" name="element" id="element"/></td>
+								<td><input class="form-control input-sm" required="true" type="text" name="old_value" id="old_value"/></td>
+								<td>
+									<div class="input-group">
+										<input class="form-control input-sm" required="true" type="text" name="new_value" id="new_value"/>
+										 <span class="input-group-btn">
+											<button type="submit" class="btn btn-sm btn-success">
+												<i class="fa fa-plus"></i>
+											</button>
+										</span>
+									</div>
+								</td>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><a href="#" class="text-danger"><i class="fa fa-minus fa-fw"></i></a></td>
+								<td>Kernel Patch Level</td>
+								<td>7.20-400</td>
+								<td>7.20-600</td>
+							</tr>
+						</tbody>
+					</table>
+				</form>
 				<h5 class=""><i class="fa fa-flag"></i> Aprobaciones</h5>
 				<table class="table">
 					<thead>
@@ -2232,7 +2251,7 @@ public function csi_cmp_build_page_show_task(){
 			<div class="panel-heading">
 				<h4 class="panel-title">
 					<i class="fa fa-gear"></i> Plan de Actividades
-					<button type="button" data-target="#csi-cmp-task-step-list-importer, #csi-cmp-task-' . $task_id . '-step-list-actual" data-toggle="collapse" class="btn btn-xs btn-warning">
+					<button type="button" data-target="#csi-cmp-task-step-list-importer, #csi-cmp-task-' . $task_id . '-step-list-actual" data-toggle="collapse" class="btn btn-xs btn-warning hidden-print">
 						<i class="fa fa-magic"></i> Importar
 					</button>
 				</h4>
@@ -2277,7 +2296,7 @@ public function csi_cmp_build_page_show_task(){
 				<table class="table table-condensed">
 					<thead>
 						<tr>
-							<th><a href="#" class="text-success"><i class="fa fa-plus fa-fw"></i></a></th>
+							<th class="hidden-print"><a href="#" class="text-success"><i class="fa fa-plus fa-fw"></i></a></th>
 							<th>Empresa</th>
 							<th>Nombre</th>
 							<th>Desc</th>
@@ -2288,7 +2307,7 @@ public function csi_cmp_build_page_show_task(){
 					<tbody>
 						' . $internal_contact . '
 						<tr>
-							<td><a href="#" class="text-danger"><i class="fa fa-minus fa-fw"></i></a></td>
+							<td class="hidden-print"><a href="#" class="text-danger"><i class="fa fa-minus fa-fw"></i></a></td>
 							<td>IBM</td>
 							<td>Javier Martinez</td>
 							<td>Ejecutor IBM</td>

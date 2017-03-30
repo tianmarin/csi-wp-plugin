@@ -28,6 +28,8 @@ var ajaxPages={
 	'edittaskplan'	:	'csi_cmp_build_page_task_steps_import',
 	'scheduletask'	:	'csi_cmp_build_page_schedule_task',
 	'addservice'	:	'csi_cmp_build_page_new_service_form',
+	'dashboard'		:	'csi_cmp_dashboard_build_page',
+	'capacity'		:	'csi_cmp_capacity_build_page',
 	'keynote'		:	'csi_cmp_keynote_build_page',
 
 };

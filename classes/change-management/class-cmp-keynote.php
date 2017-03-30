@@ -126,7 +126,7 @@ public function csi_cmp_keynote_fetch_slide(){
 		foreach ( $tasks as $task ){
 			$start_datetime = new DateTime( $task['start_datetime']);
 			$o.='
-							<li><samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-caret-right"></i> ' . $task['service_name'] . ' - </li>
+							<li><samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-angle-double-right"></i> ' . $task['service_name'] . '</li>
 			';
 		}
 		$o.='
@@ -165,7 +165,7 @@ public function csi_cmp_keynote_fetch_slide(){
 		foreach ( $tasks as $task ){
 			$start_datetime = new DateTime( $task['start_datetime']);
 			$o.='
-							<li><samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-caret-right"></i> ' . $task['service_name'] . ' - </li>
+							<li><samp><span class="text-muted">' . $start_datetime->format('D d/m') . '</span> - [' . $task['sid'] . ']</samp> <i class="fa fa-angle-double-right"></i> ' . $task['service_name'] . '</li>
 			';
 		}
 		$o.='
