@@ -18,7 +18,7 @@
 .text-handwrite{
 	font-family: 'janeaustennosecret';
 }
-.prevent-print-split { 
+.prevent-print-split {
    page-break-after: always;
    page-break-inside: avoid;
 }
@@ -295,8 +295,69 @@ input[type='checkbox'].csi-cool-checkbox-lock{
 		}
 	}
 }
+.csi-jumbotron-reports{
+	background: url(https://d13yacurqjgara.cloudfront.net/users/25514/screenshots/3195247/racing_event_website_design_ramotion.gif) center center ;
+	//color:@gray-lighter;
+}
+.csi-cmp-keynote-slide{
+	//background: url(../../img/bg/csi-cmp-keynote-slide-background.png) #FFF no-repeat top right;
+	//background-size: 100% 100%;
+	border: solid thin rgba(0,0,0,0.15);
+	background-color: #FFF;
+	.prevent-print-split;
+	margin-top: 3rem;
+	min-height:768px;
+	position: relative;
+	.csi-cmp-keynote-slide-top{
+		top:0;
+		right:0;
+		position: absolute;
+		img{
+			height: auto;
+			@media (max-width: @screen-xs-max) {
+				width: @container-sm/8;
+			}
+			@media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
+				width: @container-sm/4;
+		 	}
+			@media (min-width: @screen-md-min) and (max-width: @screen-md-max) {
+				width: @container-md/4;
+			}
+			@media (min-width: @screen-lg-min) {
+				width: @container-lg/4;
+			}
+		}
+	}
+	.csi-cmp-keynote-slide-bottom{
+		bottom:0;
+		right:0;
+		position: absolute;
+		img{
+			height: auto;
+			@media (max-width: @screen-xs-max) {
+				width: @container-sm/12;
+			}
+			@media (min-width: @screen-sm-min) and (max-width: @screen-sm-max) {
+				width: @container-sm/6;
+		 	}
+			@media (min-width: @screen-md-min) and (max-width: @screen-md-max) {
+				width: @container-md/6;
+			}
+			@media (min-width: @screen-lg-min) {
+				width: @container-lg/6;
+			}
+		}
+	}
+}
+@media print{
+	.csi-cmp-keynote-slide{
+		@page {
+			size: landscape;
+			writing-mode: tb-rl;
+		}
+	}
 
-
+}
 
 
 

@@ -14029,6 +14029,80 @@ input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after .badge {
   color: #5cb85c;
   background-color: #fff;
 }
+.csi-jumbotron-reports {
+  background: url(https://d13yacurqjgara.cloudfront.net/users/25514/screenshots/3195247/racing_event_website_design_ramotion.gif) center center;
+}
+.csi-cmp-keynote-slide {
+  border: solid thin rgba(0, 0, 0, 0.15);
+  background-color: #FFF;
+  page-break-after: always;
+  page-break-inside: avoid;
+  margin-top: 3rem;
+  min-height: 768px;
+  position: relative;
+}
+.csi-cmp-keynote-slide .csi-cmp-keynote-slide-top {
+  top: 0;
+  right: 0;
+  position: absolute;
+}
+.csi-cmp-keynote-slide .csi-cmp-keynote-slide-top img {
+  height: auto;
+}
+@media (max-width: 767px) {
+  .csi-cmp-keynote-slide .csi-cmp-keynote-slide-top img {
+    width: 93.75px;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .csi-cmp-keynote-slide .csi-cmp-keynote-slide-top img {
+    width: 187.5px;
+  }
+}
+@media (min-width: 992px) and (max-width: 1199px) {
+  .csi-cmp-keynote-slide .csi-cmp-keynote-slide-top img {
+    width: 242.5px;
+  }
+}
+@media (min-width: 1200px) {
+  .csi-cmp-keynote-slide .csi-cmp-keynote-slide-top img {
+    width: 292.5px;
+  }
+}
+.csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom {
+  bottom: 0;
+  right: 0;
+  position: absolute;
+}
+.csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
+  height: auto;
+}
+@media (max-width: 767px) {
+  .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
+    width: 62.5px;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
+    width: 125px;
+  }
+}
+@media (min-width: 992px) and (max-width: 1199px) {
+  .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
+    width: 161.66666667px;
+  }
+}
+@media (min-width: 1200px) {
+  .csi-cmp-keynote-slide .csi-cmp-keynote-slide-bottom img {
+    width: 195px;
+  }
+}
+@media print {
+  @page {
+    size: landscape;
+    writing-mode: tb-rl;
+  }
+}
 .csi-project-request-welcome {
   min-height: 100vh;
   background-color: #263238;

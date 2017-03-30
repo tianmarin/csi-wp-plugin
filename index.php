@@ -363,6 +363,9 @@ require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-status.ph
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task-doc.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-task.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-dashboard.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-capacity.php");
+require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-keynote.php");
 
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-urgency.php");

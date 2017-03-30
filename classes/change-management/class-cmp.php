@@ -1205,7 +1205,7 @@ public function csi_cmp_build_page_intro(){
 					</a>
 				</div>
 				<div class="list-group col-sm-6 col-md-4">
-					<a href="#" class="list-group-item list-group-item-success">
+					<a href="#!dashboard" class="list-group-item list-group-item-success">
 						<h3><i class="fa fa-dashboard"></i> Dashboards</h3>
 						<p class="text-justify">Vsitas pre-fabricadas para la gestión de los Planes de Corrección o Mantenimiento.</p>
 					</a>
@@ -1217,7 +1217,7 @@ public function csi_cmp_build_page_intro(){
 					</a>
 				</div>
 				<div class="list-group col-sm-6 col-md-4">
-					<a href="#" class="list-group-item list-group-item-info">
+					<a href="#!capacity" class="list-group-item list-group-item-info">
 						<h3><i class="fa fa-area-chart"></i> Capacity</h3>
 						<p class="text-justify">Reportes de la capacidad del personal relacionado a las tareas.</p>
 					</a>
@@ -1229,7 +1229,7 @@ public function csi_cmp_build_page_intro(){
 					</a>
 				</div>
 				<div class="list-group col-sm-6 col-md-4">
-					<a href="#" class="list-group-item list-group-item-warning">
+					<a href="#!keynote" class="list-group-item list-group-item-warning">
 						<h3><i class="fa fa-television"></i> Presentación</h3>
 						<p class="text-justify">Reportes orientados a dar soporte a seguimiento periódico con clientes.</p>
 					</a>
