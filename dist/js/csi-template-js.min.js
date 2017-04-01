@@ -538,6 +538,17 @@ function csiSoftRefreshEventListener(pageResponse){
 			});
 		}
 	});
+	$('.csi-cmp-keynote-option').off('change').change( function(event){
+		var target = $( $(this).data('keynote-target') );
+		var tasks = ( target.data('tasks') );
+		if ( $(this).is(':checked') ){
+			tasks.push ( $(this).prop('name') );
+		}else{
+			tasks.splice( $.inArray( $(this).prop('name'), tasks ), 1 );
+		}
+		target.data ( 'tasks', tasks );
+		csiTemplateCmpFetchTableContent ( target );
+	});
 	$('.edit-table-button').off('click').click( function(event){
 		event.preventDefault();
 		if (  undefined !== $(this).attr('href') ) {
