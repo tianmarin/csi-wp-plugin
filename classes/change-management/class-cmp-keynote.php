@@ -29,23 +29,44 @@ public function csi_cmp_keynote_build_page(){
 	wp_die();
 }
 protected function csi_cmp_keynote_build_keynote ( $customer_id ){
+	global $NOVIS_CSI_CUSTOMER;
+	$customer = $NOVIS_CSI_CUSTOMER->get_single ( $customer_id );
 	$o='
 	<div class="container">
 		<div class="hidden-print">
-			<h1>Filtro</h1>
-			<table class="table">
-			 	<thead>
-					<th>Tabla de filtros</th>
-				</thead>
-				<tbody>
-					<td>
-						<a href="#csi-cmp-keynote-holder" class="refresh-button btn btn-primary btn-sm btn-block"><i class="fa fa-refresh"></i> Refrescar</a>
-					</td>
-				</tbody>
-			</table>
+			<h1>Resumen de actividades para <i>' . $customer['short_name'] . '</i></h1>
+			<p>La vista de <i>presentaci&oacute;n</i> permite generar una vista similar a los reportes semanales entregados en muchos clientes.</p>
+			<form>
+				<div class="form-group col-sm-6">
+					<div class="">
+						<input type="checkbox" class="form-control csi-cool-checkbox csi-cmp-keynote-option" id="finished_tasks" name="finished_tasks" data-keynote-target="#csi-cmp-keynote-holder" value="1" checked>
+						<label for="finished_tasks">Actividades ejecutadas</label>
+					</div>
+				</div>
+				<div class="form-group col-sm-6">
+					<div class="">
+						<input type="checkbox" class="form-control csi-cool-checkbox csi-cmp-keynote-option" id="next_tasks" name="next_tasks" data-keynote-target="#csi-cmp-keynote-holder" value="1" checked>
+						<label for="next_tasks">Siguientes Actividades</label>
+					</div>
+				</div>
+				<div class="form-group col-sm-6">
+					<div class="">
+						<input type="checkbox" class="form-control csi-cool-checkbox csi-cmp-keynote-option" id="pending_tasks" name="pending_tasks" data-keynote-target="#csi-cmp-keynote-holder" value="1">
+						<label for="pending_tasks">Actividades Pendientes</label>
+					</div>
+				</div>
+				<div class="form-group col-sm-6">
+					<div class="">
+						<input type="checkbox" class="form-control csi-cool-checkbox csi-cmp-keynote-option" id="alert_tasks" name="alert_tasks" data-keynote-target="#csi-cmp-keynote-holder" value="1">
+						<label for="alert_tasks">Actividades con atraso y error</label>
+					</div>
+				</div>
+			</form>
 		</div>
+	</div>
+	<div class="container">
 		<div style="position:relative;" class="row">
-			<div id="csi-cmp-keynote-holder" class="refreshable" data-customer-id="' . $customer_id . '" data-action="csi_cmp_keynote_fetch_slide"></div>
+			<div id="csi-cmp-keynote-holder" class="refreshable" data-customer-id="' . $customer_id . '" data-action="csi_cmp_keynote_fetch_slide" data-tasks=\'["finished_tasks","next_tasks"]\'></div>
 		</div>
 	</div>';
 	return $o;
@@ -64,6 +85,7 @@ public function csi_cmp_keynote_fetch_slide(){
 	$response			= array();
 	$current_datetime	= new DateTime();
 	$o					= '';
+	$limit				= 5;
 	$post	= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	//self::write_log($post);
 	$customer_id = $post['customerId'];
@@ -103,123 +125,20 @@ public function csi_cmp_keynote_fetch_slide(){
 					</div>
 					<br/>
 					' . $progress['progress_bar'] . '
-				</div>
+				</div><!-- .col-sm-4 -->';
+		$o.='
 				<div class="col-sm-7 col-sm-offset-1">
-					<h3 class="text-danger">Actividades ejecutadas</h3>
-					<p class="help-block small">S&oacute;lo se muestran las &uacute;ltimas 5 actividades</p>
-					<table class="table table-condensed">
-						<tbody>';
-		$sql = '
-			SELECT
-				T00.*,
-				T01.name as service_name,
-				T02.sid as sid,
-				T03.icon as status_icon,
-				T03.hex_color as status_hex_color,
-				T03.short_name as status_short_name
-			FROM
-				' . $NOVIS_CSI_CMP_TASK->tbl_name . ' as T00
-				LEFT JOIN ' . $NOVIS_CSI_SERVICE->tbl_name . ' as T01
-					ON T00.service_id = T01.id
-				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T02
-					ON T00.customer_system_id = T02.id
-				LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' as T03
-					ON T00.status_id = T03.id
-			WHERE
-				T00.cmp_id="' . $plan['id'] . '"
-				AND T00.start_datetime <= "' . $current_datetime->format('Y-m-d H:i:s') . '"
-				AND ( T03.cmp_finished_flag="1" OR T03.cmp_finished_end_flag="1")
+		';
+		foreach ( explode( ',', $post['tasks'] ) as $table_type ) {
+			$o.=self::csi_cmp_keynote_tasks_table ( $table_type, $plan );
+		}
+		$o.='
+				</div><!-- .col-sm-7 -->
+			</div><!-- .row -->
+		</div><!-- .csi-cmp-keynote-slide -->
 
-			ORDER BY
-				T00.start_datetime
-				DESC
-			LIMIT
-				5
-				';
-		$tasks = $this->get_sql ( $sql );
-		$tasks = array_reverse ( $tasks, true );
-		foreach ( $tasks as $task ){
-			$start_datetime = new DateTime( $task['start_datetime']);
-			$o.='
-							<tr>
-								<td><samp class="text-muted">' . $start_datetime->format('D d/m') . '</samp></td>
-								<td><samp>' . $task['sid'] . '</samp></td>
-								<td>' . $task['service_name'] . '</td>
-								<!--
-								<td><small class="text-muted">
-									<i class="fa fa-' . $task['status_icon'] . '"></i>
-									' . $task['status_short_name'] . '
-								</small></td>
-								-->
-							</tr>
-			';
-		}
-		$o.='
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<br/>
-			<div class="">
-				<div class="col-sm-4">
-				</div>
-				<div class="col-sm-7 col-sm-offset-1">
-					<h3 class="text-danger">Siguientes actividades</h3>
-					<p class="help-block small">S&oacute;lo se muestran las pr&oacute;ximas 5 actividades</p>
-					<table class="table table-condensed">
-						<tbody>';
-		$sql = '
-			SELECT
-				T00.*,
-				T01.name as service_name,
-				T02.sid as sid,
-				T03.icon as status_icon,
-				T03.hex_color as status_hex_color,
-				T03.short_name as status_short_name
-			FROM
-				' . $NOVIS_CSI_CMP_TASK->tbl_name . ' as T00
-				LEFT JOIN ' . $NOVIS_CSI_SERVICE->tbl_name . ' as T01
-					ON T00.service_id = T01.id
-				LEFT JOIN ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T02
-					ON T00.customer_system_id = T02.id
-					LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' as T03
-						ON T00.status_id = T03.id
-			WHERE
-				cmp_id="' . $plan['id'] . '"
-				AND T00.start_datetime > "' . $current_datetime->format('Y-m-d H:i:s') . '"
-			ORDER BY
-				T00.start_datetime
-				ASC
-			LIMIT
-				5
-				';
-		$tasks = $this->get_sql ( $sql );
-		//$tasks = array_reverse ( $tasks, true );
-		foreach ( $tasks as $task ){
-			$start_datetime = new DateTime( $task['start_datetime']);
-			$o.='
-							<tr>
-								<td><samp class="text-muted">' . $start_datetime->format('D d/m') . '</samp></td>
-								<td><samp>' . $task['sid'] . '</samp></td>
-								<td>' . $task['service_name'] . '</td>
-								<!--
-								<td><small class="text-muted">
-									<i class="fa fa-' . $task['status_icon'] . '"></i>
-									' . $task['status_short_name'] . '
-								</small></td>
-								-->
-							</tr>
-			';
-		}
-		$o.='
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
 		';
 	}
-
 	$response['message'] = $o;
 	echo json_encode($response);
 	wp_die();
@@ -256,6 +175,104 @@ protected function csi_cmp_keynote_build_page_intro(){
 		</div>
 	</div>';
 	return $o;
+}
+protected function csi_cmp_keynote_tasks_table ( $task_type = '' , $plan = array(), $limit = 5 ) {
+	//Global Variables
+	global $NOVIS_CSI_CMP_TASK;
+	global $NOVIS_CSI_SERVICE;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_CMP_TASK_STATUS;
+	//Local Variables
+	$current_datetime	= new DateTime();
+	$task_table			= '';
+	switch ( $task_type ){
+		case 'finished_tasks':
+			$title='Actividades ejecutadas';
+			$sql_cond='
+				AND T00.start_datetime <= "' . $current_datetime->format('Y-m-d H:i:s') . '"
+				AND ( T03.cmp_finished_flag="1" OR T03.cmp_finished_end_flag="1")
+			';
+			break;
+		case 'next_tasks':
+			$title='Pr&oacute;ximas actividades';
+			$sql_cond='
+				AND T00.start_datetime > "' . $current_datetime->format('Y-m-d H:i:s') . '"
+			';
+			break;
+		case 'pending_tasks':
+			$title='Actividades pendientes';
+			$sql_cond='
+				AND T03.cmp_total_flag = 1
+				AND T03.cmp_finished_flag != 1
+				AND T03.cmp_finished_start_flag != 1
+				AND T03.cmp_finished_end_flag != 1
+				AND T00.start_datetime <= "' . $current_datetime->format('Y-m-d H:i:s') . '"
+			';
+			break;
+		case 'alert_tasks':
+			$title='Actividades con atraso o error';
+			$sql_cond='
+				AND
+					(
+					(T03.cmp_finished_start_flag!=0 AND T00.start_datetime<NOW() )
+					OR ( T03.cmp_finished_end_flag!=0 AND T00.end_datetime<NOW() )
+					OR ( T03.cmp_error_flag = 1 )
+					)
+			';
+			break;
+		default:
+			$title = '--';
+			$sql_cond = '';
+	}
+	$sql = '
+		SELECT
+			T00.*,
+			T01.name as service_name,
+			T02.sid as sid,
+			T03.icon as status_icon,
+			T03.hex_color as status_hex_color,
+			T03.short_name as status_short_name
+		FROM
+			' . $NOVIS_CSI_CMP_TASK->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_SERVICE->tbl_name . ' as T01
+				ON T00.service_id = T01.id
+			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER_SYSTEM->tbl_name . ' as T02
+				ON T00.customer_system_id = T02.id
+			LEFT JOIN ' . $NOVIS_CSI_CMP_TASK_STATUS->tbl_name . ' as T03
+				ON T00.status_id = T03.id
+		WHERE
+			T00.cmp_id="' . $plan['id'] . '"
+		' . $sql_cond . '
+		ORDER BY
+			T00.start_datetime
+			ASC
+		LIMIT
+			' . $limit . '
+	';
+	$tasks = $this->get_sql ( $sql );
+	$tasks = array_reverse ( $tasks, true );
+	$task_table='
+				<div>
+					<h3 class="text-danger">' . $title . '</h3>
+					<p class="help-block small">Se muestra un m&aacute;ximo de ' . $limit . ' actividades</p>
+					<table class="table table-condensed">
+						<tbody>';
+	foreach ( $tasks as $task ){
+		$start_datetime = new DateTime( $task['start_datetime']);
+		$task_table.='
+						<tr>
+							<td><samp class="text-muted">' . $start_datetime->format('D d/m') . '</samp></td>
+							<td><samp>' . $task['sid'] . '</samp></td>
+							<td>' . $task['service_name'] . '</td>
+						</tr>
+		';
+	}
+	$task_table.='
+					</tbody>
+				</table>
+			</div>
+		';
+	return $task_table;
 }
 //END OF CLASS
 }
