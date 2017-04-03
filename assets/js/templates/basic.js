@@ -539,16 +539,7 @@ function csiSoftRefreshEventListener(pageResponse){
 		}
 	});
 	$('.csi-cmp-keynote-option').off('change').change( function(event){
-		var target = $( $(this).data('keynote-target') );
-		var tasks = [];
-		$(this).closest('form').find('.csi-cmp-keynote-option').each( function(){
-			console.log ( $(this) );
-			if ( $(this).is(':checked') ){
-				tasks.push ( $(this).prop('name') );
-			}
-		});
-		target.data ( 'tasks', tasks );
-		csiTemplateCmpFetchTableContent ( target );
+		csiCmpKeynoteOption ( this );
 	});
 	$('.edit-table-button').off('click').click( function(event){
 		event.preventDefault();
@@ -580,18 +571,7 @@ function csiSoftRefreshEventListener(pageResponse){
 		start:function(){
 		},
 		stop:function(){
-			var target = $( $(this).find('.csi-cmp-keynote-option').data('keynote-target') );
-
-			var tasks = [];
-			$(this).closest('form').find('.csi-cmp-keynote-option').each( function(){
-				console.log ( $(this) );
-				if ( $(this).is(':checked') ){
-					tasks.push ( $(this).prop('name') );
-				}
-			});
-			target.data ( 'tasks', tasks );
-			csiTemplateCmpFetchTableContent ( target );
-
+			csiCmpKeynoteOption ( this );
 		},
 		change:function(){
 		},
@@ -799,6 +779,20 @@ function csiHardRefreshEventListener(pageResponse){
 		}
 	});
 	csiSoftRefreshEventListener(response);
+}
+function csiCmpKeynoteOption( trigger ){
+	var element = $(trigger);
+	var parent = element.parent();
+	var target = $( parent.find('.csi-cmp-keynote-option').data('keynote-target') );
+	var tasks = [];
+	element.closest('form').find('.csi-cmp-keynote-option').each( function(){
+		if ( $(this).is(':checked') ){
+			tasks.push ( $(this).prop('name') );
+		}
+	});
+	target.data ( 'tasks', tasks );
+	csiTemplateCmpFetchTableContent ( target );
+
 }
 function csiSelect2Format(option) {
     var opt = option.element;
