@@ -540,12 +540,13 @@ function csiSoftRefreshEventListener(pageResponse){
 	});
 	$('.csi-cmp-keynote-option').off('change').change( function(event){
 		var target = $( $(this).data('keynote-target') );
-		var tasks = ( target.data('tasks') );
-		if ( $(this).is(':checked') ){
-			tasks.push ( $(this).prop('name') );
-		}else{
-			tasks.splice( $.inArray( $(this).prop('name'), tasks ), 1 );
-		}
+		var tasks = [];
+		$(this).closest('form').find('.csi-cmp-keynote-option').each( function(){
+			console.log ( $(this) );
+			if ( $(this).is(':checked') ){
+				tasks.push ( $(this).prop('name') );
+			}
+		});
 		target.data ( 'tasks', tasks );
 		csiTemplateCmpFetchTableContent ( target );
 	});
@@ -571,6 +572,31 @@ function csiSoftRefreshEventListener(pageResponse){
 	$('.user-data').off('click').click( function(event){
 		event.preventDefault();
 		csiTemplateCmpFetchUserData( $(this).data('user-id') );
+	});
+	$('.csi-cmp-keynote-sortable').sortable({
+		axis: 'y',
+		placeholder: 'placeholder',
+		opacity: 0.8,
+		start:function(){
+		},
+		stop:function(){
+			var target = $( $(this).find('.csi-cmp-keynote-option').data('keynote-target') );
+
+			var tasks = [];
+			$(this).closest('form').find('.csi-cmp-keynote-option').each( function(){
+				console.log ( $(this) );
+				if ( $(this).is(':checked') ){
+					tasks.push ( $(this).prop('name') );
+				}
+			});
+			target.data ( 'tasks', tasks );
+			csiTemplateCmpFetchTableContent ( target );
+
+		},
+		change:function(){
+		},
+		update: function( ) {
+		},
 	});
 	$('input.csi-datetime-range-input').on('apply.daterangepicker', function(ev, picker) {
 		$(this).val ( picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm') );

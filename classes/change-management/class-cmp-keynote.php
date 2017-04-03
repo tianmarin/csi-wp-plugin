@@ -36,29 +36,33 @@ protected function csi_cmp_keynote_build_keynote ( $customer_id ){
 		<div class="hidden-print">
 			<h1>Resumen de actividades para <i>' . $customer['short_name'] . '</i></h1>
 			<p>La vista de <i>presentaci&oacute;n</i> permite generar una vista similar a los reportes semanales entregados en muchos clientes.</p>
-			<form>
-				<div class="form-group col-sm-6">
-					<div class="">
+			<form class="csi-cmp-keynote-sortable">
+				<div class="form-group">
+					<div class="input-group">
 						<input type="checkbox" class="form-control csi-cool-checkbox csi-cmp-keynote-option" id="finished_tasks" name="finished_tasks" data-keynote-target="#csi-cmp-keynote-holder" value="1" checked>
 						<label for="finished_tasks">Actividades ejecutadas</label>
+						<span class="input-group-addon" id="basic-addon2"><i class="fa fa-arrows-v"></i></span>
 					</div>
 				</div>
-				<div class="form-group col-sm-6">
-					<div class="">
+				<div class="form-group">
+					<div class="input-group">
 						<input type="checkbox" class="form-control csi-cool-checkbox csi-cmp-keynote-option" id="next_tasks" name="next_tasks" data-keynote-target="#csi-cmp-keynote-holder" value="1" checked>
 						<label for="next_tasks">Siguientes Actividades</label>
+						<span class="input-group-addon" id="basic-addon2"><i class="fa fa-arrows-v"></i></span>
 					</div>
 				</div>
-				<div class="form-group col-sm-6">
-					<div class="">
+				<div class="form-group">
+					<div class="input-group">
 						<input type="checkbox" class="form-control csi-cool-checkbox csi-cmp-keynote-option" id="pending_tasks" name="pending_tasks" data-keynote-target="#csi-cmp-keynote-holder" value="1">
 						<label for="pending_tasks">Actividades Pendientes</label>
+						<span class="input-group-addon" id="basic-addon2"><i class="fa fa-arrows-v"></i></span>
 					</div>
 				</div>
-				<div class="form-group col-sm-6">
-					<div class="">
+				<div class="form-group">
+					<div class="input-group">
 						<input type="checkbox" class="form-control csi-cool-checkbox csi-cmp-keynote-option" id="alert_tasks" name="alert_tasks" data-keynote-target="#csi-cmp-keynote-holder" value="1">
 						<label for="alert_tasks">Actividades con atraso y error</label>
+						<span class="input-group-addon" id="basic-addon2"><i class="fa fa-arrows-v"></i></span>
 					</div>
 				</div>
 			</form>
