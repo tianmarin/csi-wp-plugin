@@ -289,7 +289,7 @@ public function csi_fetch_project_entrance_list_info(){
 				</td>
 				<td class="small">' . $reg_date->format('d-m-Y') . '</td>
 				<td class="small">' . $author . '</td>
-				<td class="small">' . $project_entrance['entrance'] . '</td>
+				<td class="small">' . nl2br ( $project_entrance['entrance'] ) . '</td>
 			</tr>
 		';
 	}
