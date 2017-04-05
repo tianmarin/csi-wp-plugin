@@ -1572,19 +1572,6 @@ protected function csi_pm_build_gantt ( $sql, $post, $start_date, $end_date ) {
 	$silent = FALSE;
 	foreach ( $projects as $project){
 		if ( self::validate_date( $project['planned_start_date'] ) && self::validate_date( $project['planned_end_date'] ) ){
-			if(!$silent){
-				if( is_multisite() ){
-					if ( $customer_id != $project['customer_id']){
-						$customer_id = $project['customer_id'];
-						if (0 == $customer_id){
-							$o.='<div class="col-xs-12 customer"><p class="lead text-center" '.$style.'>Clientes fuera de Operaci&oacute;n</p></div>';
-						}else{
-							$blog_details = get_blog_details($customer_id);
-							$o.='<div class="col-xs-12 customer"><div class="lead text-center">'.$blog_details->blogname.'</div></div>';
-						}
-					}
-				}
-			}
 			$planned_start_date	= DateTime::createFromFormat('Y-m-d', $project['planned_start_date']);
 			$planned_end_date	= DateTime::createFromFormat('Y-m-d', $project['planned_end_date']);
 			if( $start_date < $planned_start_date){
