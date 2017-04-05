@@ -426,7 +426,7 @@ public function csi_create_project_entrance_form(){
 			<div for="entrance" class="form-group">
 				<label class="col-sm-2">Texto</label>
 				<div class="col-sm-10">
-					<textarea name="entrance" id="entrance" class="form-control input-sm" required="true"></teztarea>
+					<textarea name="entrance" id="entrance" class="form-control input-sm" required="true"></textarea>
 					<p class="help-block">Descripción<br/>Tama&ntilde;o m&aacute;ximo: 255 caracteres</p>
 				</div>
 			</div>
