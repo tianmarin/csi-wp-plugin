@@ -57,6 +57,7 @@ $novis_csi_vars = array(
 	##Project Management Module
 	'project_urgency'				."_network_class"	=> TRUE,
 	'project_status'				."_network_class"	=> TRUE,
+	'project_entrance'				."_network_class"	=> TRUE,
 	'project'						."_network_class"	=> TRUE,
 	##Change MAnagement Module
 	'cmp'							."_network_class"	=> TRUE,
@@ -93,6 +94,7 @@ $novis_csi_vars = array(
 	##Project Management Module
 	'project_status'				."_menu_slug"	=> 'csi_'		.'project_status',
 	'project_urgency'				."_menu_slug"	=> 'csi_'		.'project_urgency',
+	'project_entrance'				."_menu_slug"	=> 'csi_'		.'project_entrance',
 	'project'						."_menu_slug"	=> 'csi_'		.'project',
 	##Change Management Module
 	'cmp'							."_menu_slug"	=> 'csi_'		.'cmp',
@@ -129,6 +131,7 @@ $novis_csi_vars = array(
 	##Project Management Module
 	'project_status'				."_menu_cap"		=> 'manage_options',
 	'project_urgency'				."_menu_cap"		=> 'manage_options',
+	'project_entrance'				."_menu_cap"		=> 'manage_options',
 	'project'						."_menu_cap"		=> 'manage_options',
 	##Change MAnagement Module
 	'cmp'							."_menu_cap"		=> 'manage_options',
@@ -369,6 +372,7 @@ require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-keynote.php");
 
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-urgency.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-entrance.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project.php");
 
 ##External Classes

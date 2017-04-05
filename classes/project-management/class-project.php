@@ -40,7 +40,7 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.5.3';
+	$this->db_version	= '0.6.0';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -48,8 +48,9 @@ public function __construct(){
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql_wt	="(
 								id bigint(20) unsigned not null auto_increment,
-								customer_id bigint unsigned not null,
-								customer_name varchar(50) not null,
+								registered_customer_flag tinyint(1) unsigned null COMMENT 'Indicates if customer is already registered',
+								registered_customer_id bigint unsigned not null COMMENT 'Customer Id',
+								non_registered_customer_name varchar(50) not null COMMENT 'Name of unregistered customer',
 								short_name varchar(100) not null,
 								description text not null,
 								requested_user_id bigint(20) unsigned not null,
@@ -67,12 +68,21 @@ public function __construct(){
 								last_modified_time time null,
 								doc_link varchar(255) null,
 								task_link varchar(255) null,
+								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of each record',
+								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+								creation_date date null COMMENT 'Date of the creation of this record',
+								creation_time time null COMMENT 'Time of the creation of this record',
+								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
+								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+								last_modified_date date null COMMENT 'Date of the last modification of this record',
+								last_modified_time time null COMMENT 'Time of the last modification of this record',
+
 								UNIQUE KEY id (id)
 							) $charset_collate;";
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
-		/*	
+		/*
 		type					: Tipo de Dato para validacion
 									- id
 									- text
@@ -86,7 +96,7 @@ public function __construct(){
 									- radio
 									- select
 									- dual_id
-		backend_wp_in_table		: Flag de mostrar el campo en las tablas de 
+		backend_wp_in_table		: Flag de mostrar el campo en las tablas de
 									true|false
 		backend_wp_sp_table		: If true, 'sp_wp_table'+field_id function will be executed to show special content
 		backend_wp_table_lead	: If true, 'Edit'button will be shown below field values in backend table
@@ -518,6 +528,7 @@ public function __construct(){
 		),
 	);
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'							));
+	self::db_install();
 	//in a new blog creation, create the db for new blog
 	//Applies only for non-network classes
 	if( true != $this->network_class ){
@@ -533,6 +544,14 @@ public function __construct(){
 	//Add Ajax actions
 	add_action( 'wp_ajax_csi_new_project_request', 				array( $this , 'csi_new_project_request'			));
 	add_action( 'wp_ajax_csi_user_project_request_status', 		array( $this , 'csi_user_project_request_status'	));
+	add_action( 'wp_ajax_csi_pm_build_page_intro', 				array( $this , 'csi_pm_build_page_intro'			));
+	add_action( 'wp_ajax_csi_pm_new_project_request', 			array( $this , 'csi_pm_new_project_request'			));
+	add_action( 'wp_ajax_csi_add_project', 						array( $this , 'csi_add_project'					));
+	add_action( 'wp_ajax_csi_pm_build_page_list_projects', 		array( $this , 'csi_pm_build_page_list_projects'	));
+	add_action( 'wp_ajax_csi_pm_filtered_panel', 				array( $this , 'csi_pm_filtered_panel'				));
+	add_action( 'wp_ajax_csi_pm_build_page_show_project', 		array( $this , 'csi_pm_build_page_show_project'		));
+
+
 //	add_action( 'wp_ajax_nopriv_csi_new_project_request', 		array( $this , 'new_project_request'		));
 }
 protected function backend_wp_sp_table_code($code){
@@ -552,7 +571,7 @@ public function shortcode_project_panel($atts){
 	$output		='<div class="csi-shortcode">';
 	if ( isset($atts['customer']) ){
 		if( is_numeric($atts['customer']) ){
-			$customer =$atts['customer']; 
+			$customer =$atts['customer'];
 		}else{
 			$customer_list = explode(',', $atts['customer']);
 			if( count($customer_list)>1 ){
@@ -653,7 +672,7 @@ public function shortcode_project_panel($atts){
 		}//end for $i counter
 		$output.='</div>';##timeline-header
 		if ( false == $customer ){
-			$sql = "SELECT * FROM ".$this->tbl_name." ORDER BY customer_id DESC";		
+			$sql = "SELECT * FROM ".$this->tbl_name." ORDER BY customer_id DESC";
 		}else{
 			if ( 'array' == gettype($customer) ){
 				$sql = "SELECT * FROM ".$this->tbl_name;
@@ -675,15 +694,13 @@ public function shortcode_project_panel($atts){
 						if ( $customer_id != $project['customer_id']){
 							$customer_id = $project['customer_id'];
 							if (0 == $customer_id){
-								$output.='<div class="col-xs-12 customer"><p class="lead text-center" '.$style.'>Clientes fuera de Operaci&oacute;n</p></div>';							
+								$output.='<div class="col-xs-12 customer"><p class="lead text-center" '.$style.'>Clientes fuera de Operaci&oacute;n</p></div>';
 							}else{
 								$blog_details = get_blog_details($customer_id);
-								$output.='<div class="col-xs-12 customer"><div class="lead text-center">'.$blog_details->blogname.'</div></div>';						
+								$output.='<div class="col-xs-12 customer"><div class="lead text-center">'.$blog_details->blogname.'</div></div>';
 							}
 						}
-						
 					}
-					
 				}
 				$planned_start_date	= DateTime::createFromFormat('Y-m-d', $project['planned_start_date']);
 				$planned_end_date	= DateTime::createFromFormat('Y-m-d', $project['planned_end_date']);
@@ -761,7 +778,7 @@ public function shortcode_project_panel($atts){
 
 	}
 	$output.='</div>';#wrap plugin shortcode csi-shortcode
-	return $output;	
+	return $output;
 }
 public function csi_new_project_request(){
 	$insertArray			= array();
@@ -796,11 +813,93 @@ public function csi_new_project_request(){
 	}else{
 		$response['error']=true;
 		$response['message']="Hubo un error al agregar el nuevo ".$this->name_single."; intenta nuevamente. :)";
-	}	
+	}
 	echo json_encode($response);
 	wp_die();
 }
+public function csi_add_project(){
+	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_PROJECT_STATUS;
+	//Local Variables
+	$insertArray			= array();
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$current_user			= get_userdata ( get_current_user_id() );
+	$current_datetime		= new DateTime();
+	if ( isset ( $post['planned_start_date'] ) ){
+		$start_date = new DateTime ( $post['planned_start_date'] );
+		$planned_start_date = $start_date->format('Y-m-d');
+	}else{
+		$planned_start_date = NULL;
+	}
+	if ( isset ( $post['planned_end_date'] ) ){
+		$end_date = new DateTime ( $post['planned_end_date'] );
+		$planned_end_date = $end_date->format('Y-m-d');
+	}else{
+		$planned_end_date = NULL;
+	}
+	$default_status_code = 'revision';
+	$status_id = $wpdb->get_var ( 'SELECT id FROM ' . $NOVIS_CSI_PROJECT_STATUS->tbl_name . ' WHERE code ="' . $default_status_code . '"');
 
+//	self::write_log ( $post );
+
+	$insertArray['registered_customer_flag']	= isset ( $post['registered_customer_flag'] )? 1 : NULL ;
+	$insertArray['registered_customer_id']		= isset ( $post['registered_customer_id'] ) ? intval ( $post['registered_customer_id'] ) : NULL;
+	$insertArray['non_registered_customer_name']= isset ( $post['non_registered_customer_name'] ) ? strip_tags(stripslashes( $post['non_registered_customer_name'] ) ) : NULL;
+	$insertArray['short_name']					= strip_tags(stripslashes( $post['short_name'] ) );
+	$insertArray['description']					= strip_tags(stripslashes( $post['description'] ) );
+	$insertArray['status_id']					= intval ( $status_id );
+	$insertArray['planned_start_date']			= $planned_start_date;
+	$insertArray['planned_end_date']			= $planned_end_date;
+	$insertArray['creation_user_id']			= $current_user->ID;
+	$insertArray['creation_user_email']			= $current_user->user_email;
+	$insertArray['creation_date']				= $current_datetime->format('Y-m-d');
+	$insertArray['creation_time']				= $current_datetime->format('H:i:s');
+	//self::write_log ( $post );
+	//self::write_log ( $editArray );
+	if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
+		$response['id']=$wpdb->insert_id;
+		$service_id = $wpdb->insert_id;
+		//crear registro de Ejecutores
+		$response['postSubmitAction']	='changeHash';
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-success',
+				),
+			),
+			'icon'				=> 'fa fa-check fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>#' . $service_id . '</code>)',
+			'title'				=> 'Bien!',
+			'type'				=> 'green',
+			'autoClose'			=> 'OK|3000',
+		);
+	}else{
+		$response['error']=true;
+		$response['notifStopNextPage'] = true;
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-danger',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-triangle fa-sm text-danger',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Hubo un error al agregar el nuevo ' . $this->name_single . '; intenta nuevamente. :)<p><small><code>' . htmlspecialchars( $wpdb->last_error, ENT_QUOTES ) . '</code></small></p>',
+			'title'				=> 'Error!',
+			'type'				=> 'red',
+			'autoClose'			=> 'OK|3000',
+		);
+	}
+	echo json_encode($response);
+	wp_die();
+
+}
 public function csi_user_project_request_status(){
 	global $NOVIS_CSI_PROJECT_STATUS;
 	$user_id = get_current_user_id();
@@ -823,7 +922,7 @@ public function csi_user_project_request_status(){
 				$output.= '<td class="text-center">'.$project['id'].'</td>';
 			if ( is_multisite() ){
 				if ( 0 == $project['customer_id'] ){
-					$output.= '<td class="text-left">...</td>';								
+					$output.= '<td class="text-left">...</td>';
 				}else{
 					$customer_name = get_blog_details($project['customer_id'])->blogname;
 					$output.= '<td class="text-left">'.$customer_name.'</td>';
@@ -840,9 +939,729 @@ public function csi_user_project_request_status(){
 	echo json_encode($response);
 	wp_die();
 }
+public function csi_pm_new_project_request(){
+	//Global Variables
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_COUNTRY;
+	//Local Variables
+	$o				= '';
+	$customer_opts	= '';
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' ORDER BY short_name';
+	foreach ( $this->get_sql ( $sql ) as $country ){
+		$customer_opts.='<optgroup label="' . $country['short_name'] . '">';
+		$sql = 'SELECT id, short_name, code FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' WHERE country_id="' . $country['id'] . '" ORDER BY short_name';
+		foreach ( $this->get_sql ( $sql ) as $customer ){
+			$customer_opts.='<option value="' . $customer['id'] . '">' . $customer['short_name'] . ' (' . strtoupper ( $customer['code'] ) . ')</option>';
+		}
+		$customer_opts.='</optgroup>';
+	}
+	//--------------------------------------------------------------------------
+	$o.='
+	<div class="container">
+		<div class="panel panel-default row">
+			<div class="panel-heading">
+				<h1 class="panel-title">Crear Solicitud de Proyecto</h1>
+			</div>
+			<div class="panel-body">
+				<form class="form-horizontal" data-function="csi_add_project" data-next-page="listprojects" style="position:relative;">
+					<div class="form-group">
+						<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
+						<div class="col-sm-10">
+							<div class="input-group select2-bootstrap-append select2-bootstrap-prepend">
+								<span class="input-group-addon"><samp>&nbsp;&nbsp;&nbsp;Registrado</samp></span>
+								<span class="input-group-addon">
+									<input type="radio" name="registered_customer_flag" class="csi-switchable-radio-button" value="1" checked>
+								</span>
+								<select name="registered_customer_id" class="form-control select2 " required="true" data-placeholder="Selecciona el cliente registrado" tabindex="-1" aria-hidden="true">
+									<option></option>
+									' . $customer_opts . '
+								</select>
+							</div><!-- .input-group -->
+							<div class="input-group">
+								<span class="input-group-addon"><samp>No registrado</samp></span>
+								<span class="input-group-addon">
+									<input type="radio" class="csi-switchable-radio-button" name="registered_customer_flag" value="0">
+								</span>
+								<input type="text" name="non_registered_customer_name" required="true" class="form-control disabled" disabled="" placeholder="[Nombre de Cliente]" value="">
+							</div><!-- .input-group -->
+							<p class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Si el cliente no existe en nuestra Base de Datos (campo <strong>Cliente registrado</strong> puedes agregar la referencia con un texto que identifique al cliente.<br/>
+								Por ejemplo: <i>Soluciones Industriales S.A. de C.V.</i></p>
+						</div>
+					</div>
+					<div class="form-group ">
+						<label for="short_name" class="col-sm-2 control-label">Nombre del Proyecto</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="short_name" name="short_name" placeholder="Nombre del Proyecto" required="true">
+							<p class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 100 caracteres
+							</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="description" class="col-sm-2 control-label">Descripción</label>
+						<div class="col-sm-10">
+							<textarea class="form-control" id="description" name="description" placeholder="Descripción" required="true"></textarea>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Descripción breve del Plan de Corrección o Mantenimiento.<br>
+								<small>Tamaño máximo: 255 caracteres.</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="planned_start_date" class="col-sm-2 control-label">Fecha de Inicio</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control csi-date-range-input" id="planned_start_date" name="planned_start_date" data-single-date-picker="true" required="true"/>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Indicar la fecha estimada de inicio del proyecto.<br/>
+								Recuerda que estas fechas ser&aacute;n evaluadas acorde al Capacity Planning de la sub-dirección de Proyectos.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="planned_end_date" class="col-sm-2 control-label">Fecha de Fin</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control csi-date-range-input" id="planned_end_date" name="planned_end_date" data-single-date-picker="true"/>
+							<span class="help-block">
+								Indica la fecha de GoLive del proyecto.<br/>
+								En caso que el GoLive no coincida con la fecha de fin del proyecto, es importante indicar este detalle en la Descripción del Proyecto.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-1 col-sm-10">
+							<p class=" text-justify">
+								La creación de un Plan de Corrección o Mantenimiento aparecerá de modo inmediato en los planes del cliente seleccionado.
+							</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10 text-right">
+							<button type="reset" class="btn btn-danger">Cancelar</button>
+							<button type="submit" class="btn btn-primary">Entiendo, Crear Solicitud de Proyecto</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div><!-- .container -->';
 
+	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_pm_filtered_panel(){
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$o = $this->csi_pm_panel_builder ( $post );
+	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+}
+protected function csi_pm_panel_builder ( $post ) {
+	//Global Variables
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_PROJECT_STATUS;
+	//Local Variables
 
+	//self::write_log ( $post );
 
+	$status					= $post['status'];
+	$show_plan				= isset ( $post['show_plan'] ) ? TRUE : NULL ;
+	$plan					= '';
+	$show_table				= isset ( $post['show_table'] ) ? TRUE : NULL ;
+	$table					= '';
+	$group_by				= '';
+	$order_by				= '';
+	$start_date				= new DateTime ( explode ( ' - ', $post['date_range'] )[0] );
+	$end_date				= new DateTime ( explode ( ' - ', $post['date_range'] )[1] );
+	//--------------------------------------------------------------------------
+	$sql = '
+		SELECT
+			T00.*,
+			T00.id as project_id,
+			T01.id as customer_id,
+			T01.code as customer_code,
+			T02.short_name as status_short_name,
+			T02.css_class as status_class,
+			IF ( T00.registered_customer_flag , T01.short_name, T00.non_registered_customer_name ) as customer_short_name
+		FROM
+			' . $this->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T01
+				ON T00.registered_customer_id = T01.id
+			LEFT JOIN ' . $NOVIS_CSI_PROJECT_STATUS->tbl_name . ' as T02
+				ON T00.status_id = T02.id
+		WHERE
+			T00.status_id IN (' . $status . ')
+			AND T00.planned_end_date > "' . $start_date->format('Y-m-d') . '"
+			AND T00.planned_start_date < "' . $end_date->format('Y-m-d') . '"
+	';
+	//--------------------------------------------------------------------------
+	if ( $show_plan ){
+		$plan.=$this->csi_pm_build_gantt ( $sql, $post, $start_date, $end_date );
+	}
+	//--------------------------------------------------------------------------
+	if ( $show_table ){
+		$table.='
+			<table class="table table-condensed table-striped">
+				<thead>
+					<tr>
+						<th>Cliente</th>
+						<th>Nombre de Proyecto</th>
+						<th>PM</th>
+						<th>L&iacute;der T&eacute;cnico</th>
+						<th>KAM</th>
+						<th>Fecha plan inicio</th>
+						<th>Fecha plan fin</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
+		';
+		$projects = $this->get_sql ( $sql );
+		foreach ( $projects as $project ){
+			$customer_name = ( NULL != $project['customer_id'] ) ? $project['customer_short_name'] : $project['non_registered_customer_name'];
+			$table.='
+					<tr>
+						<td class="small">' . $project['customer_short_name'] . '</td>
+						<td class="small"><a href="#!showproject?project_id=' . $project['project_id'] . '">' . $project['short_name'] . '</a></td>
+						<td>PM</td>
+						<td>lider</td>
+						<td>kam</td>
+						<td>' . $project['planned_start_date'] . '</td>
+						<td>' . $project['planned_end_date'] . '</td>
+						<td class="' . $project['status_class'] . '">' . $project['status_short_name'] . '</td>
+					</tr>
+			';
+		}
+		$table.='
+				</tbody>
+			</table>
+		';
+	}
+	$o=$plan;
+	$o.=$table;
+	return $o;
+	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_pm_build_page_list_projects(){
+	//Global Variables
+	global $NOVIS_CSI_PROJECT_STATUS;
+	global $NOVIS_CSI_COUNTRY;
+	//Local Variables
+	$pm_status_opt			= '';
+	$country_opt			= '';
+	//--------------------------------------------------------------------------
+	foreach ( $NOVIS_CSI_COUNTRY->get_all() as $country ){
+		$country_opt.='<option value="' . $country['id'] . '" selected>' . $country['short_name'] . '</option>';
+	}
+	//--------------------------------------------------------------------------
+	$default_status_codes = array ( 'executing', 'revision');
+	foreach ( $NOVIS_CSI_PROJECT_STATUS->get_all() as $pm_status ){
+		$selected = in_array ( $pm_status['code'], $default_status_codes ) ? 'selected' : '';
+		$pm_status_opt.='<option value="' . $pm_status['id'] . '" ' . $selected . '>' . $pm_status['short_name'] . '</option>';
+	}
+	//--------------------------------------------------------------------------
+	$start_date = new DateTime();
+	$start_date->modify('-3 months');
+	$end_date = new DateTime();
+	$end_date->modify('+3 months');
+	//--------------------------------------------------------------------------
+	$o='
+	<div class="container">
+		<div class="page-header row">
+			<h3 class="col-sm-10">Planes de Corrección o Mantenimiento</h3>
+			<h3 class="col-sm-2">
+				<a href="#!addproject" class="btn btn-success">
+					<i class="fa fa-plus"></i> Nuevo Proyecto
+				</a>
+			</h3>
+		</div>
+		<div class="panel panel-default row">
+			<div class="panel-heading">
+				<a data-toggle="collapse" href="#csi-pm-panel-filter" role="button">
+					<i class="fa fa-filter"></i> Filtros
+				</a>
+				<div class="pull-right">
+					<a data-toggle="collapse" href="#csi-pm-panel-filter" role="button">
+						<i class="fa fa-fw fa-caret-down"></i>
+					</a>
+				</div>
+			</div>
+			<div class="panel-body collapse" id="csi-pm-panel-filter">
+				<form class="form-horizontal" id="csi-pm-filtered-pm-panel-form" data-target="#csi-pm-filtered-pm-panel">
+					<div class="form-group">
+						<label for="status" class="col-sm-2 control-label">Status</label>
+						<div class="col-sm-10">
+							<select class="form-control select2" multiple="multiple" style="width:100%;" name="status" id="status">
+								' . $pm_status_opt . '
+							</select>
+							<span class="help-block"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Rango de Fechas</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control csi-date-range-input" name="date_range" id="date_range" value="' . $start_date->format('Y-m') . '-01 - ' . $end_date->format('Y-m-t') . '"" data-show-dropdowns="true" data-linked-calendars="false"/>
+							<span class="help-block"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Despliegue</label>
+						<div class="col-sm-10">
+							<div class="">
+								<input type="checkbox" name="show_plan" id="show_plan" value="1" class="form-control csi-cool-checkbox" >
+								<label for="show_plan">Desplegar Plan</label>
+							</div>
+							<div class="">
+								<input type="checkbox" name="show_table" id="show_table" value="1" class="form-control csi-cool-checkbox" checked>
+								<label for="show_table">Desplegar Tabla</label>
+							</div>
+							<p class="help-block">
+								Indica que elementos mostrar
+							</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Agrupar por</label>
+						<div class="col-sm-10">
+							<div class="">
+								<input type="radio" name="group_by" id="group_by_1" value="1" class="csi-cool-radio" checked>
+								<label for="group_by_1">Cliente</label>
+							</div>
+							<div class="">
+								<input type="radio" name="group_by" id="group_by_2" value="2" class="csi-cool-radio">
+								<label for="group_by_2">Status</label>
+							</div>
+							<span class="help-block"></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Ordernar por</label>
+						<div class="col-sm-10">
+							<div class="">
+								<input type="radio" name="order_by" id="order_by_1" value="1" class="csi-cool-radio" checked>
+								<label for="order_by_1">Cliente</label>
+							</div>
+							<div class="">
+								<input type="radio" name="order_by" id="order_by_2" value="2" class="csi-cool-radio">
+								<label for="order_by_2">Status</label>
+							</div>
+							<div class="">
+								<input type="radio" name="order_by" id="order_by_3" value="3" class="csi-cool-radio" checked>
+								<label for="order_by_3">Fecha Inicio</label>
+							</div>
+							<div class="">
+								<input type="radio" name="order_by" id="order_by_4" value="4" class="csi-cool-radio" checked>
+								<label for="order_by_4">Fecha Fin</label>
+							</div>
+							<span class="help-block"></span>
+						</div>
+					</div>
+					<div class="form-group ">
+						<label class="col-sm-2 control-label"></label>
+						<div class="col-sm-10 text-center">
+							<a class="refresh-button btn btn-primary" data-refresh-table="" href="#csi-pm-filtered-pm-panel">
+								<i class="fa fa-filter"></i> Filtrar
+							</a>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="panel panel-default row">
+			<div class="panel-heading">
+				<strong class="">
+					<i class="fa fa-tasks"></i>
+					Panel de Resumen de Proyectos
+				</strong>
+				<div class="pull-right">
+					<a class="refresh-button" data-refresh-table="" href="#csi-pm-filtered-pm-panel">
+						<i class="fa fa-fw fa-refresh"></i>
+					</a>
+				</div>
+			</div>
+			<div id="csi-pm-filtered-pm-panel" class="table refreshable" data-action="csi_pm_filtered_panel" data-filter-form="#csi-pm-filtered-pm-panel-form" style="position:relative;"></div>
+		</div>
+	</div>
+	';
+	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_pm_build_page_show_project(){
+	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_PROJECT_STATUS;
+	//Local Variables
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$o					= '';
+	$project_id = $post['project_id'];
+	//--------------------------------------------------------------------------
+	$sql = '
+		SELECT
+			T00.short_name as short_name,
+			T00.description as description,
+			T00.id as project_id,
+			T01.id as customer_id,
+			T01.code as customer_code,
+			T02.id as status_id,
+			T02.short_name as status_short_name,
+			T02.css_class as status_class,
+			IF ( T00.registered_customer_flag , T01.short_name, T00.non_registered_customer_name ) as customer_short_name
+		FROM
+			' . $this->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T01
+				ON T00.registered_customer_id = T01.id
+			LEFT JOIN ' . $NOVIS_CSI_PROJECT_STATUS->tbl_name . ' as T02
+				ON T00.status_id = T02.id
+		WHERE
+			T00.id ="' . $project_id . '"
+	';
+	$project = $wpdb->get_row ( $sql );
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT
+				id,
+				short_name,
+				IF(id = ' . $project->status_id . ', "selected", "") as selected
+	 		FROM ' . $NOVIS_CSI_PROJECT_STATUS->tbl_name . ' ';
+	$status_inline_options = '';
+	foreach ( $this->get_sql ( $sql ) as $status ){
+		$status_inline_options.='<option value="' . $status['id'] . ' ' . $status['selected'] . '">' . $status['short_name'] . '</option>';
+	}
+	//--------------------------------------------------------------------------
+	$o = '
+	<div class="container">
+
+		<div class="page-header row">
+			<a href="#!listprojects"><i class="fa fa-angle-left fa-fw"></i> Proyectos</a>
+			<h3 class="clearfix">
+				<span class="col-sm-10">' . $project->short_name . ' <small>' . $project->customer_short_name . '</small></span>
+				<p class="col-sm-2 text-right">
+					<a href="#!editproject?plan_id=' . $project_id . '" class="btn btn-default">
+						<i class="fa fa-pencil"></i> Editar
+					</a>
+				</p>
+			</h3>
+		</div><!-- .page-header -->
+		<div class="row">
+			<h4 class="col-sm-3">Ficha del Proyecto</h4>
+			<div class="col-sm-9">
+				<table class="table table-condensed">
+					<tbody>
+						<tr>
+							<th class="small text-muted">Cliente</th>
+							<td>' . $project->customer_short_name . '</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Titulo del Proyecto</th>
+							<td><i>' . $project->short_name . '</i></td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Status</th>
+							<td>
+								<span class="csi-2ble-click" style="position:relative;">
+									<span class="csi-2ble-click-front">' . $project->status_short_name . '</span>
+									<form class="csi-2ble-click-back" style="display:none;" data-function="csi_cmp_edit_project_status">
+										<input type="hidden" name="task_id" id="task_id" value="65">
+										<select class="form-control input-sm" name="status_id" id="status_id">
+											' . $status_inline_options . '
+										</select>
+									</form>
+								</span>
+
+							</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Avance Planificado</th>
+							<td>
+								<div class="progress" style="margin-bottom:0px;">
+  									<div class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;width: 40%;">
+										40%
+									</div>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Avance Real</th>
+							<td>
+								<div class="progress" style="margin-bottom:0px;">
+  									<div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;width: 50%;">
+										50%
+									</div>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Project Manager</th>
+							<td>Javier Caballero</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Líder Técnico</th>
+							<td>Javier Caballero</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">KAM</th>
+							<td>Javier Caballero</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Project Request</th>
+							<td>Solicitado por <a href="#" class="user-data" data-user-id="1" title="Más información"><i class="fa fa-id-card-o"></i> cmarin</a> el 23/07/2017 <small class="text-muted">23:56hrs</small></td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Planificación</th>
+							<td>
+								<a target="_blank" href="#">
+									Enlace al plan de Actividades <i class="fa fa-external-link"></i>
+								</a>
+							</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Documentos</th>
+							<td>
+								<a target="_blank" href="#">
+									Enlace al Documentaci&oacute;n del Proyecto <i class="fa fa-external-link"></i>
+								</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div><!-- .row -->
+		<div class="row">
+			<h4 class="col-sm-3">Descripci&oacute;n del Proyecto</h4>
+			<div class="col-sm-9">
+				<p id="csi-pm-project-description-short" class="text-justify collapse in">
+					' . substr ( $project->description, 0, 400 );
+	if ( 200 < strlen ( $project->description) ){
+		$o.='
+					<button class="hidden-print btn btn-success btn-xs" type="button" data-toggle="collapse" data-target="#csi-pm-project-description-short,#csi-pm-project-description-long" aria-expanded="false" aria-controls="collapseExample"><i class="fa fa-expand"></i></button>
+				</p>
+				<p id="csi-pm-project-description-long" class="text-justify collapse" >' . htmlspecialchars ( $project->description ) . '
+					<button class="hidden-print btn btn-danger btn-xs" type="button" data-toggle="collapse" data-target="#csi-pm-project-description-short,#csi-pm-project-description-long" aria-expanded="false" aria-controls="collapseExample"><i class="fa fa-compress"></i></button>
+				';
+	}
+	$o.='
+				</p>
+			</div>
+		</div><!-- .row -->
+		<div class="row">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<i class="fa fa-fw fa-star"></i> Registro de hitos
+					<div class="pull-right">
+						<a href="#"><i class="fa fa-fw fa-plus"></i></a>
+						|
+						<a href="#csi-fetch-project-entrance-list-info" class="refresh-button"><i class="fa fa-fw fa-refresh"></i></a>
+						|
+						<a data-toggle="collapse" href="#project-' . $project->project_id . '-entrances" role="button" class="collapsed" aria-expanded="false">
+							<i class="fa fa-fw fa-caret-down"></i>
+						</a>
+					</div>
+				</div>
+				<div id="project-' . $project->project_id . '-entrances" class="collapse in">
+					<table class="table table-condensed refreshable" id="csi-fetch-project-entrance-list-info" data-action="csi_fetch_project_entrance_list_info" data-project-id="' . $project->project_id . '" style="position:relative;">
+						<thead>
+							<tr>
+								<th class="hidden-print">&nbsp;</th>
+								<th>Fecha</th>
+								<th>Autor</th>
+								<th>Avance</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div><!-- #project-' . $project->project_id . '-entrances -->
+			</div><!-- .panel -->
+		</div><!-- .row -->
+	</div><!-- .container -->
+
+	';
+	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_pm_build_page_intro(){
+	//Global Variables
+	//Local Variables
+	$o					= '';
+	//--------------------------------------------------------------------------
+	$o.='
+	<div class="jumbotron">
+		<div class="container">
+			<h2>Gestión de Proyectos Novis</h2>
+			<p>Módulo de registro y control de proyectos.</p>
+			<p><a class="btn btn-primary btn-lg" href="#!listplans" role="button">Aprender más</a></p>
+		</div>
+	</div><!-- .jumbotron -->
+	<nav class="container">
+		<div class="row">
+			<div class="list-group col-sm-6 col-md-4">
+				<a href="#!listprojects" class="list-group-item list-group-item-info">
+					<h3><i class="fa fa-tasks"></i> Proyectos</h3>
+					<p class="text-justify">Proyectos Novis.</p>
+				</a>
+			</div>
+			<div class="list-group col-sm-6 col-md-4">
+				<a href="#!addproject" class="list-group-item active">
+					<h3><i class="fa fa-plus"></i> Solicitud de Proyecto</h3>
+					<p class="text-justify">Aqui puedes solicitar o proponer un nuevo Proyecto.</p>
+				</a>
+			</div>
+			<div class="list-group col-sm-6 col-md-4">
+				<a href="#!pm_dashboard" class="list-group-item list-group-item-success">
+					<h3><i class="fa fa-dashboard"></i> Dashboards</h3>
+					<p class="text-justify">Vsitas pre-fabricadas para la gestión de Proyectos.</p>
+				</a>
+			</div>
+		</div>
+	</nav><!-- .container -->
+	';
+	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+
+}
+protected function csi_pm_build_gantt ( $sql, $post, $start_date, $end_date ) {
+	//Global Variables
+	//Local Variables
+	$o				= '';
+	define('DAYS_PER_MONTH', 30);
+	define('DURATION', 6);
+	$start_date->modify('first day of this month');
+	$end_date->modify('last day of this month');
+	$year				= $start_date->format('Y');
+	$month				= $start_date->format('m');
+	$date_diff			= date_diff ( $end_date, $start_date );
+	$months				= $date_diff->y * 12 + $date_diff->m + 1; //5 months 20 days -> 6 months
+	$month_width		= 100 / $months;
+	$o.='
+	<div class="csi-project-panel" style="margin-left:' . $month_width . '%;">';
+	//Build Frame
+	$o.='
+		<div class="col-xs-12 timeline-header">';
+	$o.='
+			<div style="position:absolute;width:' . $month_width . '%;margin-left:-' . $month_width . '%;">Cliente</div>
+	';
+	for ( $i = 0 ; $i < $months ; $i++ ){
+		$date = DateTime::createFromFormat('Y-m-d', $year.'-'.intval($month+$i).'-01');
+		$date_header_long='<span>'.$date->format('F').'<br/><small class="text-muted">'.$date->format('Y').'</small></span>';
+		$date_header_short='<span>'.$date->format('M').'<br/><small class="text-muted">'.$date->format('Y').'</small></span>';
+		$o.='
+			<div class="month text-center hidden-xs" style="width:'.$month_width.'%;">
+				'.$date_header_long.'
+			</div>';
+		$o.='
+			<div class="month text-center visible-xs" style="width:'.$month_width.'%;">
+				'.$date_header_short.'
+			</div>';
+	}
+	$o.='
+		</div><!-- #timeline-header -->';
+	//Build projects
+	$customer_name = '';
+	$projects = $this->get_sql ( $sql );
+	$silent = FALSE;
+	foreach ( $projects as $project){
+		if ( self::validate_date( $project['planned_start_date'] ) && self::validate_date( $project['planned_end_date'] ) ){
+			if(!$silent){
+				if( is_multisite() ){
+					if ( $customer_id != $project['customer_id']){
+						$customer_id = $project['customer_id'];
+						if (0 == $customer_id){
+							$o.='<div class="col-xs-12 customer"><p class="lead text-center" '.$style.'>Clientes fuera de Operaci&oacute;n</p></div>';
+						}else{
+							$blog_details = get_blog_details($customer_id);
+							$o.='<div class="col-xs-12 customer"><div class="lead text-center">'.$blog_details->blogname.'</div></div>';
+						}
+					}
+				}
+			}
+			$planned_start_date	= DateTime::createFromFormat('Y-m-d', $project['planned_start_date']);
+			$planned_end_date	= DateTime::createFromFormat('Y-m-d', $project['planned_end_date']);
+			if( $start_date < $planned_start_date){
+				$month_diff = new DateTime;
+				$month_diff = date_diff ( $planned_start_date,$start_date);
+				//add months
+				$proj_prev = floatval ( intval ( $month_diff->y * 12 + $month_diff->m ) * $month_width );
+				//add days
+				$proj_prev = $proj_prev + intval( $month_diff->d ) / DAYS_PER_MONTH * $month_width;
+			}else{
+				$proj_prev = 0;
+			}
+			if( $end_date > $planned_end_date){
+				$month_diff = new DateTime;
+				$month_diff = date_diff ( $planned_end_date,$end_date);
+				//add months
+				$proj_post = floatval ( intval( $month_diff->y * 12 + $month_diff->m ) * $month_width );
+				//add days
+				$proj_post = $proj_post + $month_width / ( DAYS_PER_MONTH / intval( $planned_end_date->format('d') ) );
+				//self::write_log( $month_width / ( DAYS_PER_MONTH / intval( $planned_end_date->format('d') ) ) );
+			}else{
+				$proj_post=0;
+			}
+			$proj_width = 100 - ($proj_prev + $proj_post);
+			//self::write_log($proj_prev.' - '.$proj_width.' - '.$proj_post);
+			$o.='
+			<div class="row project">';
+			if ( !$silent ){
+				/*
+				if ( $customer_name == $project['customer_short_name']){
+					$display_customer_name =' &nbsp;';
+				}else{
+					$customer_name = $display_customer_name = $project['customer_short_name'];
+				}
+				*/
+				$o.='
+				<div class="col-xs-12 text-left project-options">
+					<div class="btn-group btn-group-sm" style="width:' . $month_width . '%;margin-left:-' . $month_width . '%;overflow:hidden;" title="' . $project['customer_short_name'] . '" data-toggle="tooltip" data-placement="top" >
+						<small>' . $project['customer_short_name'] . '</small>
+					</div>
+					<div class="month text-center" style=";width:'.$proj_prev.'%;">&nbsp;</div>
+					<div class="btn-group btn-group-sm" style=";width:'.$proj_width.'%;">
+						<a type="button" class="text-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<small><i class="fa fa-cog fa-fw"></i>'.$project['short_name'].'</small>
+						</a>
+						<ul class="dropdown-menu">
+							<li><a href="#" title="Ver los documentos del proyecto '.$project['short_name'].'"><i class="fa fa-tasks fa-fw" aria-hidden="true"></i> Tareas</a></li>
+							<li><a href="#" title="Ver las tareas del proyecto '.$project['short_name'].'"><i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i> Documentos</a></li>
+						</ul>
+					</div>
+					 <div class="month" style="width:'.$proj_post.'%;">&nbsp;</div>
+				</div>';
+			}
+			$short_name= true==$silent  ? '<small style="color:#FFF;white-space: nowrap;text-overflow: ellipsis;display: block;overflow: hidden;">&nbsp;'.$project['short_name'].'</small>':'&nbsp;';
+			$start_class= (0 == $proj_prev) ? ' non_start ' : '';
+			$end_class= (0 == $proj_post) ? ' non_end ' : '';
+			$o.='
+				<div class="col-xs-12 project-timeline">
+					<div class="month text-center" style="width:'.$proj_prev.'%;">&nbsp;</div>
+					<div class="month text-center" style="width:'.$proj_width.'%;">
+						<div class="progress '.$start_class.$end_class.'">
+							<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="'.$project['percentage'].'" aria-valuemin="0" aria-valuemax="100" style="width: '.$project['percentage'].'%;min-width:2em;">
+								<small>'.$project['percentage'].'%</small>
+							</div>
+						</div>
+					</div>
+					<div class="month" style="width:'.$proj_post.'%;">'.$short_name.'</div>
+				</div>
+			</div>';
+		}else{
+			//No se muestra el proyecto, ya que no tiene fechas valida planificadas
+		}
+	}
+	$o.='
+	</div><!-- .csi-project-panel -->';
+	return $o;
+}
 //END OF CLASS
 
 }

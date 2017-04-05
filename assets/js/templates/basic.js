@@ -31,6 +31,9 @@ var ajaxPages={
 	'dashboard'		:	'csi_cmp_dashboard_build_page',
 	'capacity'		:	'csi_cmp_capacity_build_page',
 	'keynote'		:	'csi_cmp_keynote_build_page',
+	'addproject'	:	'csi_pm_new_project_request',
+	'listprojects'	:	'csi_pm_build_page_list_projects',
+	'showproject'  	:   'csi_pm_build_page_show_project',
 
 };
 ajaxPages.intro		=	cmpMainContent.data('default-action');
@@ -198,6 +201,17 @@ function csiTemplateCmpFetchTableContent( tableSelector ){
 	$.each(table.data(),function(index,val){
 		data.append(index,val);
 	});
+	if ( undefined !== table.data('filter-form') ){
+		$( table.data('filter-form') ).find('input, select, textarea, checkbox').each(function(){
+			if ( $(this).is(':checkbox, :radio') ) {
+				if ( $(this).prop('checked') ) {
+					data.append($(this).attr('name'),$(this).val());
+				}
+			}else{
+				data.append($(this).attr('name'),$(this).val());
+			}
+		});
+	}
 	$.ajax({
 		url: csiTemplateScript.ajaxUrl,
 		type: 'POST',
@@ -380,6 +394,15 @@ function csiSoftRefreshEventListener(pageResponse){
 			cancelLabel: 'Cancelar',
 		}
 	});
+	$('input.csi-date-range-input').daterangepicker({
+		cancelClass: 'btn-danger',
+		opens: 'center',
+		locale: {
+			format: 'YYYY-MM-DD',
+			applyLabel: 'Aceptar',
+			cancelLabel: 'Cancelar',
+		}
+	});
 	$('.front-end-editable').each(function(){
 		var editLink = $('<i class="fa fa-pencil front-end-editable-button"></i>')
 		.css ( 'cursor', 'pointer' )
@@ -538,6 +561,9 @@ function csiSoftRefreshEventListener(pageResponse){
 			});
 		}
 	});
+	$('.csi-switchable-radio-button').off('change').change(function (event) {
+		csiSwitchableRadioButton ( this );
+	});
 	$('.csi-cmp-keynote-option').off('change').change( function(event){
 		csiCmpKeynoteOption ( this );
 	});
@@ -665,26 +691,7 @@ function csiSoftRefreshEventListener(pageResponse){
 						csiTemplateCmpFetchTableContent( $(this).closest('.refreshable') );
 					});
 					cell.find('.csi-switchable-radio-button').off('change').change(function(){
-						cell.find('.csi-switchable-radio-button').each(function(){
-							var nextInput = $(this).parent().next('input, select').first();
-							if ( $(this).is(':checked') ){
-								if ( nextInput.hasClass('select2') ) {
-									nextInput.select2('enable');
-								}else{
-									nextInput.removeClass('disabled').prop('disabled',false);
-								}
-							}else{
-								if ( nextInput.hasClass('select2') ) {
-									console.log ( nextInput );
-									nextInput.select2('enable',false);
-									nextInput.addClass('disabled').prop('disabled',true).val('');
-									//nextInput.select2('val', '');
-									nextInput.val('').trigger('change');
-								}else{
-									nextInput.addClass('disabled').prop('disabled',true).val('');
-								}
-							}
-						});
+						csiSwitchableRadioButton ( this );
 					});
 				}
 			},
@@ -759,6 +766,29 @@ function csiSoftRefreshEventListener(pageResponse){
 			error: aaAjaxError,
 		});
 		return false;
+	});
+}
+function csiSwitchableRadioButton ( radio ) {
+	var radioBtn = $( radio );
+
+	radioBtn.closest('.form-group').find('.csi-switchable-radio-button').each(function(){
+		var nextInput = $(this).parent().next('input, select').first();
+		if ( $(this).is(':checked') ){
+			if ( nextInput.hasClass('select2') ) {
+				nextInput.select2('enable');
+			}else{
+				nextInput.removeClass('disabled').prop('disabled',false);
+			}
+		}else{
+			if ( nextInput.hasClass('select2') ) {
+				nextInput.select2('enable',false);
+				nextInput.addClass('disabled').prop('disabled',true).val('');
+				//nextInput.select2('val', '');
+				nextInput.val('').trigger('change');
+			}else{
+				nextInput.addClass('disabled').prop('disabled',true).val('');
+			}
+		}
 	});
 }
 function csiHardRefreshEventListener(pageResponse){

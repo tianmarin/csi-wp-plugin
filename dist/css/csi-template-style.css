@@ -14106,6 +14106,59 @@ input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after .badge {
     writing-mode: tb-rl;
   }
 }
+.csi-project-panel {
+  padding-top: 50px;
+  position: relative;
+}
+.csi-project-panel .timeline-header {
+  position: absolute;
+  top: 0px;
+  height: 100%;
+  padding: 0;
+}
+.csi-project-panel .timeline-header div {
+  float: left;
+  height: 100%;
+}
+.csi-project-panel .timeline-header .month {
+  float: left;
+  height: 100%;
+  border-left: thin dashed rgba(0, 0, 0, 0.25);
+}
+.csi-project-panel .timeline-header .month:nth-last-child(2),
+.csi-project-panel .timeline-header .month:last-child {
+  border-right: thin dashed rgba(0, 0, 0, 0.25);
+}
+.csi-project-panel .timeline-header .month:nth-child(4n+1),
+.csi-project-panel .timeline-header .month:nth-child(4n+2) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.csi-project-panel .timeline-header .month:nth-child(4n+3),
+.csi-project-panel .timeline-header .month:nth-child(4n+4) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.csi-project-panel .customer .customer-name {
+  margin-top: 10px;
+}
+.csi-project-panel .project .project-options div {
+  display: block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  float: left;
+}
+.csi-project-panel .project .project-timeline > div {
+  float: left;
+}
+.csi-project-panel .project .project-timeline > div .progress {
+  margin-bottom: 5px;
+  border: thin solid #AAA;
+}
+.csi-project-panel .project .project-timeline > div .progress.non_end {
+  border-right: none;
+}
+.csi-project-panel .project .project-timeline > div .progress.non_start {
+  border-left: none;
+}
 .csi-project-request-welcome {
   min-height: 100vh;
   background-color: #263238;

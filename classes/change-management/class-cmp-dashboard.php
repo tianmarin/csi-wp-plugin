@@ -17,6 +17,9 @@ public function csi_cmp_dashboard_build_page(){
 			case 'alert_tasks':
 				$o = $this->csi_cmp_dashboard_alert_tasks ( $post );
 				break;
+			case 'tasks_service_dist':
+				$o.=$this->csi_cmp_dashboard_tasks_service_dist ( $post );
+				break;
 			default:
 				$o = $this->csi_cmp_dashboard_build_page_intro();
 		}
@@ -64,7 +67,8 @@ protected function csi_cmp_dashboard_build_page_intro(){
 					<h3><i class="fa fa-list"></i> Tareas</h3>
 					<p>Detalle</p>
 					<ul>
-						<li><a href="#!dashboard?view=alert_tasks">con alertas</a></li>
+						<li><a href="#!dashboard?view=alert_tasks">Tareas con alertas</a></li>
+						<li><a href="#!dashboard?view=tasks_service_dist">Servicios por Tarea</a></li>
 						<li>demasiado largas</li>
 						<li>pendientes</li>
 						<li>visibles / No visibles para cliente</li>
@@ -162,6 +166,7 @@ protected function csi_cmp_dashboard_alert_tasks ( $posts ){
 			<a href="#!dashboard"><i class="fa fa-angle-left fa-fw"></i> Dashboards</a>
 			<h2>Tareas con atraso o error</h2>
 		</div>
+		<div class="well text-center">Filtro</div>
 		<table class="table table-condensed">
 			<thead>
 				<tr>
@@ -228,6 +233,102 @@ protected function csi_cmp_dashboard_alert_tasks ( $posts ){
 				<tr>
 					<td></td>
 				</tr>
+			</tbody>
+		</table>
+	';
+	$o.='
+	</div>
+	';
+	return $o;
+}
+protected function csi_cmp_dashboard_tasks_service_dist ( $posts ){
+	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_CMP;
+	global $NOVIS_CSI_CMP_TASK;
+	global $NOVIS_CSI_CMP_TASK_STATUS;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_SERVICE;
+	//Local Variables
+	$limit			= 10;
+	$current_datetime 	= new DateTime();
+	if ( isset ( $post['start_date'] ) ){
+		$start_datetime = new DateTime($post['start_date']);
+	}else{
+		$start_datetime		= new DateTime();
+	}
+	if ( isset ( $post['end_date'] ) ){
+		$end_datetime = new DateTime($post['end_date']);
+	}else{
+		$end_datetime		= new DateTime();
+	}
+	$sql = 'SELECT
+				T00.id as service_id,
+				T00.name as service_name,
+				T00.short_name as service_short_name,
+				COUNT(T01.id) as sum,
+				ROUND( COUNT(T01.id) / T02.total * 100 ,2) as avg,
+				T02.total as total
+
+			FROM
+				' . $NOVIS_CSI_SERVICE->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_CMP_TASK->tbl_name . ' as T01
+					ON T01.service_id = T00.id
+				CROSS JOIN (SELECT COUNT(*) as total FROM ' . $NOVIS_CSI_CMP_TASK->tbl_name . ') as T02
+			GROUP BY
+				T00.id
+			ORDER BY
+				total DESC
+
+	';
+	self::write_log ( $sql );
+	$services = $this->get_sql ( $sql );
+	$o='';
+	$o.='
+	<div class="container">
+		<div class="page-header">
+			<a href="#!dashboard"><i class="fa fa-angle-left fa-fw"></i> Dashboards</a>
+			<h2>Distribución de Servicios por Tareas</h2>
+		</div>
+		<div class="well text-center">Gráfico</div>
+		<div class="well text-center">Filtro</div>
+		<table class="table table-condensed">
+			<thead>
+				<tr>
+					<th><small><i class="fa fa-hashtag fa-fw"></i></small></th>
+					<th>Servicio</th>
+					<th>Distribuci&oacute;n</th>
+				</tr>
+			</thead>
+			<tbody>';
+
+	foreach ( $services as $key => $service ){
+		if ( $key == $limit ){
+			$o.='
+				<tr>
+					<td colspan="3" class="info text-center">
+						<button class="btn btn-primary btn-sm" type="button" data-toggle="collapse" data-target=".tasks_service_dist">
+							<i class="fa fa-expand fa-fw"></i> Mostrar m&aacute;s
+						</button>
+					</td>
+				</tr>';
+		}
+
+		$o.='
+				<tr class="' . ( $key >= $limit ? 'tasks_service_dist collapse' : '' ) . '">
+					<td><small>' . intval ( $key + 1 ) . '</small></td>
+					<td>
+						<span class="hidden-xs">' . $service['service_name'] . '</span>
+						<span class="visible-xs-inline" title="' . $service['service_name'] . '" data-toggle="tooltip" data-placement="top">
+							' . $service['service_short_name'] . '
+						</span>
+					</td>
+					<td>' . $service['avg'] . '% <small class="text-muted">(' . $service['sum'] . ')</small></td>
+				</tr>
+		';
+	}
+	$o.='
 			</tbody>
 		</table>
 	';
