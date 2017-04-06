@@ -426,7 +426,7 @@ public function csi_create_project_entrance_form(){
 			<div for="entrance" class="form-group">
 				<label class="col-sm-2">Texto</label>
 				<div class="col-sm-10">
-					<textarea name="entrance" id="entrance" class="form-control input-sm" required="true"></textarea>
+					<textarea name="entrance" id="entrance" class="form-control input-sm" required="true" maxlength="255"></textarea>
 					<p class="help-block">Descripción<br/>Tama&ntilde;o m&aacute;ximo: 255 caracteres</p>
 				</div>
 			</div>
@@ -588,7 +588,7 @@ public function csi_edit_project_entrance_form(){
 			<div for="entrance" class="form-group">
 				<label class="col-sm-2">Texto</label>
 				<div class="col-sm-10">
-					<textarea name="entrance" id="entrance" class="form-control input-sm" required="true">' . $entrance->entrance . '</textarea>
+					<textarea name="entrance" id="entrance" class="form-control input-sm" required="true" maxlength="255">' . $entrance->entrance . '</textarea>
 					<p class="help-block">Descripción<br/>Tama&ntilde;o m&aacute;ximo: 255 caracteres</p>
 				</div>
 			</div>

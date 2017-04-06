@@ -843,7 +843,7 @@ public function csi_add_project(){
 
 //	self::write_log ( $post );
 
-	$insertArray['registered_customer_flag']	= isset ( $post['registered_customer_flag'] )? 1 : NULL ;
+	$insertArray['registered_customer_flag']	= isset ( $post['registered_customer_flag'] ) && 1 != $post['registered_customer_flag'] ? 1 : NULL ;
 	$insertArray['registered_customer_id']		= isset ( $post['registered_customer_id'] ) ? intval ( $post['registered_customer_id'] ) : NULL;
 	$insertArray['non_registered_customer_name']= isset ( $post['non_registered_customer_name'] ) ? strip_tags(stripslashes( $post['non_registered_customer_name'] ) ) : NULL;
 	$insertArray['short_name']					= strip_tags(stripslashes( $post['short_name'] ) );
@@ -1439,12 +1439,12 @@ public function csi_pm_build_page_show_project(){
 			<h4 class="col-sm-3">Descripci&oacute;n del Proyecto</h4>
 			<div class="col-sm-9">
 				<p id="csi-pm-project-description-short" class="text-justify collapse in">
-					' . substr ( $project->description, 0, 400 );
+					' . nl2br ( substr ( $project->description, 0, 400 ) );
 	if ( 200 < strlen ( $project->description) ){
 		$o.='
 					<button class="hidden-print btn btn-success btn-xs" type="button" data-toggle="collapse" data-target="#csi-pm-project-description-short,#csi-pm-project-description-long" aria-expanded="false" aria-controls="collapseExample"><i class="fa fa-expand"></i></button>
 				</p>
-				<p id="csi-pm-project-description-long" class="text-justify collapse" >' . htmlspecialchars ( $project->description ) . '
+				<p id="csi-pm-project-description-long" class="text-justify collapse" >' . nl2br ( $project->description ) . '
 					<button class="hidden-print btn btn-danger btn-xs" type="button" data-toggle="collapse" data-target="#csi-pm-project-description-short,#csi-pm-project-description-long" aria-expanded="false" aria-controls="collapseExample"><i class="fa fa-compress"></i></button>
 				';
 	}
