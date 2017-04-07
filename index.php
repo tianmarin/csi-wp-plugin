@@ -68,6 +68,9 @@ $novis_csi_vars = array(
 	'cmp_task_status'				."_network_class"	=> TRUE,
 	'cmp_task_step'					."_network_class"	=> TRUE,
 	'cmp_task_step_type'			."_network_class"	=> TRUE,
+	##Issue Management Module
+	'issue_event'					."_network_class"	=> TRUE,
+	'issue'							."_network_class"	=> TRUE,
 
 //MENU SLUGS
 	'main'							."_menu_slug"	=> 'csi_'		.'main',
@@ -105,6 +108,9 @@ $novis_csi_vars = array(
 	'cmp_task_status'				."_menu_slug"	=> 'csi_'		.'cmp_task_status',
 	'cmp_task_step'					."_menu_slug"	=> 'csi_'		.'cmp_task_step',
 	'cmp_task_step_type'			."_menu_slug"	=> 'csi_'		.'cmp_task_step_type',
+	##Issue Management Module
+	'issue_event'					."_menu_slug"	=> 'csi_'		.'issue_event',
+	'issue'							."_menu_slug"	=> 'csi_'		.'issue',
 
 //MENU CAPABILITIES
 	'main'							."_menu_cap"		=> 'manage_options',
@@ -142,6 +148,9 @@ $novis_csi_vars = array(
 	'cmp_task_status'				."_menu_cap"		=> 'manage_options',
 	'cmp_task_step'					."_menu_cap"		=> 'manage_options',
 	'cmp_task_step_type'			."_menu_cap"		=> 'manage_options',
+	##Issue Management Module
+	'issue_event'					."_menu_cap"		=> 'manage_options',
+	'issue'							."_menu_cap"		=> 'manage_options',
 );
 
 
@@ -369,6 +378,9 @@ require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-dashboard.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-capacity.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-keynote.php");
+## Issue Management Module
+require_once(CSI_PLUGIN_DIR."/classes/issue-management/class-issue-event.php");
+require_once(CSI_PLUGIN_DIR."/classes/issue-management/class-issue.php");
 
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-urgency.php");

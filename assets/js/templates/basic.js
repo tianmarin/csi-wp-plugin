@@ -34,6 +34,9 @@ var ajaxPages={
 	'addproject'	:	'csi_pm_new_project_request',
 	'listprojects'	:	'csi_pm_build_page_list_projects',
 	'showproject'  	:   'csi_pm_build_page_show_project',
+	'addissue'		:	'csi_issue_new_issue_form',
+	'searchissues'	:	'csi_issue_build_page_search_issue',
+	'showissue'  	:   'csi_issue_build_page_show_issue',
 
 };
 ajaxPages.intro		=	cmpMainContent.data('default-action');
@@ -106,6 +109,16 @@ var aaAjaxError = function(jqXHR, textStatus, errorThrown){
 	//si sale mal
 		//$.alert
 		//guardar log (sm21)
+var parseQueryString = function(url) {
+	var urlParams = {};
+	url.replace(
+		new RegExp("([^?=&]+)(=([^&]*))?", "g"),
+		function($0, $1, $2, $3) {
+			urlParams[$1] = $3;
+		}
+	);
+	return urlParams;
+}
 $(window).bind( 'hashchange', function(event) {
 	event.preventDefault();
 	//eval hash in the url
@@ -117,16 +130,8 @@ $(window).bind( 'hashchange', function(event) {
 		return false;
 	}
 	//eval GET Variables in the URL
-	var getRegEx = /(\w+=\w+)+/g;
-	var GET=[];
-	if ( getRegEx.test(window.location.hash) ){
-		$.each( window.location.hash.match( getRegEx ), function ( key, val ) {
-			var parameter = val.split('=');
-			GET[parameter[0]] = parameter[1];
-		});
-	}else{
-		GET = null;
-	}
+	//https://cmatskas.com/get-url-parameters-using-javascript/
+	var GET = parseQueryString ( window.location.hash) ;
 	//eval softGET Variables in the URL
 	var sGetRegEx = /\/(\w+)/g;
 	var sGET=[];
@@ -544,7 +549,19 @@ function csiSoftRefreshEventListener(pageResponse){
 	});
 	$('.refresh-button').off('click').click( function(event){
 		event.preventDefault();
-		csiTemplateCmpFetchTableContent ( $( $(this).attr('href') ) );
+		if( undefined !== $(this).attr('href') ){
+			csiTemplateCmpFetchTableContent ( $( $(this).attr('href') ) );
+		}
+		if( undefined !== $(this).data('refresh-elements') ){
+			var trigger = $(this);
+			$( $(this).data('refresh-elements') ).each(function(){
+				var dest = $(this);
+				$.each ( trigger.data(), function ( index, val ){
+					dest.data ( index, val );
+				});
+				csiTemplateCmpFetchTableContent ( $( this ) );
+			});
+		}
 	});
 	$('.csi-2ble-click').off('dblclick').dblclick(function(event){
 		var element = $(this);
@@ -676,11 +693,11 @@ function csiSoftRefreshEventListener(pageResponse){
 			processData: false,
 			contentType: false,
 			beforeSend: function () {
-				cell.addClass('ajax-loading');
+				button.closest('.in-table-form-button-wrapper').addClass('ajax-loading');
 			},
 			success: function(response){
 				setTimeout(function(){
-					cell.removeClass('ajax-loading');
+					button.closest('.in-table-form-button-wrapper').removeClass('ajax-loading');
 				}, 300);
 				if ( 0 === response ){
 				}else{

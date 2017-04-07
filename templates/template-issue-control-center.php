@@ -1,6 +1,6 @@
 <?php
 /*
-* Template Name: CSI Issue Control Center
+* Template Name: CSI Project Management CC
 *
 * @author Cristian Marin
 */
@@ -54,11 +54,11 @@
 		?>
 	</title>
 	<?php
-		function csi_template(){
+		function csi_template_cmp_control_center(){
 			wp_register_script(
 				'csiVendorScripts',
 				CSI_PLUGIN_URL.'/dist/js/vendor.min.js',
-				array('jquery'),
+				array('jquery', 'jquery-ui-sortable'),
 				'0.1.0',
 				true
 			);
@@ -79,7 +79,7 @@
 			);
 
 		}
-		add_action( 'wp_enqueue_scripts', 'csi_template', 99);
+		add_action( 'wp_enqueue_scripts', 'csi_template_cmp_control_center', 99);
 		//------------------------------------------
 		wp_register_style(
 			"csiTemplateStyle",
@@ -126,7 +126,7 @@
 
 
 
-<body class="csi-template csi-template-issue-control-center-body">
+<body class="csi-template csi-template-cmp-control-center-body">
 
 
 
@@ -145,135 +145,26 @@
 		<div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#csi-template-cmp-control-center-navbar" aria-expanded="false">
-					<span class="sr-only">Toggle navigation</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand" href="<?php _e(trailingslashit(get_permalink())); ?>" title="Plan de Correcci&oacute;n o Mantenimiento">
-					<i class="fa fa-tasks"></i>
-					PCM
+				<a class="navbar-brand" href="<?php _e(trailingslashit(get_permalink())); ?>" title="Notas Novis">
+					<i class="fa fa-tasks"></i> Notas Novis
 					<i id="csi-template-cmp-control-center-ajax" class="fa fa-spin fa-circle-o-notch text-primary"></i>
 				</a>
 			</div>
-			<div class="collapse navbar-collapse" id="csi-template-cmp-control-center-navbar">
-				<ul class="nav navbar-nav navbar-right">
-					<li>
-						<a href="#" title="Planes creados por mi">
-							<i class="fa fa-user-o fa-fw fa-lg"></i>
-							<span class="visible-xs-inline">Planes creados por mi</span>
-						</a>
-					</li>
-					<li>
-						<a href="#" title="Planes en los que participo">
-							<i class="fa fa-user-plus fa-fw fa-lg"></i>
-							<span class="visible-xs-inline">Planes en los que participo</span>
-						</a>
-					</li>
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle animated  infinite" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-							<i class="fa fa-bell fa-lg "></i>
-							<span class="badge progress-bar-warning">4</span>
-						</a>
-						<ul class="dropdown-menu">
-							<li>
-								<span class="dropdown-header">
-									<i class="fa fa-exclamation-triangle text-warning"></i> Tienes <strong>4</strong> tareas retrasadas
-								</span>
-							</li>
-							<li role="separator" class="divider"></li>
-							<li>
-								<a href="#">
-									EPH - Actualización de Kernel Patch Level - ERD<br/>
-									<small>Tarea progrmada para el 24/02/2017</small>
-								</a>
-							</li>
-							<li>
-								<a href="#">
-									EPH - Actualización de Kernel Patch Level - ERD<br/>
-									<small>Tarea progrmada para el 24/02/2017</small>
-								</a>
-							</li>
-							<li>
-								<a href="#">
-									EPH - Actualización de Kernel Patch Level - ERD<br/>
-									<small>Tarea progrmada para el 24/02/2017</small>
-								</a>
-							</li>
-							<li>
-								<a href="#">
-									EPH - Actualización de Kernel Patch Level - ERD<br/>
-									<small>Tarea progrmada para el 24/02/2017</small>
-								</a>
-							</li>
-						</ul>
-					</li>
-				</ul>
-			</div><!-- /.navbar-collapse -->
 		</div><!-- /.container-fluid -->
 	</nav>
 
 
 
-
 	<article id="csi-template-issue-control-center-main" style="min-height:100vh;" class="csi-template-main-content" data-default-action="csi_issue_build_page_intro">
-		<div class="container">
-			<p class="h2">Errores en Interfaces de PI</p>
-			<p class="h4">Resumen</p>
-			<p class="text-justify">Esto es una prueba de texto para ver como se ve cuando uno escribe mucho. Tambien podría servir para ver cuantos caracteres deben ser incluidos como el maximo numero de caracteres. Este texto tiene 228 caracteres.</p>
-			<p class="h4">Sintomas</p>
-			<p class="h4">Causa / Pre-requisitos</p>
-			<p class="h4">Solución</p>
-			<p class="h4">Documentos relacionados</p>
-			<div class="row">
-				<div class="col-sm-6 list-group">
-					<a href="#" class="list-group-item list-group-item-info">
-						<p class="list-group-item-heading">
-							<i class="fa fa-file-text-o"></i> Documento de algo
-						</p>
-						<p class="list-group-item-body">Bla blablablab blabfdbfd  er bone vpoer  o  re</p>
-					</a>
-				</div>
-			</div>
-			<p class="h4">Tabla de ocurrencias del issue</p>
-			<table class="table">
-				<thead>
-					<tr>
-						<td><a href="#" class="btn btn-xs btn-success"><i class="fa fa-plus"></i></a></td>
-						<th>Cliente</th>
-						<th>Sistema</th>
-						<th>Fecha</th>
-						<th>Ticket</th>
-						<th>Autor</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td><a href="#" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></a></td>
-						<td>Extra</td>
-						<td>RR0</td>
-						<td>23/06/2015</td>
-						<td>500173465</td>
-						<td class="small">
-							<a href="#"><i class="fa fa-id-card-o"></i> cmarin</a>
-						</td>
-					</tr>
-					<tr>
-						<td><a href="#" class="btn btn-xs btn-danger"><i class="fa fa-minus"></i></a></td>
-						<td>El Palacio de Hierro</td>
-						<td>ERP</td>
-						<td>23/06/2016</td>
-						<td>53094767693</td>
-						<td class="small">
-							<a href="#"><i class="fa fa-id-card-o"></i> cmarin</a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
 	</article>
 
+
+	<div style="position:fixed; top:70px;" class="animated bounce">
+		<div class="alert alert-info alert-dismissible visible-xs hidden-print" role="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<strong>Atenci&oacute;n!</strong> Ciertas funcionalidades no pueden ser visibles en un dispositivo m&oacute;vil o una pantalla demasiada peque&ntilde;a. En caso que esto ocurra por favor <a href="#" class="alert-link">notif&iacute;canos</a> y pruba la versión de escritorio.
+		</div>
+	</div>
 
 
 
