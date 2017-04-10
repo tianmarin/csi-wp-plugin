@@ -37,6 +37,7 @@ var ajaxPages={
 	'addissue'		:	'csi_issue_new_issue_form',
 	'searchissues'	:	'csi_issue_build_page_search_issue',
 	'showissue'  	:   'csi_issue_build_page_show_issue',
+	'editissue'		:	'csi_issue_edit_issue_form',
 
 };
 ajaxPages.intro		=	cmpMainContent.data('default-action');
@@ -112,13 +113,13 @@ var aaAjaxError = function(jqXHR, textStatus, errorThrown){
 var parseQueryString = function(url) {
 	var urlParams = {};
 	url.replace(
-		new RegExp("([^?=&]+)(=([^&]*))?", "g"),
+		new RegExp('([^?=&]+)(=([^&]*))?', 'g'),
 		function($0, $1, $2, $3) {
 			urlParams[$1] = $3;
 		}
 	);
 	return urlParams;
-}
+};
 $(window).bind( 'hashchange', function(event) {
 	event.preventDefault();
 	//eval hash in the url
@@ -515,6 +516,38 @@ function csiSoftRefreshEventListener(pageResponse){
 		event.preventDefault();
 		window.history.back();
 	});
+	$('.nav-tabs a').on('shown.bs.tab', function(event) {
+		if ( 'mdPreview' === $(this).data('function') ){
+			var target = $( $(this).attr('href') );
+			var dataInput = $( $(this).data('text-field') );
+			var data = new FormData();
+			$.each($(this).data(),function(index,val){
+				data.append(index,val);
+			});
+			data.append ( 'dataInput', dataInput.val() );
+			$.ajax({
+				url: csiTemplateScript.ajaxUrl,
+				type: 'POST',
+				data: data,
+				cache: false,
+				dataType: 'json',
+				processData: false,
+				contentType: false,
+				beforeSend: function () {
+					target.addClass('ajax-loading');
+				},
+				success: function(response){
+					setTimeout(function(){
+						target.removeClass('ajax-loading');
+
+					}, 300);
+					target.html(response.message);
+				},
+				error: aaAjaxError,
+			});
+		}
+		console.log( $(this).data('function') );
+	});
 	$('.csi-form-additional-fields').off('hidden.bs.collapse').on('hidden.bs.collapse', function () {
 		$(this).find('input, select').each(function(){
 			if ( $(this).hasClass('select2') ) {
@@ -756,7 +789,12 @@ function csiSoftRefreshEventListener(pageResponse){
 							case 'changeHash':
 								if ( undefined === response.notifStopNextPage ){
 									//http://stackoverflow.com/a/34567019/5129222
-									response.notification.onClose = changeHash.bind(null,form.data('next-page') );
+									if ( undefined !== response.newId){
+										response.notification.onClose = changeHash.bind(null,response.newId );
+									}else{
+										response.notification.onClose = changeHash.bind(null,form.data('next-page') );
+									}
+
 								}
 								break;
 							case 'refreshParent':
@@ -844,7 +882,7 @@ function csiCmpKeynoteOption( trigger ){
 function csiSelect2Format(option) {
     var opt = option.element;
 	var response=$('<span class="csi-cmp-online-form-select"></span>');
-	if ( undefined === $(opt).data('icon') ){
+	if ( undefined === $(opt).data('icon') ) {
 		return option.text;
 	}
 	if ( undefined !== $(opt).data('icon') ) {

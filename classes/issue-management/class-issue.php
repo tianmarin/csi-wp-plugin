@@ -533,15 +533,191 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_issue_build_page_intro', 			array( $this , 'csi_issue_build_page_intro'			));
 	add_action( 'wp_ajax_csi_issue_new_issue_form',	 			array( $this , 'csi_issue_new_issue_form'			));
 	add_action( 'wp_ajax_csi_add_issue', 						array( $this , 'csi_add_issue'						));
+	add_action( 'wp_ajax_csi_issue_edit_issue_form',			array( $this , 'csi_issue_edit_issue_form'			));
+	add_action( 'wp_ajax_csi_edit_issue', 						array( $this , 'csi_edit_issue'						));
 	add_action( 'wp_ajax_csi_issue_build_page_search_issue', 	array( $this , 'csi_issue_build_page_search_issue'	));
 	add_action( 'wp_ajax_csi_issue_filtered_issues',	 		array( $this , 'csi_issue_filtered_issues'			));
 	add_action( 'wp_ajax_csi_issue_filtered_issues_pagination', array( $this , 'csi_issue_filtered_issues_pagination'));
 	add_action( 'wp_ajax_csi_issue_build_page_show_issue', 		array( $this , 'csi_issue_build_page_show_issue'	));
+	add_action( 'wp_ajax_csi_issue_new_issue_form_md_preview', 	array( $this , 'csi_issue_new_issue_form_md_preview'));
+	add_action( 'wp_ajax_csi_issue_popup_markdown_info',	 	array( $this , 'csi_issue_popup_markdown_info'		));
 
 
 //	add_action( 'wp_ajax_nopriv_csi_new_issue_request', 		array( $this , 'new_issue_request'		));
 }
+public function csi_issue_popup_markdown_info(){
+	//Global Variables
+	global $NOVIS_CSI_CUSTOMER;
+	//Local Variables
+	$response			= array();
+	$o = '';
 
+	$sql = 'SELECT * FROM ' . $this->tbl_name . ' ';
+	$task_types = $this->get_sql($sql);
+	$o.='
+	<p><a target="_blank" href="http://daringfireball.net/projects/markdown/">Markdown <i class="fa fa-external-link"></i></a> es un m&eacute;todo (sencillo y seguro) de poner estilos en la web.</p>
+
+	<table class="table table-condensed">
+		<thead>
+			<tr>
+				<th>Estilo</th>
+				<th>Sintaxis</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><strong>negrita</strong></td>
+				<td>
+					<code>**texto**</code><br/>
+					<code>__texto__</code>
+				</td>
+			</tr>
+			<tr>
+				<td><i>it&aacute;lica</i></td>
+				<td>
+					<code>*texto*</code><br/>
+					<code>_texto_</code>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Lista desordenada
+					<ul>
+						<li>Item 1</li>
+						<li>Item 2
+							<ul>
+								<li>Item 2a</li>
+								<li>Item 2b</li>
+							</ul>
+						</li>
+					</ul>
+				</td>
+				<td>
+<pre>* Item 1
+* Item 2
+  * Item 2a
+  * Item 2b</pre>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Lista ordenada
+					<ol>
+						<li>Item 1</li>
+						<li>Item 2
+							<ol>
+								<li>Item 2a</li>
+								<li>Item 2b</li>
+							</ol>
+						</li>
+					</ol>
+				</td>
+				<td>
+<pre>1. Item 1
+1. Item 2
+   1. Item 2a
+   1. Item 2b</pre>
+				</td>
+			</tr>
+			<tr>
+				<td>Enlace: <a href="http://www.google.com" target="_blank">Google</a></td>
+				<td>[Google](http://www.google.com)</td>
+			</tr>
+			<tr>
+				<td>
+					<table class="table">
+						<thead>
+							<tr><th>Header 1</th><th>Header 2</th></tr>
+						</thead>
+						<tbody>
+							<tr><td>Cell 1</td><td>Cell 2</td></tr>
+							<tr><td>Cell 3</td><td>Cell 4</td></tr>
+						</tbody>
+					</table>
+				<td>
+<pre>Header 1 | Header 2
+------------ | -------------
+Cell 1 | Cell 2
+Cell 3 | Cell 4</pre>
+				</td>
+			</tr>
+		</tbody>
+	</table>';
+	$response['notification']=array(
+		'buttons'			=> array(
+			'OK'			=> array(
+				'text'		=> '<small> Gracias por la informaci&oacute;n</small> <i class="fa fa-thumbs-up"></i>',
+				'btnClass'	=> 'btn-info',
+			),
+		),
+		'backgroundDismiss' =>true,
+		'icon'				=> 'fa fa-info text-info',
+		'columnClass'		=> 'large',
+		'content'			=> $o,
+		'title'				=> 'Markdown',
+		'type'				=> 'blue',
+	);
+
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_issue_new_issue_form_md_preview(){
+	//Global Variables
+	//Loval Variables
+	$pd = new Parsedown();
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	//Execution
+	$response['message']='
+		<div class="panel panel-default">
+			<div class="panel-body" style="min-height:100px;">
+				<samp>
+					' . $pd->text( $post['dataInput'] ) . '
+				</samp>
+			</div>
+		</div>
+		';
+	$response['message'] = str_replace ( '<table>', '<table class="table">', $response['message']);
+	echo json_encode($response);
+	wp_die();
+}
+protected function csi_issue_new_issue_form_textarea ( $var = array() ){
+	$ta='
+	<div class="form-group ">
+		<label for="' . $var['id'] . '" class="col-sm-2 control-label">' . $var['title'] . '</label>
+		<div class="col-sm-10">
+			<!-- Nav tabs -->
+			<ul class="nav nav-tabs">
+				<li role="presentation" class="active">
+					<a href="#csi-issue-input-' . $var['id'] . '" data-toggle="tab" data-function="editor">
+						Escribir
+					</a>
+				</li>
+				<li role="presentation">
+					<a href="#csi-issue-preview-' . $var['id'] . '" data-toggle="tab" data-function="mdPreview" data-text-field="#' . $var['id'] . '" data-action="csi_issue_new_issue_form_md_preview">
+						Previsualizar
+					</a>
+				</li>
+			</ul><!-- .nav-tabs -->
+			<div class="tab-content">
+				<div role="tabpanel" class="tab-pane active" id="csi-issue-input-' . $var['id'] . '">
+					<div class="list-group" style="margin-bottom:0px;">
+						<a href="#" class="list-group-item list-group-item-success small csi-popup" data-action="csi_issue_popup_markdown_info">
+							Modo de edici&oacute;n: Markdown habilitado <i class="fa fa-question-circle"></i>
+						</a>
+					</div>
+					<textarea class="form-control" id="' . $var['id'] . '" name="' . $var['id'] . '" placeholder="' . $var['placeholder'] . '" required="true" maxlength="' . $var['maxlength'] . '" rows="' . $var['rows'] . '">' . $var['value'] . '</textarea>
+					<p class="help-block">
+						<small class="text-warning pull-right">(requerido)</small>
+						' . $var['help'] . '<br>Tamaño máximo: ' . $var['maxlength'] . ' caracteres
+					</p>
+				</div>
+				<div role="tabpanel" class="tab-pane" id="csi-issue-preview-' . $var['id'] . '" style="position:relative;min-height:100px;" ></div>
+			</div><!-- .tab-content -->
+		</div><!-- .col-sm-10 -->
+	</div><!-- .form-group -->
+	';
+	return $ta;
+}
 public function csi_issue_new_issue_form(){
 	//Global Variables
 	global $NOVIS_CSI_COUNTRY;
@@ -579,66 +755,58 @@ public function csi_issue_new_issue_form(){
 								<small class="text-warning pull-right">(requerido)</small>
 						</div>
 					</div>
-					<div class="form-group ">
-						<label for="title" class="col-sm-2 control-label">Titulo</label>
-						<div class="col-sm-10">
-							<input type="text" class="form-control" id="title" name="title" placeholder="Titulo" required="true" maxlength="255"/>
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 255 caracteres
-							</p>
-						</div>
-					</div>
-					<div class="form-group ">
-						<label for="summary" class="col-sm-2 control-label">Resumen</label>
-						<div class="col-sm-10">
-							<textarea class="form-control" id="summary" name="summary" placeholder="Resumen" required="true" maxlength="800"></textarea>
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 800 caracteres
-							</p>
-						</div>
-					</div>
-					<div class="form-group ">
-						<label for="symptom" class="col-sm-2 control-label">Sintoma</label>
-						<div class="col-sm-10">
-							<textarea class="form-control" id="symptom" name="symptom" placeholder="Sintoma" required="true" maxlength="800" rows="6"></textarea>
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 800 caracteres
-							</p>
-						</div>
-					</div>
-					<div class="form-group ">
-						<label for="terms" class="col-sm-2 control-label">Otros términos</label>
-						<div class="col-sm-10">
-							<textarea class="form-control" id="terms" name="terms" placeholder="Otros términos" required="true" maxlength="800"></textarea>
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 800 caracteres
-							</p>
-						</div>
-					</div>
-					<div class="form-group ">
-						<label for="reason" class="col-sm-2 control-label">Causa y Pre-Requisitos</label>
-						<div class="col-sm-10">
-							<textarea class="form-control" id="reason" name="reason" placeholder="Causa y Pre-Requisitos" required="true" maxlength="800" rows="6"></textarea>
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 800 caracteres
-							</p>
-						</div>
-					</div>
-					<div class="form-group ">
-						<label for="solution" class="col-sm-2 control-label">Solución</label>
-						<div class="col-sm-10">
-							<textarea class="form-control" id="solution" name="solution" placeholder="Solución" required="true" maxlength="800" rows="6"></textarea>
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 800 caracteres
-							</p>
-						</div>
-					</div>
+	';
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'summary',
+		'title'			=> 'Resumen',
+		'placeholder'	=> 'Resumen',
+		'maxlength'		=> 1000,
+		'rows'			=> 6,
+		'required'		=> true,
+		'help'			=> 'Resumen del Issue',
+		'value'			=> null,
+	)) ;
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'symptom',
+		'title'			=> 'S&iacute;ntomas',
+		'placeholder'	=> 'S&iacute;ntomas',
+		'maxlength'		=> 1000,
+		'rows'			=> 6,
+		'required'		=> true,
+		'help'			=> 'hola',
+		'value'			=> null,
+	)) ;
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'terms',
+		'title'			=> 'Otros t&eacute;rminos',
+		'placeholder'	=> 'Otros t&eacute;rminos',
+		'maxlength'		=> 500,
+		'rows'			=> 4,
+		'required'		=> true,
+		'help'			=> 'hola',
+		'value'			=> null,
+	)) ;
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'reason',
+		'title'			=> 'Causa y Pre-Requisitos',
+		'placeholder'	=> 'Soluci&oacute;n',
+		'maxlength'		=> 1000,
+		'rows'			=> 6,
+		'required'		=> true,
+		'help'			=> 'hola',
+		'value'			=> null,
+	)) ;
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'solution',
+		'title'			=> 'Soluci&oacute;n',
+		'placeholder'	=> 'Soluci&oacute;n',
+		'maxlength'		=> 1000,
+		'rows'			=> 6,
+		'required'		=> true,
+		'help'			=> 'hola',
+		'value'			=> null,
+	)) ;
+	$o.='
 					<div class="form-group">
 						<div class="col-sm-offset-1 col-sm-10">
 							<p class=" text-justify">
@@ -695,7 +863,7 @@ public function csi_add_issue(){
 		$issue_id = $wpdb->insert_id;
 		//crear registro de Ejecutores
 		$response['postSubmitAction']	='changeHash';
-		$response['new_id']				= '#!showissue?issue_id=' . $issue_id;
+		$response['newId']				= '#!showissue?i=' . $issue_id;
 		$response['notification']=array(
 			'buttons'			=> array(
 				'OK'			=> array(
@@ -706,7 +874,7 @@ public function csi_add_issue(){
 			'icon'				=> 'fa fa-check fa-sm',
 			'closeIcon'			=> true,
 			'columnClass'		=> 'large',
-			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>NOV' . $issue_id . '</code>)',
+			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>NOV' . $this->nov_id ( $issue_id ) . '</code>)',
 			'title'				=> 'Bien!',
 			'type'				=> 'green',
 			'autoClose'			=> 'OK|3000',
@@ -845,6 +1013,7 @@ public function csi_issue_build_page_search_issue(){
 			<form class="form-horizontal" id="csi-issue-filtered-issues-form" data-target="#csi-issue-filtered-issues,#csi-issue-filtered-issues-pagination">
 				<div class="form-group col-sm-10">
 						<input type="text" class="form-control input-lg" id="issue_text" name="issue_text" placeholder=""  required="true"/>
+						<input type="checkbox" class="hidden" value="1" id="date_sort" name="date_sort"/>
 				</div>
 				<div class="form-group col-sm-2">
 					<button type="submit" class="refresh-button btn btn-primary btn-lg btn-block" data-refresh-elements="#csi-issue-filtered-issues,#csi-issue-filtered-issues-pagination">
@@ -875,6 +1044,7 @@ public function csi_issue_filtered_issues(){
 	//Local Variables
 	$o				= '';
 	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	self::write_log ( $post );
 	if ( isset ( $post['issue_text'] ) AND 0 != strlen ($post['issue_text'] ) ) {
 		//--------------------------------------------------------------------------
 		$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
@@ -883,29 +1053,39 @@ public function csi_issue_filtered_issues(){
 		$results = self::csi_issue_filtered_issues_sql($post);
 		//$results = $this->get_sql ( $sql );
 		$o.='
-		<table class="table">
+		<table class="table table-condensed">
 			<thead>
 				<tr>
-					<th>id</th>
-					<th>Titulo</th>
-					<th>Creación</th>
-					<th>Modificación</th>
+					<th>Resultados</th>
 				</tr>
 			</thead>
 			<tbody>';
 		foreach ( $results['rows'] as $result ){
 			$creation_date = new DateTime ( $result['creation_date'] );
 			$modification_date = new DateTime ( $result['last_modified_date'] );
+			$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
+			$terms = preg_split ( $regex, urldecode ( $post['issue_text'] ) ) ;
+			foreach ( $terms as $term ){
+				//self::write_log (  urldecode ( $post['issue_text'] ));
+				$conditions = array();
+				$pattern = preg_quote($term);
+				$result['summary']  = preg_replace("/($pattern)/i", '<mark>$1</mark>', $result['summary']);
+			}
 			$o.='
 				<tr>
 					<td>
-						<a href="#!showissue?i=NOV' . $this->nov_id ( $result['id'] ) . '&issue_text=' . urlencode ( $post['issue_text'] ). '" target="_blank">
-							NOV' . $this->nov_id ( $result['id'] ) . ' <i class="fa fa-fw fa-external-link"></i>
-						</a>
+						<div>
+							<a href="#!showissue?i=' . $this->nov_id ( $result['id'] ) . '&issue_text=' . urlencode ( $post['issue_text'] ). '" target="_blank">
+								' . $this->nov_id ( $result['id'] ) . ' - ' . $result['title'] . ' <i class="fa fa-fw fa-external-link"></i>
+							</a>
+						</div>
+						<div>
+							<!-- <small>' . $result['summary'] . '</small> -->
+						</div>
+						<div>
+							<strong>Creaci&oacute;n</strong> : <span>' . $creation_date->format('d-m-Y') . '</span>
+						</div>
 					</td>
-					<td>' . $result['title'] . '</td>
-					<td>' . $creation_date->format('d-m-Y') . '</td>
-					<td>' . $modification_date->format('d-m-Y') . '</td>
 				</tr>
 			';
 		}
@@ -969,9 +1149,10 @@ protected function csi_issue_filtered_issues_sql ( $post, $calculate_rows = TRUE
 		$page_no = 1;
 	}
 	if ( $calculate_rows ){
-		$rows = 'SELECT DISTINCT T00.id, T00.title, T00.creation_date, T00.last_modified_date ';
+		$rows = 'SELECT DISTINCT T00.id, T00.title, T00.creation_date, T00.last_modified_date, T00.summary ';
 		$limit = ' LIMIT ' . ( $page_no - 1 ) * $page_size . ',' . $page_size ;
-		$results['rows']		= $this->get_sql (  $rows . $sql . $limit );
+		$order = ' ORDER BY T00.creation_date DESC ';
+		$results['rows']		= $this->get_sql (  $rows . $sql . $order . $limit );
 	}
 	$results['pages']		= ceil ( $results['total_rows'] / $page_size );
 	$results['page_no']		= $page_no;
@@ -1048,16 +1229,20 @@ public function csi_issue_build_page_show_issue(){
 	';
 	$issue = $wpdb->get_row ( $sql );
 	//--------------------------------------------------------------------------
-	if ( isset ( $post['issue_text'] ) AND 0 != strlen ($post['issue_text'] ) ) {
-		$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
-		$terms = preg_split ( $regex, urldecode ( $post['issue_text'] ) ) ;
-		//self::write_log (  urldecode ( $post['issue_text'] ));
-		$conditions = array();
-		foreach ( $terms as $term ){
-			foreach ( $issue as $key => $value ){
-				if ( $key == 'id' ){
-					$value = $this->nov_id ( $value);
-				}
+	$pd = new Parsedown();
+	//--------------------------------------------------------------------------
+	foreach ( $issue as $key => $value ){
+		if ( $key == 'id' ){
+			$issue->$key = $this->nov_id ( $value );
+		}
+		$issue->$key = $pd->text( $issue->$key );
+		$issue->$key = str_replace ( '<table>', '<table class="table">', $issue->$key);
+		if ( isset ( $post['issue_text'] ) AND 0 != strlen ($post['issue_text'] ) ) {
+			$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
+			$terms = preg_split ( $regex, urldecode ( $post['issue_text'] ) ) ;
+			foreach ( $terms as $term ){
+				//self::write_log (  urldecode ( $post['issue_text'] ));
+				$conditions = array();
 				$pattern = preg_quote($term);
 				$issue->$key  = preg_replace("/($pattern)/i", '<mark>$1</mark>', $value);
 			}
@@ -1069,35 +1254,48 @@ public function csi_issue_build_page_show_issue(){
 
 		<div class="page-header row">
 			<a href="#!searchissues" class="hidden-print"><i class="fa fa-angle-left fa-fw"></i> Buscador de Notas Novis</a>
-			<h3 class="clearfix">
-				<span class="col-sm-10">NOV' . $issue->id . ' - ' . $issue->title . '</span>
+			<h3 class="">
+				<samp class="col-sm-10">
+					<span class="text-muted small">' . $issue->id . '</span>
+					' . $issue->title . '
+				</samp>
 				<p class="col-sm-2 text-right hidden-print">
-					<a href="#!editissue?plan_id=' . $issue_id . '" class="btn btn-default">
+					<a href="#!editissue?issue_id=' . $issue_id . '" class="btn btn-default">
 						<i class="fa fa-pencil"></i> Editar
 					</a>
 				</p>
 			</h3>
 		</div><!-- .page-header -->
-		<div class="row">
+		<div class="row csi-issue-display-note">
 			<div class="csi-issue-summary">
-				<h3 class=""><samp>Resumen</samp></h3>
-				<p class="text-justify"><samp>' . $issue->summary . '</samp></p>
+				<div class="page-header">
+					<h3 class=""><strong><samp>Resumen</samp></strong></h3>
+				</div>
+				<div class="text-justify"><samp>' . $issue->summary . '</samp></div>
 			</div><!-- .csi-issue-summary -->
 			<div class=" csi-issue-symptom">
-				<h3 class=""><samp>Sintoma</samp></h3>
-				<p class="text-justify"><samp>' . $issue->symptom . '</samp></p>
+				<div class="page-header">
+					<h3 class=""><strong><samp>Sintoma</samp></strong></h3>
+				</div>
+				<div class="text-justify"><samp>' . $issue->symptom . '</samp></div>
 			</div><!-- .csi-issue-symptom -->
 			<div class=" csi-issue-terms">
-				<h3 class=""><samp>Otros Términos</samp></h3>
-				<p class="text-justify"><samp>' . $issue->terms . '</samp></p>
+				<div class="page-header">
+					<h3 class=""><strong><samp>Otros Términos</samp></strong></h3>
+				</div>
+				<div class="text-justify"><samp>' . $issue->terms . '</samp></div>
 			</div><!-- .csi-issue-terms -->
 			<div class=" csi-issue-reason">
-				<h3 class=""><samp>Causa y Pre-Requisitos</samp></h3>
-				<p class="text-justify"><samp>' . $issue->reason . '</samp></p>
+				<div class="page-header">
+					<h3 class=""><strong><samp>Causa y Pre-Requisitos</samp></strong></h3>
+				</div>
+				<div class="text-justify"><samp>' .  $issue->reason . '</samp></div>
 			</div><!-- .csi-issue-reason -->
 			<div class=" csi-issue-solution">
-				<h3 class=""><samp>Solución</samp></h3>
-				<p class="text-justify"><samp>' . $issue->solution . '</samp></p>
+				<div class="page-header">
+					<h3 class=""><strong><samp>Solución</samp></strong></h3>
+				</div>
+				<dov class="text-justify"><samp>' . $issue->solution . '</samp></div>
 			</div><!-- .csi-issue-solution -->
 			<div class=" csi-issue-event">
 				<h3 class=""><samp>Eventos</samp></h3>
@@ -1283,8 +1481,212 @@ protected function csi_pm_build_gantt ( $sql, $post, $start_date, $end_date ) {
 	</div><!-- .csi-issue-panel -->';
 	return $o;
 }
+public function csi_issue_edit_issue_form(){
+	//Global Variables
+	global $NOVIS_CSI_COUNTRY;
+	global $NOVIS_CSI_USER_TEAM;
+	global $wpdb;
+	//Local Variables
+	$o				= '';
+	$user_teams_opts	= '';
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	//--------------------------------------------------------------------------
+	$issue_id = $post['issue_id'];
+	$sql = 'SELECT * FROM ' . $this->tbl_name . ' WHERE id = "' . $issue_id . '"';
+	$issue = $wpdb->get_row ( $sql );
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' ORDER BY short_name';
+	foreach ( $this->get_sql ( $sql ) as $country ){
+		$user_teams_opts.='<optgroup label="' . $country['short_name'] . '">';
+		$sql = 'SELECT id, short_name, code FROM ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' WHERE country_id="' . $country['id'] . '" ORDER BY short_name';
+		foreach ( $this->get_sql ( $sql ) as $user_team ){
+			$selected = ($user_team['id'] == $issue->owner_team ) ? 'selected' : '';
+			$user_teams_opts.='<option value="' . $user_team['id'] . '" ' . $selected . '>' . $user_team['short_name'] . ' (' . strtoupper ( $user_team['code'] ) . ')</option>';
+		}
+		$user_teams_opts.='</optgroup>';
+	}
+	//--------------------------------------------------------------------------
+	$o.='
+	<div class="container">
+		<div class="panel panel-default row">
+			<div class="panel-heading">
+				<h1 class="panel-title">Crear Nota de Conocimiento NOVIS</h1>
+			</div>
+			<div class="panel-body">
+				<form class="form-horizontal" data-function="csi_add_issue" data-next-page="showissue" style="position:relative;">
+					<input type="hidden" name="issue_id" id="issue_id" value="' . $issue_id . '"/>
+					<div class="form-group">
+						<label for="owner_team" class="col-sm-2 control-label">Equipo Responsable</label>
+						<div class="col-sm-10">
+							<select name="owner_team" id="owner_team" class="form-control select2 " required="true" data-placeholder="Selecciona el equipo responsable" tabindex="-1" aria-hidden="true">
+								<option></option>
+								' . $user_teams_opts . '
+							</select>
+							<p class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+						</div>
+					</div>
+	';
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'summary',
+		'title'			=> 'Resumen',
+		'placeholder'	=> 'Resumen',
+		'maxlength'		=> 1000,
+		'rows'			=> 6,
+		'required'		=> true,
+		'help'			=> 'Resumen del Issue',
+		'value'			=> $issue->summary,
+	)) ;
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'symptom',
+		'title'			=> 'S&iacute;ntomas',
+		'placeholder'	=> 'S&iacute;ntomas',
+		'maxlength'		=> 1000,
+		'rows'			=> 6,
+		'required'		=> true,
+		'help'			=> 'hola',
+		'value'			=> $issue->symptom,
+	)) ;
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'terms',
+		'title'			=> 'Otros t&eacute;rminos',
+		'placeholder'	=> 'Otros t&eacute;rminos',
+		'maxlength'		=> 500,
+		'rows'			=> 4,
+		'required'		=> true,
+		'help'			=> 'hola',
+		'value'			=> $issue->terms,
+	)) ;
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'reason',
+		'title'			=> 'Causa y Pre-Requisitos',
+		'placeholder'	=> 'Soluci&oacute;n',
+		'maxlength'		=> 1000,
+		'rows'			=> 6,
+		'required'		=> true,
+		'help'			=> 'hola',
+		'value'			=> $issue->reason,
+	)) ;
+	$o.=self::csi_issue_new_issue_form_textarea ( array(
+		'id'			=> 'solution',
+		'title'			=> 'Soluci&oacute;n',
+		'placeholder'	=> 'Soluci&oacute;n',
+		'maxlength'		=> 1000,
+		'rows'			=> 6,
+		'required'		=> true,
+		'help'			=> 'hola',
+		'value'			=> $issue->solution,
+	)) ;
+	$o.='
+					<div class="form-group">
+						<div class="col-sm-offset-1 col-sm-10">
+							<p class=" text-justify">
+								Las Notas NOVIS tiene mucha actitud.
+							</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10 text-right">
+							<button type="reset" class="btn btn-danger">Cancelar</button>
+							<button type="submit" class="btn btn-primary">Entiendo, Editar Nota Novis</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div><!-- .container -->';
+
+	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_issue_edit_issue(){
+	//Globa Variables
+	global $wpdb;
+	//Local Variables
+	$editArray			= array();
+	$whereArray			= array();
+	$response			= array();
+	$post	= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$current_user		= get_userdata ( get_current_user_id() );
+	$current_datetime	= new DateTime();
+
+	$whereArray['id']						= intval ( $post['issue_id'] );
+
+	//$insertArray['status_id']					= intval ( $status_id );
+	$insertArray['owner_team']					= intval ( $post['owner_team'] );
+	$insertArray['title']						= strip_tags(stripslashes( $post['title'] ) );
+	$insertArray['summary']						= strip_tags(stripslashes( $post['summary'] ) );
+	$insertArray['symptom']						= strip_tags(stripslashes( $post['symptom'] ) );
+	$insertArray['terms']						= strip_tags(stripslashes( $post['terms'] ) );
+	$insertArray['reason']						= strip_tags(stripslashes( $post['reason'] ) );
+	$insertArray['solution']					= strip_tags(stripslashes( $post['solution'] ) );
+
+	$editArray['last_modified_user_id']		= $current_user->ID;
+	$editArray['last_modified_user_email']	= $current_user->user_email;
+	$editArray['last_modified_date']		= $current_datetime->format('Y-m-d');
+	$editArray['last_modified_time']		= $current_datetime->format('H:i:s');
+	//self::write_log ( $post );
+	//self::write_log ( $editArray );
+	$result = $wpdb->update ( $this->tbl_name, $editArray, $whereArray );
+	if( $result === false ){
+		$response['error']=true;
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-danger',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-circle fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Hubo un error al editar el ' . $this->name_single . '; intenta nuevamente. :)',
+			'title'				=> 'Bien!',
+			'type'				=> 'red',
+			'autoClose'			=> 'OK|3000',
+		);
+	}elseif ( $result == 0){
+		$response['error']=true;
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-warning',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-triangle fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> 'Los valores son iguales. ' . $this->name_single . ' no modificado',
+			'title'				=> 'Bien!',
+			'type'				=> 'orange',
+			'autoClose'			=> 'OK|3000',
+		);
+	}else{
+		$response['postSubmitAction']	='changeHash';
+		$response['newId']				= '#!showissue?i=' . $post['issue_id'];
+		$response['notification']=array(
+			'buttons'			=> array(
+				'OK'			=> array(
+					'text'		=> 'OK',
+					'btnClass'	=> 'btn-success',
+				),
+			),
+			'icon'				=> 'fa fa-exclamation-triangle fa-sm',
+			'closeIcon'			=> true,
+			'columnClass'		=> 'large',
+			'content'			=> $this->name_single . ' editado exitosamente.',
+			'title'				=> 'Bien!',
+			'type'				=> 'green',
+			'autoClose'			=> 'OK|3000',
+		);
+	}
+	echo json_encode($response);
+	wp_die();
+}// csi_edit_project_entrance
 protected function nov_id ( $value ) {
-	return (string) str_pad ( $value, 5, '0', STR_PAD_LEFT);
+	return 'NOV' . (string) str_pad ( $value, 5, '0', STR_PAD_LEFT);
 }
 //END OF CLASS
 
