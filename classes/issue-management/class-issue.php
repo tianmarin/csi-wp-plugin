@@ -534,7 +534,7 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_issue_new_issue_form',	 			array( $this , 'csi_issue_new_issue_form'			));
 	add_action( 'wp_ajax_csi_add_issue', 						array( $this , 'csi_add_issue'						));
 	add_action( 'wp_ajax_csi_issue_edit_issue_form',			array( $this , 'csi_issue_edit_issue_form'			));
-	add_action( 'wp_ajax_csi_edit_issue', 						array( $this , 'csi_edit_issue'						));
+	add_action( 'wp_ajax_csi_issue_edit_issue', 				array( $this , 'csi_issue_edit_issue'				));
 	add_action( 'wp_ajax_csi_issue_build_page_search_issue', 	array( $this , 'csi_issue_build_page_search_issue'	));
 	add_action( 'wp_ajax_csi_issue_filtered_issues',	 		array( $this , 'csi_issue_filtered_issues'			));
 	add_action( 'wp_ajax_csi_issue_filtered_issues_pagination', array( $this , 'csi_issue_filtered_issues_pagination'));
@@ -755,6 +755,14 @@ public function csi_issue_new_issue_form(){
 								<small class="text-warning pull-right">(requerido)</small>
 						</div>
 					</div>
+					<div class="form-group">
+						<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
+						<div class="col-sm-10">
+							<input type="text" name="title" id="title" class="form-control" required="true" placeholder="T&iacute;tulo" aria-hidden="true"/>
+							<p class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+						</div>
+					</div>
 	';
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
 		'id'			=> 'summary',
@@ -874,7 +882,7 @@ public function csi_add_issue(){
 			'icon'				=> 'fa fa-check fa-sm',
 			'closeIcon'			=> true,
 			'columnClass'		=> 'large',
-			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>NOV' . $this->nov_id ( $issue_id ) . '</code>)',
+			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>' . $this->nov_id ( $issue_id ) . '</code>)',
 			'title'				=> 'Bien!',
 			'type'				=> 'green',
 			'autoClose'			=> 'OK|3000',
@@ -1362,125 +1370,6 @@ public function csi_issue_build_page_intro(){
 	wp_die();
 
 }
-protected function csi_pm_build_gantt ( $sql, $post, $start_date, $end_date ) {
-	//Global Variables
-	//Local Variables
-	$o				= '';
-	define('DAYS_PER_MONTH', 30);
-	define('DURATION', 6);
-	$start_date->modify('first day of this month');
-	$end_date->modify('last day of this month');
-	$year				= $start_date->format('Y');
-	$month				= $start_date->format('m');
-	$date_diff			= date_diff ( $end_date, $start_date );
-	$months				= $date_diff->y * 12 + $date_diff->m + 1; //5 months 20 days -> 6 months
-	$month_width		= 100 / $months;
-	$o.='
-	<div class="csi-issue-panel" style="margin-left:' . $month_width . '%;">';
-	//Build Frame
-	$o.='
-		<div class="col-xs-12 timeline-header">';
-	$o.='
-			<div style="position:absolute;width:' . $month_width . '%;margin-left:-' . $month_width . '%;">Cliente</div>
-	';
-	for ( $i = 0 ; $i < $months ; $i++ ){
-		$date = DateTime::createFromFormat('Y-m-d', $year.'-'.intval($month+$i).'-01');
-		$date_header_long='<span>'.$date->format('F').'<br/><small class="text-muted">'.$date->format('Y').'</small></span>';
-		$date_header_short='<span>'.$date->format('M').'<br/><small class="text-muted">'.$date->format('Y').'</small></span>';
-		$o.='
-			<div class="month text-center hidden-xs" style="width:'.$month_width.'%;">
-				'.$date_header_long.'
-			</div>';
-		$o.='
-			<div class="month text-center visible-xs" style="width:'.$month_width.'%;">
-				'.$date_header_short.'
-			</div>';
-	}
-	$o.='
-		</div><!-- #timeline-header -->';
-	//Build issues
-	$customer_name = '';
-	$issues = $this->get_sql ( $sql );
-	$silent = FALSE;
-	foreach ( $issues as $issue){
-		if ( self::validate_date( $issue['planned_start_date'] ) && self::validate_date( $issue['planned_end_date'] ) ){
-			$planned_start_date	= DateTime::createFromFormat('Y-m-d', $issue['planned_start_date']);
-			$planned_end_date	= DateTime::createFromFormat('Y-m-d', $issue['planned_end_date']);
-			if( $start_date < $planned_start_date){
-				$month_diff = new DateTime;
-				$month_diff = date_diff ( $planned_start_date,$start_date);
-				//add months
-				$proj_prev = floatval ( intval ( $month_diff->y * 12 + $month_diff->m ) * $month_width );
-				//add days
-				$proj_prev = $proj_prev + intval( $month_diff->d ) / DAYS_PER_MONTH * $month_width;
-			}else{
-				$proj_prev = 0;
-			}
-			if( $end_date > $planned_end_date){
-				$month_diff = new DateTime;
-				$month_diff = date_diff ( $planned_end_date,$end_date);
-				//add months
-				$proj_post = floatval ( intval( $month_diff->y * 12 + $month_diff->m ) * $month_width );
-				//add days
-				$proj_post = $proj_post + $month_width / ( DAYS_PER_MONTH / intval( $planned_end_date->format('d') ) );
-				//self::write_log( $month_width / ( DAYS_PER_MONTH / intval( $planned_end_date->format('d') ) ) );
-			}else{
-				$proj_post=0;
-			}
-			$proj_width = 100 - ($proj_prev + $proj_post);
-			//self::write_log($proj_prev.' - '.$proj_width.' - '.$proj_post);
-			$o.='
-			<div class="row issue">';
-			if ( !$silent ){
-				/*
-				if ( $customer_name == $issue['customer_short_name']){
-					$display_customer_name =' &nbsp;';
-				}else{
-					$customer_name = $display_customer_name = $issue['customer_short_name'];
-				}
-				*/
-				$o.='
-				<div class="col-xs-12 text-left issue-options">
-					<div class="btn-group btn-group-sm" style="width:' . $month_width . '%;margin-left:-' . $month_width . '%;overflow:hidden;" title="' . $issue['customer_short_name'] . '" data-toggle="tooltip" data-placement="top" >
-						<small>' . $issue['customer_short_name'] . '</small>
-					</div>
-					<div class="month text-center" style=";width:'.$proj_prev.'%;">&nbsp;</div>
-					<div class="btn-group btn-group-sm" style=";width:'.$proj_width.'%;">
-						<a type="button" class="text-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							<small><i class="fa fa-cog fa-fw"></i>'.$issue['short_name'].'</small>
-						</a>
-						<ul class="dropdown-menu">
-							<li><a href="#" title="Ver los documentos del proyecto '.$issue['short_name'].'"><i class="fa fa-tasks fa-fw" aria-hidden="true"></i> Tareas</a></li>
-							<li><a href="#" title="Ver las tareas del proyecto '.$issue['short_name'].'"><i class="fa fa-file-text-o fa-fw" aria-hidden="true"></i> Documentos</a></li>
-						</ul>
-					</div>
-					 <div class="month" style="width:'.$proj_post.'%;">&nbsp;</div>
-				</div>';
-			}
-			$short_name= true==$silent  ? '<small style="color:#FFF;white-space: nowrap;text-overflow: ellipsis;display: block;overflow: hidden;">&nbsp;'.$issue['short_name'].'</small>':'&nbsp;';
-			$start_class= (0 == $proj_prev) ? ' non_start ' : '';
-			$end_class= (0 == $proj_post) ? ' non_end ' : '';
-			$o.='
-				<div class="col-xs-12 issue-timeline">
-					<div class="month text-center" style="width:'.$proj_prev.'%;">&nbsp;</div>
-					<div class="month text-center" style="width:'.$proj_width.'%;">
-						<div class="progress '.$start_class.$end_class.'">
-							<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="'.$issue['percentage'].'" aria-valuemin="0" aria-valuemax="100" style="width: '.$issue['percentage'].'%;min-width:2em;">
-								<small>'.$issue['percentage'].'%</small>
-							</div>
-						</div>
-					</div>
-					<div class="month" style="width:'.$proj_post.'%;">'.$short_name.'</div>
-				</div>
-			</div>';
-		}else{
-			//No se muestra el proyecto, ya que no tiene fechas valida planificadas
-		}
-	}
-	$o.='
-	</div><!-- .csi-issue-panel -->';
-	return $o;
-}
 public function csi_issue_edit_issue_form(){
 	//Global Variables
 	global $NOVIS_CSI_COUNTRY;
@@ -1513,7 +1402,7 @@ public function csi_issue_edit_issue_form(){
 				<h1 class="panel-title">Crear Nota de Conocimiento NOVIS</h1>
 			</div>
 			<div class="panel-body">
-				<form class="form-horizontal" data-function="csi_add_issue" data-next-page="showissue" style="position:relative;">
+				<form class="form-horizontal" data-function="csi_issue_edit_issue" style="position:relative;">
 					<input type="hidden" name="issue_id" id="issue_id" value="' . $issue_id . '"/>
 					<div class="form-group">
 						<label for="owner_team" class="col-sm-2 control-label">Equipo Responsable</label>
@@ -1522,6 +1411,14 @@ public function csi_issue_edit_issue_form(){
 								<option></option>
 								' . $user_teams_opts . '
 							</select>
+							<p class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
+						<div class="col-sm-10">
+							<input type="text" name="title" id="title" class="form-control" required="true" placeholder="T&iacute;tulo" aria-hidden="true" value="' . $issue->title . '"/>
 							<p class="help-block">
 								<small class="text-warning pull-right">(requerido)</small>
 						</div>
@@ -1608,19 +1505,19 @@ public function csi_issue_edit_issue(){
 	$whereArray			= array();
 	$response			= array();
 	$post	= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	self::write_log ( $post );
 	$current_user		= get_userdata ( get_current_user_id() );
 	$current_datetime	= new DateTime();
 
 	$whereArray['id']						= intval ( $post['issue_id'] );
 
-	//$insertArray['status_id']					= intval ( $status_id );
-	$insertArray['owner_team']					= intval ( $post['owner_team'] );
-	$insertArray['title']						= strip_tags(stripslashes( $post['title'] ) );
-	$insertArray['summary']						= strip_tags(stripslashes( $post['summary'] ) );
-	$insertArray['symptom']						= strip_tags(stripslashes( $post['symptom'] ) );
-	$insertArray['terms']						= strip_tags(stripslashes( $post['terms'] ) );
-	$insertArray['reason']						= strip_tags(stripslashes( $post['reason'] ) );
-	$insertArray['solution']					= strip_tags(stripslashes( $post['solution'] ) );
+	$editArray['owner_team']				= intval ( $post['owner_team'] );
+	$editArray['title']						= strip_tags(stripslashes( $post['title'] ) );
+	$editArray['summary']					= strip_tags(stripslashes( $post['summary'] ) );
+	$editArray['symptom']					= strip_tags(stripslashes( $post['symptom'] ) );
+	$editArray['terms']						= strip_tags(stripslashes( $post['terms'] ) );
+	$editArray['reason']					= strip_tags(stripslashes( $post['reason'] ) );
+	$editArray['solution']					= strip_tags(stripslashes( $post['solution'] ) );
 
 	$editArray['last_modified_user_id']		= $current_user->ID;
 	$editArray['last_modified_user_email']	= $current_user->user_email;

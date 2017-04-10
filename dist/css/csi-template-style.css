@@ -14159,24 +14159,6 @@ input[type='checkbox'].csi-cool-checkbox-lock:checked + label:after .badge {
 .csi-project-panel .project .project-timeline > div .progress.non_start {
   border-left: none;
 }
-.csi-issue-display-note h1 {
-  font-size: 23.4px;
-}
-.csi-issue-display-note h2 {
-  font-size: 19.5px;
-}
-.csi-issue-display-note h3 {
-  font-size: 15.6px;
-}
-.csi-issue-display-note h4 {
-  font-size: 11.7px;
-}
-.csi-issue-display-note h5 {
-  font-size: 9.1px;
-}
-.csi-issue-display-note h6 {
-  font-size: 7.8px;
-}
 .csi-project-request-welcome {
   min-height: 100vh;
   background-color: #263238;
