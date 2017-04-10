@@ -44,7 +44,7 @@ ajaxPages.intro		=	cmpMainContent.data('default-action');
 
 var changeHash = function ( nextPage ) {
 	if ( undefined !== nextPage &&  '' !== nextPage ){
-		window.location.hash='#!' + nextPage;
+		window.location.hash='#!' + nextPage.replace('#!','');
 	}
 	return true;
 };
@@ -194,6 +194,18 @@ function loadPageContent ( hash, get ) {
 				csiHardRefreshEventListener(response);
 				cmpMainContent.addClass('quick-animated ' + 'fadeInUp').one(animationEnd, function() {
 					$(this).removeClass('quick-animated ' + 'fadeInUp');
+					if ( undefined !== GET.scrollTo ){
+						if ( undefined !== $( '#' + GET.scrollTo ) ) {
+							$('html,body').animate({
+								scrollTop: $( '#' + GET.scrollTo ).offset().top
+							});
+							/*
+							$( '#' + GET.scrollTo ).addClass('animated ' + 'pulse').one(animationEnd, function() {
+								$(this).removeClass('animated ' + 'pulse');
+							});
+							*/
+						}
+					}
 				});
 			});
 		},

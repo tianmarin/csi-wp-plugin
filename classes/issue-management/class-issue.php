@@ -40,7 +40,7 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.0.1';
+	$this->db_version	= '0.0.2';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -50,7 +50,8 @@ public function __construct(){
 								id bigint(20) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
 								title tinytext not null COMMENT 'Title of Issue',
 								status_id tinyint(1) unsigned not null COMMENT 'ID of Issue status',
-								owner_team tinyint(2) unsigned not null COMMENT 'Owner team of Issue',
+								author_id bigint(20) unsigned not null COMMENT 'Id of author user',
+								author_email varchar(100) not null COMMENT 'Email of author user',
 								summary text not null COMMENT 'Summary text of Issue',
 								symptom text not null COMMENT 'Symptom text of Issue',
 								terms text not null COMMENT 'Other terms text of Issue',
@@ -724,17 +725,6 @@ public function csi_issue_new_issue_form(){
 	global $NOVIS_CSI_USER_TEAM;
 	//Local Variables
 	$o				= '';
-	$user_teams_opts	= '';
-	//--------------------------------------------------------------------------
-	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' ORDER BY short_name';
-	foreach ( $this->get_sql ( $sql ) as $country ){
-		$user_teams_opts.='<optgroup label="' . $country['short_name'] . '">';
-		$sql = 'SELECT id, short_name, code FROM ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' WHERE country_id="' . $country['id'] . '" ORDER BY short_name';
-		foreach ( $this->get_sql ( $sql ) as $user_team ){
-			$user_teams_opts.='<option value="' . $user_team['id'] . '">' . $user_team['short_name'] . ' (' . strtoupper ( $user_team['code'] ) . ')</option>';
-		}
-		$user_teams_opts.='</optgroup>';
-	}
 	//--------------------------------------------------------------------------
 	$o.='
 	<div class="container">
@@ -745,22 +735,13 @@ public function csi_issue_new_issue_form(){
 			<div class="panel-body">
 				<form class="form-horizontal" data-function="csi_add_issue" data-next-page="showissue" style="position:relative;">
 					<div class="form-group">
-						<label for="owner_team" class="col-sm-2 control-label">Equipo Responsable</label>
-						<div class="col-sm-10">
-							<select name="owner_team" id="owner_team" class="form-control select2 " required="true" data-placeholder="Selecciona el equipo responsable" tabindex="-1" aria-hidden="true">
-								<option></option>
-								' . $user_teams_opts . '
-							</select>
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-						</div>
-					</div>
-					<div class="form-group">
 						<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
 						<div class="col-sm-10">
-							<input type="text" name="title" id="title" class="form-control" required="true" placeholder="T&iacute;tulo" aria-hidden="true"/>
+							<input type="text" name="title" id="title" class="form-control" required="true" placeholder="T&iacute;tulo"/>
 							<p class="help-block">
 								<small class="text-warning pull-right">(requerido)</small>
+								El T&iacute;tulo de una <strong>Nota NOVIS</strong>, regularmente describe en breve el mensaje de error corto reflejado en el sistema.<br/>
+								Tama&ntilde;o m&aacute;ximo: 255 caracteres.
 						</div>
 					</div>
 	';
@@ -771,7 +752,7 @@ public function csi_issue_new_issue_form(){
 		'maxlength'		=> 1000,
 		'rows'			=> 6,
 		'required'		=> true,
-		'help'			=> 'Resumen del Issue',
+		'help'			=> 'El Resumen de una <strong>Nota NOVIS</strong> describe brevemente la situaci&oacute;n del error.',
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
@@ -781,7 +762,7 @@ public function csi_issue_new_issue_form(){
 		'maxlength'		=> 1000,
 		'rows'			=> 6,
 		'required'		=> true,
-		'help'			=> 'hola',
+		'help'			=> 'El S&iacute;ntoma de una <strong>Nota NOVIS</strong> describe las diferentes situaciones que generan el error identificado.',
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
@@ -791,17 +772,17 @@ public function csi_issue_new_issue_form(){
 		'maxlength'		=> 500,
 		'rows'			=> 4,
 		'required'		=> true,
-		'help'			=> 'hola',
+		'help'			=> 'Otros T&eacute;rminos de una <strong>Nota NOVIS</strong> permite complementar la documentación utilizando palabras clave alternativas para el contenido. (e.g. Solution Manager; Solman; ).',
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
 		'id'			=> 'reason',
 		'title'			=> 'Causa y Pre-Requisitos',
-		'placeholder'	=> 'Soluci&oacute;n',
+		'placeholder'	=> 'Causa y Pre-Requisitos',
 		'maxlength'		=> 1000,
 		'rows'			=> 6,
 		'required'		=> true,
-		'help'			=> 'hola',
+		'help'			=> 'Las Causas y Pre-Requisitos de una <strong>Nota NOVIS</strong> es la descripción detallada del entorno relacionado al error.',
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
@@ -811,7 +792,7 @@ public function csi_issue_new_issue_form(){
 		'maxlength'		=> 1000,
 		'rows'			=> 6,
 		'required'		=> true,
-		'help'			=> 'hola',
+		'help'			=> 'La Soluci&oacute;n de una <strong>Nota NOVIS</strong> describe las acciones requeridas para solventar el error. Es v&aacute;lido que las acciones no resuelvan la causa raíz del error y pueden proporcionar un mecanismo de <i>workaround</i>.',
 		'value'			=> null,
 	)) ;
 	$o.='
@@ -852,7 +833,8 @@ public function csi_add_issue(){
 
 	//self::write_log ( $post );
 	$insertArray['status_id']					= intval ( $status_id );
-	$insertArray['owner_team']					= intval ( $post['owner_team'] );
+	$insertArray['author_id']					=  $current_user->ID;
+	$insertArray['author_email']				=  $current_user->user_email;
 	$insertArray['title']						= strip_tags(stripslashes( $post['title'] ) );
 	$insertArray['summary']						= strip_tags(stripslashes( $post['summary'] ) );
 	$insertArray['symptom']						= strip_tags(stripslashes( $post['symptom'] ) );
@@ -871,21 +853,21 @@ public function csi_add_issue(){
 		$issue_id = $wpdb->insert_id;
 		//crear registro de Ejecutores
 		$response['postSubmitAction']	='changeHash';
-		$response['newId']				= '#!showissue?i=' . $issue_id;
+		$response['newId']				= '#!showissue?i=' . $issue_id . '&scrollTo=csi-issue-event';
 		$response['notification']=array(
 			'buttons'			=> array(
 				'OK'			=> array(
-					'text'		=> 'OK',
+					'text'		=> 'Entendido',
 					'btnClass'	=> 'btn-success',
 				),
 			),
 			'icon'				=> 'fa fa-check fa-sm',
 			'closeIcon'			=> true,
 			'columnClass'		=> 'large',
-			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>' . $this->nov_id ( $issue_id ) . '</code>)',
+			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>' . $this->nov_id ( $issue_id ) . '</code>).<br/>No olvides agregar el <strong>Evento</strong> que causó la escritura de esta Nota Novis. En la sección inferior de la nota debes crear una nueva entrada con la información requerida.',
 			'title'				=> 'Bien!',
 			'type'				=> 'green',
-			'autoClose'			=> 'OK|3000',
+			//'autoClose'			=> 'OK|3000',
 		);
 	}else{
 		$response['error']=true;
@@ -1052,7 +1034,10 @@ public function csi_issue_filtered_issues(){
 	//Local Variables
 	$o				= '';
 	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
-	self::write_log ( $post );
+	//self::write_log ( $post );
+	//--------------------------------------------------------------------------
+	$pd = new Parsedown();
+	//--------------------------------------------------------------------------
 	if ( isset ( $post['issue_text'] ) AND 0 != strlen ($post['issue_text'] ) ) {
 		//--------------------------------------------------------------------------
 		$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
@@ -1082,17 +1067,20 @@ public function csi_issue_filtered_issues(){
 			$o.='
 				<tr>
 					<td>
-						<div>
+						<p>
 							<a href="#!showissue?i=' . $this->nov_id ( $result['id'] ) . '&issue_text=' . urlencode ( $post['issue_text'] ). '" target="_blank">
 								' . $this->nov_id ( $result['id'] ) . ' - ' . $result['title'] . ' <i class="fa fa-fw fa-external-link"></i>
 							</a>
-						</div>
-						<div>
-							<!-- <small>' . $result['summary'] . '</small> -->
-						</div>
-						<div>
-							<strong>Creaci&oacute;n</strong> : <span>' . $creation_date->format('d-m-Y') . '</span>
-						</div>
+						</p>
+						<p>
+							<small>' . $pd->text( $result['summary'] ) . '</small>
+						</p>
+						<p>
+							<span class="col-xs-2"><strong>Autor</strong>:</span>
+							<span class="col-xs-9 col-xs-offset-1">' . $result['display_name'] . '</span>
+							<span class="col-xs-2"><strong>Creaci&oacute;n:</strong></span>
+							<span class="col-xs-9 col-xs-offset-1">' . $creation_date->format('d-m-Y') . '</span>
+						</p>
 					</td>
 				</tr>
 			';
@@ -1115,6 +1103,7 @@ protected function csi_issue_filtered_issues_sql ( $post, $calculate_rows = TRUE
 	global $NOVIS_CSI_ISSUE_STATUS;
 	global $NOVIS_CSI_COUNTRY;
 	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_USER;
 	global $wpdb;
 	//Local Variables
 	$page_size		= 20;
@@ -1132,6 +1121,10 @@ protected function csi_issue_filtered_issues_sql ( $post, $calculate_rows = TRUE
 				ON T01.issue_id = T00.id
 			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T02
 				ON T01.customer_id = T02.id
+			LEFT JOIN ' . $NOVIS_CSI_USER->tbl_name . ' as T03
+				ON T00.author_id = T03.id
+			LEFT JOIN ' . $wpdb->base_prefix . 'users as T04
+				ON T03.id = T04.ID
 		WHERE
 		';
 	foreach ( $terms as $term ){
@@ -1157,10 +1150,11 @@ protected function csi_issue_filtered_issues_sql ( $post, $calculate_rows = TRUE
 		$page_no = 1;
 	}
 	if ( $calculate_rows ){
-		$rows = 'SELECT DISTINCT T00.id, T00.title, T00.creation_date, T00.last_modified_date, T00.summary ';
+		$rows = 'SELECT DISTINCT T00.id, T00.title, T00.creation_date, T00.last_modified_date, T00.summary ,T03.id as user_id, T04.display_name as display_name, T04.user_email as user_email ';
 		$limit = ' LIMIT ' . ( $page_no - 1 ) * $page_size . ',' . $page_size ;
 		$order = ' ORDER BY T00.creation_date DESC ';
 		$results['rows']		= $this->get_sql (  $rows . $sql . $order . $limit );
+		self::Write_log ( $results['rows'] );
 	}
 	$results['pages']		= ceil ( $results['total_rows'] / $page_size );
 	$results['page_no']		= $page_no;
@@ -1177,7 +1171,7 @@ public function csi_issue_filtered_issues_pagination(){
 
 	if ( isset ( $post['issue_text'] ) AND 0 != strlen ($post['issue_text'] ) ) {
 		$results = self::csi_issue_filtered_issues_sql ( $post, FALSE ) ;
-		self::write_log( $post );
+		//self::write_log( $post );
 		$page_no = $results['page_no'];
 		$page_count = $results['pages'];
 		if ( $page_count > 1){
@@ -1239,20 +1233,22 @@ public function csi_issue_build_page_show_issue(){
 	//--------------------------------------------------------------------------
 	$pd = new Parsedown();
 	//--------------------------------------------------------------------------
+
 	foreach ( $issue as $key => $value ){
 		if ( $key == 'id' ){
 			$issue->$key = $this->nov_id ( $value );
-		}
-		$issue->$key = $pd->text( $issue->$key );
-		$issue->$key = str_replace ( '<table>', '<table class="table">', $issue->$key);
-		if ( isset ( $post['issue_text'] ) AND 0 != strlen ($post['issue_text'] ) ) {
-			$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
-			$terms = preg_split ( $regex, urldecode ( $post['issue_text'] ) ) ;
-			foreach ( $terms as $term ){
-				//self::write_log (  urldecode ( $post['issue_text'] ));
-				$conditions = array();
-				$pattern = preg_quote($term);
-				$issue->$key  = preg_replace("/($pattern)/i", '<mark>$1</mark>', $value);
+		}else{
+			$issue->$key = $pd->text( $issue->$key );
+			$issue->$key = str_replace ( '<table>', '<table class="table">', $issue->$key);
+			if ( isset ( $post['issue_text'] ) AND 0 != strlen ($post['issue_text'] ) ) {
+				$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
+				$terms = preg_split ( $regex, urldecode ( $post['issue_text'] ) ) ;
+				foreach ( $terms as $term ){
+					//self::write_log (  urldecode ( $post['issue_text'] ));
+					$conditions = array();
+					$pattern = preg_quote($term);
+					$issue->$key  = preg_replace("/($pattern)/i", '<mark>$1</mark>', $issue->$key);
+				}
 			}
 		}
 	}
@@ -1264,50 +1260,52 @@ public function csi_issue_build_page_show_issue(){
 			<a href="#!searchissues" class="hidden-print"><i class="fa fa-angle-left fa-fw"></i> Buscador de Notas Novis</a>
 			<h3 class="">
 				<samp class="col-sm-10">
-					<span class="text-muted small">' . $issue->id . '</span>
+					<p class="text-muted small">' . $issue->id . '</p>
 					' . $issue->title . '
 				</samp>
 				<p class="col-sm-2 text-right hidden-print">
-					<a href="#!editissue?issue_id=' . $issue_id . '" class="btn btn-default">
+					<a href="#!editissue?issue_id=' . $this->nov_id( $issue_id ) . '" class="btn btn-default">
 						<i class="fa fa-pencil"></i> Editar
 					</a>
 				</p>
 			</h3>
 		</div><!-- .page-header -->
 		<div class="row csi-issue-display-note">
-			<div class="csi-issue-summary">
+			<div id="csi-issue-summary">
 				<div class="page-header">
 					<h3 class=""><strong><samp>Resumen</samp></strong></h3>
 				</div>
 				<div class="text-justify"><samp>' . $issue->summary . '</samp></div>
-			</div><!-- .csi-issue-summary -->
-			<div class=" csi-issue-symptom">
+			</div><!-- #csi-issue-summary -->
+			<div id="csi-issue-symptom">
 				<div class="page-header">
 					<h3 class=""><strong><samp>Sintoma</samp></strong></h3>
 				</div>
 				<div class="text-justify"><samp>' . $issue->symptom . '</samp></div>
-			</div><!-- .csi-issue-symptom -->
-			<div class=" csi-issue-terms">
+			</div><!-- #csi-issue-symptom -->
+			<div id="csi-issue-terms">
 				<div class="page-header">
 					<h3 class=""><strong><samp>Otros Términos</samp></strong></h3>
 				</div>
 				<div class="text-justify"><samp>' . $issue->terms . '</samp></div>
-			</div><!-- .csi-issue-terms -->
-			<div class=" csi-issue-reason">
+			</div><!-- #csi-issue-terms -->
+			<div id="csi-issue-reason">
 				<div class="page-header">
 					<h3 class=""><strong><samp>Causa y Pre-Requisitos</samp></strong></h3>
 				</div>
 				<div class="text-justify"><samp>' .  $issue->reason . '</samp></div>
-			</div><!-- .csi-issue-reason -->
-			<div class=" csi-issue-solution">
+			</div><!-- #csi-issue-reason -->
+			<div id="csi-issue-solution">
 				<div class="page-header">
 					<h3 class=""><strong><samp>Solución</samp></strong></h3>
 				</div>
-				<dov class="text-justify"><samp>' . $issue->solution . '</samp></div>
-			</div><!-- .csi-issue-solution -->
-			<div class=" csi-issue-event">
-				<h3 class=""><samp>Eventos</samp></h3>
-				<p class="help-block">Los <strong>eventos</strong> permiten registrar en que contexto se utilizó la Nota Novis, para futuras búsquedas de errores relacionados con clientes.</p>
+				<div class="text-justify"><samp>' . $issue->solution . '</samp></div>
+			</div><!-- #csi-issue-solution -->
+			<div id="csi-issue-event">
+				<div class="page-header">
+					<h3 class=""><strong><samp>Eventos</samp></strong></h3>
+					<p class="help-block">Los <strong>eventos</strong> permiten registrar en que contexto se utilizó la Nota Novis, para futuras búsquedas de errores relacionados con clientes.</p>
+				</div>
 				<table class="refreshable table table-condensed" data-action="csi_fetch_issue_event_list_info" data-issue-id="' . $issue_id . '">
 					<thead>
 						<tr>
@@ -1320,7 +1318,7 @@ public function csi_issue_build_page_show_issue(){
 					<tbody>
 					</tbody>
 				</table>
-			</div><!-- .csi-issue-event -->
+			</div><!-- #csi-issue-event -->
 		</div>
 	</div><!-- .container -->
 
@@ -1377,23 +1375,11 @@ public function csi_issue_edit_issue_form(){
 	global $wpdb;
 	//Local Variables
 	$o				= '';
-	$user_teams_opts	= '';
 	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	//--------------------------------------------------------------------------
-	$issue_id = $post['issue_id'];
+	$issue_id = $issue_id = preg_replace ( '/[^0-9]/', '', $post['issue_id'] );
 	$sql = 'SELECT * FROM ' . $this->tbl_name . ' WHERE id = "' . $issue_id . '"';
 	$issue = $wpdb->get_row ( $sql );
-	//--------------------------------------------------------------------------
-	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' ORDER BY short_name';
-	foreach ( $this->get_sql ( $sql ) as $country ){
-		$user_teams_opts.='<optgroup label="' . $country['short_name'] . '">';
-		$sql = 'SELECT id, short_name, code FROM ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' WHERE country_id="' . $country['id'] . '" ORDER BY short_name';
-		foreach ( $this->get_sql ( $sql ) as $user_team ){
-			$selected = ($user_team['id'] == $issue->owner_team ) ? 'selected' : '';
-			$user_teams_opts.='<option value="' . $user_team['id'] . '" ' . $selected . '>' . $user_team['short_name'] . ' (' . strtoupper ( $user_team['code'] ) . ')</option>';
-		}
-		$user_teams_opts.='</optgroup>';
-	}
 	//--------------------------------------------------------------------------
 	$o.='
 	<div class="container">
@@ -1405,22 +1391,13 @@ public function csi_issue_edit_issue_form(){
 				<form class="form-horizontal" data-function="csi_issue_edit_issue" style="position:relative;">
 					<input type="hidden" name="issue_id" id="issue_id" value="' . $issue_id . '"/>
 					<div class="form-group">
-						<label for="owner_team" class="col-sm-2 control-label">Equipo Responsable</label>
-						<div class="col-sm-10">
-							<select name="owner_team" id="owner_team" class="form-control select2 " required="true" data-placeholder="Selecciona el equipo responsable" tabindex="-1" aria-hidden="true">
-								<option></option>
-								' . $user_teams_opts . '
-							</select>
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-						</div>
-					</div>
-					<div class="form-group">
 						<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
 						<div class="col-sm-10">
-							<input type="text" name="title" id="title" class="form-control" required="true" placeholder="T&iacute;tulo" aria-hidden="true" value="' . $issue->title . '"/>
+							<input type="text" name="title" id="title" class="form-control" required="true" placeholder="T&iacute;tulo" value="' . $issue->title . '"/>
 							<p class="help-block">
 								<small class="text-warning pull-right">(requerido)</small>
+								El T&iacute;tulo de una <strong>Nota NOVIS</strong>, regularmente describe en breve el mensaje de error corto reflejado en el sistema.<br/>
+								Tama&ntilde;o m&aacute;ximo: 255 caracteres.
 						</div>
 					</div>
 	';
@@ -1431,7 +1408,7 @@ public function csi_issue_edit_issue_form(){
 		'maxlength'		=> 1000,
 		'rows'			=> 6,
 		'required'		=> true,
-		'help'			=> 'Resumen del Issue',
+		'help'			=> 'El Resumen de una <strong>Nota NOVIS</strong> describe brevemente la situaci&oacute;n del error.',
 		'value'			=> $issue->summary,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
@@ -1471,7 +1448,7 @@ public function csi_issue_edit_issue_form(){
 		'maxlength'		=> 1000,
 		'rows'			=> 6,
 		'required'		=> true,
-		'help'			=> 'hola',
+		'help'			=> 'La Soluci&oacute;n de una <strong>Nota NOVIS</strong> describe las acciones requeridas para solventar el error. Es v&aacute;lido que las acciones no resuelvan la causa raíz del error y pueden proporcionar un mecanismo de <i>workaround</i>.',
 		'value'			=> $issue->solution,
 	)) ;
 	$o.='
@@ -1505,13 +1482,12 @@ public function csi_issue_edit_issue(){
 	$whereArray			= array();
 	$response			= array();
 	$post	= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
-	self::write_log ( $post );
+	//self::write_log ( $post );
 	$current_user		= get_userdata ( get_current_user_id() );
 	$current_datetime	= new DateTime();
 
 	$whereArray['id']						= intval ( $post['issue_id'] );
 
-	$editArray['owner_team']				= intval ( $post['owner_team'] );
 	$editArray['title']						= strip_tags(stripslashes( $post['title'] ) );
 	$editArray['summary']					= strip_tags(stripslashes( $post['summary'] ) );
 	$editArray['symptom']					= strip_tags(stripslashes( $post['symptom'] ) );
