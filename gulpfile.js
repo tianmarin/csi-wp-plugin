@@ -110,6 +110,16 @@ gulp.task('uglifyVendor', function() {
     .pipe($.notify('Template Script compilation done!'));
 });
 
+// Third Parties
+gulp.task('third-party-classes', function() {
+    return gulp.src(
+			[
+				config.bowerDir + '/parsedown/Parsedown.php',
+			]
+		)
+        .pipe(gulp.dest('./dist/third-party-classes'));
+});
+
 // Fonts
 gulp.task('fonts', function() {
     return gulp.src([config.bowerDir + '/**/fontawesome-webfont.*'])

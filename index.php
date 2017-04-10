@@ -389,4 +389,5 @@ require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project.php");
 
 ##External Classes
 require_once(CSI_PLUGIN_DIR."/pagetemplater.php");
+require_once(CSI_PLUGIN_DIR."/dist/third-party-classes/Parsedown.php");
 ?>

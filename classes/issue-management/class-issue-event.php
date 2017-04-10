@@ -687,25 +687,7 @@ public function csi_create_issue_event(){
 	if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
 		$response['id']=$wpdb->insert_id;
 		$plan_id = $wpdb->insert_id;
-		//crear registro de Ejecutores
 		$response['postSubmitAction']	='refreshParent';
-		/*
-		$response['notification']=array(
-			'buttons'			=> array(
-				'OK'			=> array(
-					'text'		=> 'OK',
-					'btnClass'	=> 'btn-success',
-				),
-			),
-			'icon'				=> 'fa fa-check fa-sm',
-			'closeIcon'			=> true,
-			'columnClass'		=> 'large',
-			'content'			=> 'Has agregado un nuevo ' . $this->name_single . ' exitosamente. (ID: <code>#' . $plan_id . '</code>)',
-			'title'				=> 'Bien!',
-			'type'				=> 'green',
-			'autoClose'			=> 'OK|3000',
-		);
-		*/
 	}else{
 		$response['error']=true;
 		$response['notification']=array(

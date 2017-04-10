@@ -34,6 +34,7 @@
     "bootstrap-tagsinput": "^0.8.0",
     "select2": "^4.0.3",
     "bootstrap-daterangepicker": "^2.1.25",
-    "select2-bootstrap-theme": "^0.1.0-beta.9"
+    "select2-bootstrap-theme": "^0.1.0-beta.9",
+    "parsedown": "https://github.com/erusev/parsedown.git#^1.6.2"
   }
 }
