@@ -1258,7 +1258,7 @@ public function csi_pm_new_project_request(){
 		$tl_user_opts .= '</optgroup>';
 	}
 	//--------------------------------------------------------------------------
-	if ( current_user_can ( 'csi_create_projects' ) ){
+	if ( current_user_can_for_blog ( 1, 'csi_create_projects' ) ){
 		$o.='
 		<div class="container">
 			<div class="panel panel-default row">
@@ -1631,7 +1631,7 @@ public function csi_pm_build_page_list_projects(){
 	<div class="container">
 		<div class="page-header row">
 			<h3 class="col-sm-10">Planes de Corrección o Mantenimiento</h3>';
-	if ( current_user_can ( 'csi_create_projects' ) ){
+	if ( current_user_can_for_blog ( 1, 'csi_create_projects' ) ){
 		$o.='
 			<h3 class="col-sm-2">
 				<a href="#!addproject" class="btn btn-success">
@@ -1965,7 +1965,7 @@ public function csi_pm_build_page_intro(){
 					<p class="text-justify">Proyectos Novis.</p>
 				</a>
 			</div>';
-	if ( current_user_can ( 'csi_create_projects' ) ){
+	if ( current_user_can_for_blog ( 1, 'csi_create_projects' ) ){
 		$o.='
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!addproject" class="list-group-item active">

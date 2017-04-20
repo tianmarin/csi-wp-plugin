@@ -167,7 +167,7 @@ public function csi_pm_build_page_edit_project_request_form(){
 		$status_opts .= '<option value="' . $status_det['id'] . '" ' . $selected . '>' . $status_det['short_name'] . '</option>';
 	}
 	//--------------------------------------------------------------------------
-	if ( $pr->requested_user_id == get_current_user_id() || current_user_can ( 'csi_edit_others_project_request' ) ){
+	if ( $pr->requested_user_id == get_current_user_id() || current_user_can_for_blog ( 1, 'csi_edit_others_project_request' ) ){
 
 		$o.='
 		<div class="container">
@@ -246,7 +246,7 @@ public function csi_pm_build_page_edit_project_request_form(){
 								</span>
 							</div>
 						</div>';
-		if ( current_user_can('csi_edit_project_request_restricted_fields') ){
+		if ( current_user_can_for_blog ( 1, 'csi_edit_project_request_restricted_fields') ){
 			$o.='
 						<h4>PMO</h4>
 						<div class="form-group">
@@ -324,7 +324,7 @@ public function csi_pm_build_page_edit_project_request(){
 	$editArray['planned_start_date']			= $planned_start_date;
 	$editArray['planned_end_date']				= $planned_end_date;
 
-	if ( current_user_can('csi_edit_project_request_restricted_fields') ){
+	if ( current_user_can_for_blog ( 1, 'csi_edit_project_request_restricted_fields') ){
 		$editArray['status_id']					= intval ( $post['status_id'] );
 		$editArray['pmo_comments']				= strip_tags(stripslashes( $post['pmo_comments'] ) );
 	}
@@ -640,7 +640,7 @@ public function csi_pm_build_page_show_project_request(){
 		<div class="page-header row">
 			<a href="#!ownprojectrequest" class="clearfix"><i class="fa fa-fw fa-angle-left"></i>Mis Solicitudes de Proyecto</a>
 			<h3 class="col-sm-10">Solicitud de Proyecto</h3>';
-	if ( $pr->requested_user_id == get_current_user_id() || current_user_can ( 'csi_edit_others_project_request' ) ){
+	if ( $pr->requested_user_id == get_current_user_id() || current_user_can_for_blog ( 1, 'csi_edit_others_project_request' ) ){
 		$o.='
 			<h3 class="col-sm-2">
 				<a href="#!editprojectrequest?r=' . $pr->id . '" class="btn btn-default">

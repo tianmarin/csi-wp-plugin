@@ -384,7 +384,7 @@ public function __construct(){
 	}else{
 		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"		));
 	}
-	add_action( 'wp_ajax_csi_cmp_popup_user_info',				array( $this , 'csi_cmp_popup_user_info'	));
+	add_action( 'wp_ajax_csi_popup_user_info',					array( $this , 'csi_popup_user_info'	));
 	add_action( 'show_user_profile',							array( $this, 'user_profile_fields'			));
 	add_action( 'edit_user_profile',							array( $this, 'user_profile_fields' 		));
 	add_action( 'profile_update',								array( $this, 'save_profile_update' 		));
@@ -394,9 +394,10 @@ public function __construct(){
 	add_action( 'manage_users_custom_column',  					array( $this, 'show_user_team_column_content'), 10, 3);
 }
 public function add_user_team_column ( $columns ) {
-	$columns = array_slice($columns, 0, 2, true) + array("user_team" => "Equipo") + array_slice($columns, 3, count($columns)-2, true);
-    return $columns;
-
+	if ( 1 == get_current_blog_id() ){
+		$columns = array_slice($columns, 0, 2, true) + array("user_team" => "Equipo") + array_slice($columns, 3, count($columns)-2, true);
+	    return $columns;
+	}
 }
 
 //
@@ -420,7 +421,7 @@ function show_user_team_column_content($value, $column_name, $user_id) {
 	}
 }
 
-public function csi_cmp_popup_user_info(){
+public function csi_popup_user_info(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
 	//Local Variables
@@ -482,6 +483,10 @@ public function user_profile_fields( $user ) {
 	if ( ! is_super_admin() ) {
 		return;
 	}
+ 	if ( 1 != get_current_blog_id() ){
+		return;
+	}
+
 
 	//user is admin and has BackWPup rights
 	//if ( $user->has_cap( 'administrator' ) && $user->has_cap( 'backwpup_settings' ) ) {
@@ -583,37 +588,34 @@ public function save_profile_update( $user_id ) {
 	global $csi_capabilities;
 	//Local Variables
 	$editArray				= array();
-	$post = isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
-	self::write_log ( $post );
-	$current_user		= get_userdata ( get_current_user_id() );
-	$current_datetime	= new DateTime();
-	//--------------------------------------------------------------------------
-	$user = new WP_User( $user_id );
-	foreach ( $csi_capabilities as $cap_class ){
-		foreach($cap_class['caps'] as $cap){
-			if ( isset ( $post['cap'][$cap] ) ) {
-				$user->add_cap( $cap );
-			}else{
-				$user->remove_cap( $cap );
+	if ( 1 == get_current_blog_id() ){
+		$post = isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+		$current_user		= get_userdata ( get_current_user_id() );
+		$current_datetime	= new DateTime();
+		//--------------------------------------------------------------------------
+		$user = new WP_User( $user_id );
+		foreach ( $csi_capabilities as $cap_class ){
+			foreach($cap_class['caps'] as $cap){
+				if ( isset ( $post['cap'][$cap] ) ) {
+					$user->add_cap( $cap );
+				}else{
+					$user->remove_cap( $cap );
+				}
 			}
 		}
+		//--------------------------------------------------------------------------
+		$editArray['id']							= intval ( $user_id );
+		$editArray['active_flag']					= isset ( $post['active_flag'] ) ? 1 : NULL;
+		$editArray['team_id']						= isset ( $post['team_id'] ) ? intval ( $post['team_id'] ) : NULL;
+		$editArray['team_manager_flag']				= isset ( $post['team_manager_flag'] ) ? 1 : NULL;
+		$editArray['phone_no']						= strip_tags(stripslashes( $post['phone_no'] ));
+		$editArray['timezone_id']					= isset ( $post['timezone_id'] ) ? intval ( $post['timezone_id'] ) : NULL;
+		$editArray['last_modified_user_id']			= $current_user->ID;
+		$editArray['last_modified_user_email']		= $current_user->user_email;
+		$editArray['last_modified_date']			= $current_datetime->format('Y-m-d');
+		$editArray['last_modified_time']			= $current_datetime->format('H:i:s');
+		$result = $wpdb->replace ( $this->tbl_name, $editArray );
 	}
-	//--------------------------------------------------------------------------
-
-
-
-	$editArray['id']							= intval ( $user_id );
-	$editArray['active_flag']					= isset ( $post['active_flag'] ) ? 1 : NULL;
-	$editArray['team_id']						= isset ( $post['team_id'] ) ? intval ( $post['team_id'] ) : NULL;
-	$editArray['team_manager_flag']				= isset ( $post['team_manager_flag'] ) ? 1 : NULL;
-	$editArray['phone_no']						= strip_tags(stripslashes( $post['phone_no'] ));
-	$editArray['timezone_id']					= isset ( $post['timezone_id'] ) ? intval ( $post['timezone_id'] ) : NULL;
-	$editArray['last_modified_user_id']			= $current_user->ID;
-	$editArray['last_modified_user_email']		= $current_user->user_email;
-	$editArray['last_modified_date']			= $current_datetime->format('Y-m-d');
-	$editArray['last_modified_time']			= $current_datetime->format('H:i:s');
-	$result = $wpdb->replace ( $this->tbl_name, $editArray );
-
 	return;
 }
 public function disable_profile( $user_id ) {
