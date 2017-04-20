@@ -46,39 +46,36 @@ public function __construct(){
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	$this->crt_tbl_sql_wt	="(
-								id bigint(20) unsigned not null auto_increment,
-								registered_customer_flag tinyint(1) unsigned null COMMENT 'Indicates if customer is already registered',
-								registered_customer_id bigint unsigned not null COMMENT 'Customer Id',
-								non_registered_customer_name varchar(50) not null COMMENT 'Name of unregistered customer',
-								short_name varchar(100) not null,
-								description text not null,
-								requested_user_id bigint(20) unsigned not null,
-								requested_date date not null,
-								requested_time time not null,
-								requested_start_date date null,
-								requested_end_date date null,
-								requested_urgency_id tinyint(2) unsigned not null,
-								status_id tinyint(2) unsigned not null,
-								planned_start_date date null,
-								planned_end_date date null,
-								percentage tinyint(2) unsigned not null DEFAULT '0',
-								last_modified_user_id bigint(20) unsigned null,
-								last_modified_date date null,
-								last_modified_time time null,
-								doc_link varchar(255) null,
-								task_link varchar(255) null,
-								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of each record',
-								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								creation_date date null COMMENT 'Date of the creation of this record',
-								creation_time time null COMMENT 'Time of the creation of this record',
-								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
-								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								last_modified_date date null COMMENT 'Date of the last modification of this record',
-								last_modified_time time null COMMENT 'Time of the last modification of this record',
+	$this->crt_tbl_sql_wt	="
+		(
+			id bigint(20) unsigned not null auto_increment,
+			registered_customer_flag tinyint(1) unsigned null COMMENT 'Indicates if customer is already registered',
+			registered_customer_id bigint unsigned not null COMMENT 'Customer Id',
+			non_registered_customer_name varchar(50) not null COMMENT 'Name of unregistered customer',
+			short_name varchar(100) not null,
+			description text not null,
+			requested_user_id bigint(20) unsigned not null,
+			requested_datetime datetime not null,
+			status_id tinyint(2) unsigned not null,
+			planned_start_date date null,
+			planned_end_date date null,
+			plan_percentage tinyint(2) unsigned not null DEFAULT '0',
+			real_percentage tinyint(2) unsigned not null DEFAULT '0',
+			doc_link varchar(255) null,
+			task_link varchar(255) null,
+			pm_user_id bigint(20) unsigned null COMMENT 'Id of user for Project Manager',
+			tl_user_id bigint(20) unsigned null COMMENT 'Id of user for Technical Leader',
+			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of each record',
+			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			creation_date date null COMMENT 'Date of the creation of this record',
+			creation_time time null COMMENT 'Time of the creation of this record',
+			last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
+			last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			last_modified_date date null COMMENT 'Date of the last modification of this record',
+			last_modified_time time null COMMENT 'Time of the last modification of this record',
 
-								UNIQUE KEY id (id)
-							) $charset_collate;";
+			UNIQUE KEY id (id)
+		) $charset_collate;";
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
@@ -529,6 +526,7 @@ public function __construct(){
 	);
 	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'							));
 	self::db_install();
+	add_action( 'plugins_loaded',	array( $this , 'csi_define_capabilities' ) );
 	//in a new blog creation, create the db for new blog
 	//Applies only for non-network classes
 	if( true != $this->network_class ){
@@ -550,9 +548,18 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_pm_build_page_list_projects', 		array( $this , 'csi_pm_build_page_list_projects'	));
 	add_action( 'wp_ajax_csi_pm_filtered_panel', 				array( $this , 'csi_pm_filtered_panel'				));
 	add_action( 'wp_ajax_csi_pm_build_page_show_project', 		array( $this , 'csi_pm_build_page_show_project'		));
-
-
-//	add_action( 'wp_ajax_nopriv_csi_new_project_request', 		array( $this , 'new_project_request'		));
+	add_action( 'wp_ajax_csi_pm_build_page_edit_project_form', 	array( $this , 'csi_pm_build_page_edit_project_form'));
+}
+public function csi_define_capabilities(){
+	global $csi_capabilities;
+	$class_cap = array(
+		'name'	=> 'Project Capabilities',
+		'caps'	=> array(
+			'csi_create_projects',
+			'csi_edit_projects',
+		),
+	);
+	array_push ( $csi_capabilities, $class_cap);
 }
 protected function backend_wp_sp_table_code($code){
 	return '<code>'.$code.'</code>';
@@ -939,13 +946,274 @@ public function csi_user_project_request_status(){
 	echo json_encode($response);
 	wp_die();
 }
-public function csi_pm_new_project_request(){
+public function csi_pm_build_page_edit_project_form(){
 	//Global Variables
+	global $wpdb;
 	global $NOVIS_CSI_CUSTOMER;
 	global $NOVIS_CSI_COUNTRY;
+	global $NOVIS_CSI_PROJECT_STATUS;
 	//Local Variables
 	$o				= '';
 	$customer_opts	= '';
+	$status_opts	= '';
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$project_id = intval ( $post['p'] );
+	//Execution
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT * FROM ' . $this->tbl_name . ' WHERE id = "' . $project_id . '" ';
+	$project = $wpdb->get_row ( $sql );
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' ORDER BY short_name';
+	foreach ( $this->get_sql ( $sql ) as $country ){
+		$customer_opts.='<optgroup label="' . $country['short_name'] . '">';
+		$sql = 'SELECT id, short_name, code FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' WHERE country_id="' . $country['id'] . '" ORDER BY short_name';
+		foreach ( $this->get_sql ( $sql ) as $customer ){
+			$selected = ( $project->registered_customer_id == $customer['id'] ) ? 'selected' : '';
+			$customer_opts.='<option value="' . $customer['id'] . '" ' . $selected . '>' . $customer['short_name'] . ' (' . strtoupper ( $customer['code'] ) . ')</option>';
+		}
+		$customer_opts.='</optgroup>';
+	}
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT * FROM ' . $NOVIS_CSI_PROJECT_STATUS->tbl_name . '';
+	$status = $this->get_sql ( $sql );
+	foreach ( $status as $status_det ){
+		$selected = ( $status_det['id'] == $project->status_id ) ? 'selected' : '';
+		$status_opts .= '<option ' . $selected . '>' . $status_det['short_name'] . '</option>';
+	}
+	//--------------------------------------------------------------------------
+	$project_request_dt = new DateTime ( $project->requested_datetime );
+	//--------------------------------------------------------------------------
+	$project_start_date = new DateTime ( $project->planned_start_date );
+	$project_end_date = new DateTime ( $project->planned_end_date );
+	//--------------------------------------------------------------------------
+	$o.='
+	<div class="container">
+		<div class="panel panel-default row">
+			<div class="panel-heading">
+				<h1 class="panel-title">Editar Proyecto: ' . $project->id . '</h1>
+			</div>
+			<div class="panel-body">
+				<form class="form-horizontal" data-function="csi_add_project" data-next-page="listprojects" style="position:relative;">
+					<h4>Definici&oacute;n y Alcance del Proyecto</h4>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Solicitud</label>
+						<div class="col-sm-10">
+							<p class="form-control">Solicitado por <a href="#"><i class="fa fa-fw fa-id-card-o"></i>cmarin</a> el ' . $project_request_dt->format('d/m/Y') . '</p>
+							<p class="help-block">
+								La fecha y autor de solicitud no pueden ser modificadas
+							</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
+						<div class="col-sm-10">
+							<div class="input-group select2-bootstrap-append select2-bootstrap-prepend">
+								<span class="input-group-addon"><samp>&nbsp;&nbsp;&nbsp;Registrado</samp></span>
+								<span class="input-group-addon">
+									<input type="radio" name="registered_customer_flag" class="csi-switchable-radio-button" value="1" ' . ( $project->registered_customer_flag ? 'checked' : '' ) . '>
+								</span>
+								<select name="registered_customer_id" class="form-control select2 ' . ( $project->registered_customer_flag ? '' : 'disabled' ) . '" ' . ( $project->registered_customer_flag ? '' : 'disabled' ) . ' required="true" data-placeholder="Selecciona el cliente registrado" tabindex="-1" aria-hidden="true">
+									<option></option>
+									' . $customer_opts . '
+								</select>
+							</div><!-- .input-group -->
+							<div class="input-group">
+								<span class="input-group-addon"><samp>No registrado</samp></span>
+								<span class="input-group-addon">
+									<input type="radio" class="csi-switchable-radio-button" name="registered_customer_flag" value="0" ' . ( $project->registered_customer_flag ? '' : 'checked' ) . '>
+								</span>
+								<input type="text" name="non_registered_customer_name" required="true" class="form-control ' . ( $project->registered_customer_flag ? 'disabled' : '' ) . '" ' . ( $project->registered_customer_flag ? 'disabled' : '' ) . ' placeholder="[Nombre de Cliente]" value="' . $project->non_registered_customer_name . '">
+							</div><!-- .input-group -->
+							<p class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Si el cliente no existe en nuestra Base de Datos (campo <strong>Cliente registrado</strong> puedes agregar la referencia con un texto que identifique al cliente.<br/>
+								Por ejemplo: <i>Soluciones Industriales</i></p>
+						</div>
+					</div>
+					<div class="form-group ">
+						<label for="short_name" class="col-sm-2 control-label">Nombre del Proyecto</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control" id="short_name" name="short_name" placeholder="Nombre del Proyecto" required="true" value="' . $project->short_name . '">
+							<p class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 100 caracteres
+							</p>
+						</div>
+					</div>
+					<div class="form-group ">
+						<label for="description" class="col-sm-2 control-label">Descripci&oacute;n</label>
+						<div class="col-sm-10">
+							<!-- Nav tabs -->
+							<ul class="nav nav-tabs">
+								<li role="presentation" class="active">
+									<a href="#csi-issue-input-description" data-toggle="tab" data-function="editor">
+										Escribir
+									</a>
+								</li>
+								<li role="presentation">
+									<a href="#csi-issue-preview-description" data-toggle="tab" data-function="mdPreview" data-text-field="#description" data-action="csi_issue_new_issue_form_md_preview">
+										Previsualizar
+									</a>
+								</li>
+							</ul><!-- .nav-tabs -->
+							<div class="tab-content">
+								<div role="tabpanel" class="tab-pane active" id="csi-issue-input-description">
+									<div class="list-group" style="margin-bottom:0px;">
+										<a href="#" class="list-group-item list-group-item-success small csi-popup" data-action="csi_issue_popup_markdown_info">
+											Modo de edici&oacute;n: Markdown habilitado <i class="fa fa-question-circle"></i>
+										</a>
+									</div>
+									<textarea class="form-control" id="description" name="description" placeholder="Descripci&oacute;n" required="true" rows="6">' . $project->description . '</textarea>
+									<p class="help-block collapse in">
+									</p>
+								</div>
+								<div role="tabpanel" class="tab-pane" id="csi-issue-preview-description" style="position:relative;min-height:100px;"></div>
+							</div><!-- .tab-content -->
+						</div><!-- .col-sm-10 -->
+					</div><!-- .form-group -->
+					<h4>Información de PMO</h4>
+					<div class="form-group">
+						<label for="status_id" class="col-sm-2 control-label">Status</label>
+						<div class="col-sm-10">
+							<select id="status_id" name="status_id" class="form-control select2" data-placeholder="Selecciona el Status">
+								<option></option>
+								' . $status_opts . '
+							</select>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Cuando un proyeto cambia de status, es recomendable crear un hito en el proyecto para que si el proyecto cambia de Status, indicar
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="planned_start_date" class="col-sm-2 control-label">Fecha de Inicio</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control csi-date-range-input" id="planned_start_date" name="planned_start_date" data-single-date-picker="true" required="true" value="' . $project_start_date->format('Y-m-d') . '"/>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+								Indicar la fecha estimada de inicio del proyecto.<br/>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="planned_end_date" class="col-sm-2 control-label">Fecha de Fin</label>
+						<div class="col-sm-10">
+							<input type="text" class="form-control csi-date-range-input" id="planned_end_date" name="planned_end_date" data-single-date-picker="true" value="' . $project_end_date->format('Y-m-d') . '"/>
+							<span class="help-block">
+								<small class="text-info pull-right">(recomendado)</small>
+								Indica la fecha de fin del proyecto.<br/>
+								Para mostrar de modo consistente este proyecto en la vista de <i>l&icute;nea de tiempo</i> es importante indicar la fecha de fin del proyecto.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="pm_user_id" class="col-sm-2 control-label">Project Manager</label>
+						<div class="col-sm-10">
+							<select id="pm_user_id" name="pm_user_id" class="form-control select2" data-placeholder="Selecciona el Project Manager">
+								<option></option>
+							</select>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="tl_user_id" class="col-sm-2 control-label">L&iacute;der T&eacute;cnico</label>
+						<div class="col-sm-10">
+							<select id="tl_user_id" name="tl_user_id" class="form-control select2" data-placeholder="Selecciona el L&iacute;der T&eacute;cnico">
+								<option></option>
+							</select>
+							<span class="help-block">
+								<small class="text-warning pull-right">(requerido)</small>
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="doc_link" class="col-sm-2 control-label">Enlace de Documentaci&oacute;n</label>
+						<div class="col-sm-10">
+							<input type="text" id="doc_link" name="doc_link" class="form-control" placeholder="Enlace de Documentaci&oacute;n">
+								<option></option>
+							</select>
+							<span class="help-block">
+								El <i>Enlace a la Documentaci&oacute;n</i> es el enlace a la carpeta de proyecto acorde a las <a href="#" target="_blank">reglas de documentación de proyecto <i class="fa fa-fw fa-external-link"></i></a>.
+							</span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="plan_link" class="col-sm-2 control-label">Enlace de Planificac&oacute;n</label>
+						<div class="col-sm-10">
+							<input type="text" id="plan_link" name="plan_link" class="form-control" placeholder="Enlace de Planificac&oacute;n">
+								<option></option>
+							</select>
+							<span class="help-block">
+								El <i>Enlace a la Planificac&oacute;n</i> es el enlace a la carga gantt del proyecto acorde a las <a href="#" target="_blank">reglas de documentación de proyecto <i class="fa fa-fw fa-external-link"></i></a>.
+							</span>
+						</div>
+					</div>
+					<h4>Hitos de Proyecto</h4>
+					<div class="form-group">
+						<a href="#project-' . $project->id . '-entrances" class="col-sm-2 control-label" data-toggle="collapse"><strong>Hitos del Proyecto</strong></a>
+						<div class="col-sm-10">
+							<div class="row panel panel-default">
+								<div class="panel-heading">
+									<i class="fa fa-fw fa-star"></i> Registro de hitos
+									<div class="pull-right">
+										<a href="#csi-fetch-project-entrance-list-info" class="refresh-button"><i class="fa fa-fw fa-refresh"></i></a>
+										|
+										<a data-toggle="collapse" href="#project-' . $project->id . '-entrances" role="button" class="collapsed" aria-expanded="false">
+											<i class="fa fa-fw fa-caret-down"></i>
+										</a>
+									</div>
+								</div>
+								<div id="project-' . $project->id . '-entrances" class="collapse">
+									<table class="table table-condensed refreshable" id="csi-fetch-project-entrance-list-info" data-action="csi_fetch_project_entrance_list_info" data-project-id="' . $project->id . '" style="position:relative;">
+										<thead>
+											<tr>
+												<th class="hidden-print">&nbsp;</th>
+												<th>Fecha</th>
+												<th>Autor</th>
+												<th>Avance</th>
+											</tr>
+										</thead>
+										<tbody>
+										</tbody>
+									</table>
+								</div><!-- #project-' . $project->id . '-entrances -->
+							</div><!-- .panel -->
+							<p class="help-block">
+								Las entradas de un proyecto son almacenados automáticamente.
+							</p>
+						</div><!-- .col-sm-10 -->
+					</div><!-- .form-group -->
+					<div class="form-group">
+						<div class="col-sm-offset-2 col-sm-10 text-right">
+							<button type="reset" class="btn btn-danger">Cancelar</button>
+							<button type="submit" class="btn btn-primary">Entiendo, Crear Solicitud de Proyecto</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div><!-- .container -->';
+	//--------------------------------------------------------------------------
+	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_pm_new_project_request(){
+	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_COUNTRY;
+	global $NOVIS_CSI_PROJECT_STATUS;
+	global $NOVIS_CSI_USER;
+	global $NOVIS_CSI_USER_TEAM;
+	//Local Variables
+	$o				= '';
+	$customer_opts	= '';
+	$status_opts	= '';
+	$pm_user_opts	= '';
+	$tl_user_opts	= '';
 	//--------------------------------------------------------------------------
 	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' ORDER BY short_name';
 	foreach ( $this->get_sql ( $sql ) as $country ){
@@ -957,99 +1225,287 @@ public function csi_pm_new_project_request(){
 		$customer_opts.='</optgroup>';
 	}
 	//--------------------------------------------------------------------------
-	$o.='
-	<div class="container">
-		<div class="panel panel-default row">
-			<div class="panel-heading">
-				<h1 class="panel-title">Crear Solicitud de Proyecto</h1>
-			</div>
-			<div class="panel-body">
-				<form class="form-horizontal" data-function="csi_add_project" data-next-page="listprojects" style="position:relative;">
-					<div class="form-group">
-						<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
-						<div class="col-sm-10">
-							<div class="input-group select2-bootstrap-append select2-bootstrap-prepend">
-								<span class="input-group-addon"><samp>&nbsp;&nbsp;&nbsp;Registrado</samp></span>
-								<span class="input-group-addon">
-									<input type="radio" name="registered_customer_flag" class="csi-switchable-radio-button" value="1" checked>
+	$sql = 'SELECT * FROM ' . $NOVIS_CSI_PROJECT_STATUS->tbl_name . '';
+	$status = $this->get_sql ( $sql );
+	foreach ( $status as $status_det ){
+		$status_opts .= '<option value="' . $status_det['id'] . '">' . $status_det['short_name'] . '</option>';
+	}
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id,short_name FROM ' . $NOVIS_CSI_USER_TEAM->tbl_name . ' ';
+	$user_teams = $this->get_sql ( $sql);
+	foreach ( $user_teams as $user_team ){
+		$sql = 'SELECT
+					T00.id as user_id,
+					T01.display_name as display_name,
+					T01.user_email as user_email
+				FROM
+					' . $NOVIS_CSI_USER->tbl_name . ' as T00
+					LEFT JOIN ' . $wpdb->base_prefix . 'users as T01
+						ON T00.id = T01.ID
+				WHERE
+					T00.active_flag = 1 AND
+					T00.team_id = "' . $user_team['id'] . '"
+		';
+		$users = $this->get_sql ( $sql );
+		$pm_user_opts .= '<optgroup label="' . $user_team['short_name'] . '">';
+		$tl_user_opts .= '<optgroup label="' . $user_team['short_name'] . '">';
+		foreach ( $users as $user ){
+			$selected = ( $user['user_id'] == get_current_user_id() ) ? ' selected ' : '';
+			$pm_user_opts .= '<option value="' . $user['user_id'] . '" ' . $selected . '>' . $user['display_name'] . '</option>';
+			$tl_user_opts .= '<option value="' . $user['user_id'] . '" >' . $user['display_name'] . '</option>';
+		}
+		$pm_user_opts .= '</optgroup>';
+		$tl_user_opts .= '</optgroup>';
+	}
+	//--------------------------------------------------------------------------
+	if ( current_user_can ( 'csi_create_projects' ) ){
+		$o.='
+		<div class="container">
+			<div class="panel panel-default row">
+				<div class="panel-heading">
+					<h1 class="panel-title">Crear Proyecto</h1>
+				</div>
+				<div class="panel-body">
+					<form class="form-horizontal" data-function="csi_add_project" data-next-page="listprojects" style="position:relative;">
+						<h4>Definición del Proyecto</h4>
+						<div class="form-group">
+							<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
+							<div class="col-sm-10">
+								<div class="input-group select2-bootstrap-append select2-bootstrap-prepend">
+									<span class="input-group-addon"><small><samp>&nbsp;&nbsp;&nbsp;Registrado</samp></small></span>
+									<span class="input-group-addon">
+										<input type="radio" name="registered_customer_flag" class="csi-switchable-radio-button" value="1" checked>
+									</span>
+									<select name="registered_customer_id" class="form-control select2 " required="true" data-placeholder="Selecciona el cliente registrado" style="width:100%;">
+										<option></option>
+										' . $customer_opts . '
+									</select>
+								</div><!-- .input-group -->
+								<div class="input-group">
+									<span class="input-group-addon"><small><samp>No registrado</samp></small></span>
+									<span class="input-group-addon">
+										<input type="radio" class="csi-switchable-radio-button" name="registered_customer_flag" value="0">
+									</span>
+									<input type="text" name="non_registered_customer_name" required="true" class="form-control disabled" disabled="" placeholder="[Nombre de Cliente]" value="">
+								</div><!-- .input-group -->
+								<p class="help-block">
+									<small class="text-warning pull-right">(requerido)</small>
+									Si el cliente no existe en nuestra Base de Datos (campo <strong>Cliente registrado</strong> puedes agregar la referencia con un texto que identifique al cliente.<br/>
+									Por ejemplo: <i>Soluciones Industriales</i></p>
+							</div>
+						</div>
+						<div class="form-group ">
+							<label for="short_name" class="col-sm-2 control-label">Nombre del Proyecto</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" id="short_name" name="short_name" placeholder="Nombre del Proyecto" required="true">
+								<p class="help-block">
+									<small class="text-warning pull-right">(requerido)</small>
+								</p>
+							</div>
+						</div>
+						<div class="form-group ">
+							<label for="description" class="col-sm-2 control-label">Descripci&oacute;n</label>
+							<div class="col-sm-10">
+								<!-- Nav tabs -->
+								<ul class="nav nav-tabs">
+									<li role="presentation" class="active">
+										<a href="#csi-issue-input-description" data-toggle="tab" data-function="editor">
+											Escribir
+										</a>
+									</li>
+									<li role="presentation">
+										<a href="#csi-issue-preview-description" data-toggle="tab" data-function="mdPreview" data-text-field="#description" data-action="csi_issue_new_issue_form_md_preview">
+											Previsualizar
+										</a>
+									</li>
+								</ul><!-- .nav-tabs -->
+								<div class="tab-content">
+									<div role="tabpanel" class="tab-pane active" id="csi-issue-input-description">
+										<div class="list-group" style="margin-bottom:0px;">
+											<a href="#" class="list-group-item list-group-item-success small csi-popup" data-action="csi_issue_popup_markdown_info">
+												Modo de edici&oacute;n: Markdown habilitado <i class="fa fa-question-circle"></i>
+											</a>
+										</div>
+										<textarea class="form-control" id="description" name="description" placeholder="Descripci&oacute;n" rows="6"></textarea>
+										<p class="help-block collapse in">
+										</p>
+									</div>
+									<div role="tabpanel" class="tab-pane" id="csi-issue-preview-description" style="position:relative;min-height:100px;"></div>
+								</div><!-- .tab-content -->
+							</div><!-- .col-sm-10 -->
+						</div><!-- .form-group -->
+						<div class="form-group ">
+							<label for="scope" class="col-sm-2 control-label">Alcance</label>
+							<div class="col-sm-10">
+								<!-- Nav tabs -->
+								<ul class="nav nav-tabs">
+									<li role="presentation" class="active">
+										<a href="#csi-issue-input-scope" data-toggle="tab" data-function="editor">
+											Escribir
+										</a>
+									</li>
+									<li role="presentation">
+										<a href="#csi-issue-preview-scope" data-toggle="tab" data-function="mdPreview" data-text-field="#scope" data-action="csi_issue_new_issue_form_md_preview">
+											Previsualizar
+										</a>
+									</li>
+								</ul><!-- .nav-tabs -->
+								<div class="tab-content">
+									<div role="tabpanel" class="tab-pane active" id="csi-issue-input-scope">
+										<div class="list-group" style="margin-bottom:0px;">
+											<a href="#" class="list-group-item list-group-item-success small csi-popup" data-action="csi_issue_popup_markdown_info">
+												Modo de edici&oacute;n: Markdown habilitado <i class="fa fa-question-circle"></i>
+											</a>
+										</div>
+										<textarea class="form-control" id="scope" name="scope" placeholder="Alcance" rows="6"></textarea>
+										<p class="help-block collapse in">
+										</p>
+									</div>
+									<div role="tabpanel" class="tab-pane" id="csi-issue-preview-scope" style="position:relative;min-height:100px;"></div>
+								</div><!-- .tab-content -->
+							</div><!-- .col-sm-10 -->
+						</div><!-- .form-group -->
+						<div class="form-group ">
+							<label for="capacity" class="col-sm-2 control-label">Capacidad RRHH</label>
+							<div class="col-sm-10">
+								<!-- Nav tabs -->
+								<ul class="nav nav-tabs">
+									<li role="presentation" class="active">
+										<a href="#csi-issue-input-capacity" data-toggle="tab" data-function="editor">
+											Escribir
+										</a>
+									</li>
+									<li role="presentation">
+										<a href="#csi-issue-preview-capacity" data-toggle="tab" data-function="mdPreview" data-text-field="#capacity" data-action="csi_issue_new_issue_form_md_preview">
+											Previsualizar
+										</a>
+									</li>
+								</ul><!-- .nav-tabs -->
+								<div class="tab-content">
+									<div role="tabpanel" class="tab-pane active" id="csi-issue-input-capacity">
+										<div class="list-group" style="margin-bottom:0px;">
+											<a href="#" class="list-group-item list-group-item-success small csi-popup" data-action="csi_issue_popup_markdown_info">
+												Modo de edici&oacute;n: Markdown habilitado <i class="fa fa-question-circle"></i>
+											</a>
+										</div>
+										<textarea class="form-control" id="capacity" name="capacity" placeholder="Capacidad" rows="6"></textarea>
+										<p class="help-block collapse in">
+										</p>
+									</div>
+									<div role="tabpanel" class="tab-pane" id="csi-issue-preview-capacity" style="position:relative;min-height:100px;"></div>
+								</div><!-- .tab-content -->
+							</div><!-- .col-sm-10 -->
+						</div><!-- .form-group -->
+						<div class="form-group">
+							<label for="planned_dates" class="col-sm-2 control-label">Duraci&oacute;n</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control csi-date-range-input" id="planned_dates" name="planned_dates" required="true"/>
+								<span class="help-block">
+									<small class="text-warning pull-right">(requerido)</small>
 								</span>
-								<select name="registered_customer_id" class="form-control select2 " required="true" data-placeholder="Selecciona el cliente registrado" tabindex="-1" aria-hidden="true">
+							</div>
+						</div>
+						<div class="well well-sm row">
+							<h4>Status del Proyecto</h4>
+							<div class="form-group">
+								<label for="status_id" class="col-sm-2 control-label">Status del Proyecto</label>
+								<div class="col-sm-10">
+									<select id="status_id" name="status_id" class="form-control select2" data-placeholder="Selecciona el Status" style="width:100%;">
+										<option></option>
+										' . $status_opts . '
+									</select>
+									<span class="help-block">
+										<small class="text-warning pull-right">(requerido)</small>
+									</span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="phase_id" class="col-sm-2 control-label">Fase del Proyecto</label>
+								<div class="col-sm-10">
+									<select id="phase_id" name="phase_id" class="form-control select2" data-placeholder="Selecciona la Fase" style="width:100%;">
+										<option></option>
+
+									</select>
+									<span class="help-block">
+										<i class="fa fa-fw fa-info"></i>La fase de un Proyecto, solo aplica para proyectos <i>En curso</i>.
+									</span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-2 control-label">Avance del Proyecto</label>
+								<div class="col-sm-10">
+									<div class="input-group">
+										<span class="input-group-addon" style="width:45%;">Avance Planificado</span>
+										<input type="number" class="form-control" name="plan_percentage"/>
+										<span class="input-group-addon">%</span>
+									</div>
+									<div class="input-group">
+										<span class="input-group-addon" style="width:45%;">Avance Real</span>
+										<input type="number" class="form-control" name="real_percentage"/>
+										<span class="input-group-addon">%</span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<h4>Responsables del Proyecto</h4>
+						<div class="form-group">
+							<label for="pm_user_id" class="col-sm-2 control-label">Project Manager</label>
+							<div class="col-sm-10">
+								<select id="pm_user_id" name="pm_user_id" class="form-control select2" data-placeholder="Selecciona el Project Manager" style="width:100%;">
 									<option></option>
-									' . $customer_opts . '
+									' . $pm_user_opts . '
 								</select>
-							</div><!-- .input-group -->
-							<div class="input-group">
-								<span class="input-group-addon"><samp>No registrado</samp></span>
-								<span class="input-group-addon">
-									<input type="radio" class="csi-switchable-radio-button" name="registered_customer_flag" value="0">
+								<span class="help-block">
 								</span>
-								<input type="text" name="non_registered_customer_name" required="true" class="form-control disabled" disabled="" placeholder="[Nombre de Cliente]" value="">
-							</div><!-- .input-group -->
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Si el cliente no existe en nuestra Base de Datos (campo <strong>Cliente registrado</strong> puedes agregar la referencia con un texto que identifique al cliente.<br/>
-								Por ejemplo: <i>Soluciones Industriales S.A. de C.V.</i></p>
+							</div>
 						</div>
-					</div>
-					<div class="form-group ">
-						<label for="short_name" class="col-sm-2 control-label">Nombre del Proyecto</label>
-						<div class="col-sm-10">
-							<input type="text" class="form-control" id="short_name" name="short_name" placeholder="Nombre del Proyecto" required="true">
-							<p class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Indicar el nombre descriptivo del Proyecto.<br>Tamaño máximo: 100 caracteres
-							</p>
+						<div class="form-group">
+							<label for="tl_user_id" class="col-sm-2 control-label">L&iacute;der T&eacute;cnico</label>
+							<div class="col-sm-10">
+								<select id="tl_user_id" name="tl_user_id" class="form-control select2" data-placeholder="Selecciona el L&iacute;der T&eacute;cnico" style="width:100%;">
+									<option></option>
+									' . $tl_user_opts . '
+								</select>
+								<span class="help-block">
+								</span>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label for="description" class="col-sm-2 control-label">Descripción</label>
-						<div class="col-sm-10">
-							<textarea class="form-control" id="description" name="description" placeholder="Descripción" required="true"></textarea>
-							<span class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Descripción breve del Plan de Corrección o Mantenimiento.<br>
-								<small>Tamaño máximo: 255 caracteres.</small>
-							</span>
+						<h4>Documentación del Proyecto</h4>
+						<p>Los repositorios de documentación del proyecto deben estar creados acorde a las <a href="#" target="_blank">reglas de documentación de proyecto <i class="fa fa-fw fa-external-link"></i></a>.
+						<div class="form-group">
+							<label for="doc_link" class="col-sm-2 control-label">Enlace de Documentaci&oacute;n</label>
+							<div class="col-sm-10">
+								<input type="url" id="doc_link" name="doc_link" class="form-control" placeholder="Enlace de Documentaci&oacute;n">
+									<option></option>
+								</select>
+								<span class="help-block">
+								</span>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label for="planned_start_date" class="col-sm-2 control-label">Fecha de Inicio</label>
-						<div class="col-sm-10">
-							<input type="text" class="form-control csi-date-range-input" id="planned_start_date" name="planned_start_date" data-single-date-picker="true" required="true"/>
-							<span class="help-block">
-								<small class="text-warning pull-right">(requerido)</small>
-								Indicar la fecha estimada de inicio del proyecto.<br/>
-								Recuerda que estas fechas ser&aacute;n evaluadas acorde al Capacity Planning de la sub-dirección de Proyectos.
-							</span>
+						<div class="form-group">
+							<label for="plan_link" class="col-sm-2 control-label">Enlace de Planificac&oacute;n</label>
+							<div class="col-sm-10">
+								<input type="url" id="plan_link" name="plan_link" class="form-control" placeholder="Enlace de Planificac&oacute;n">
+									<option></option>
+								</select>
+								<span class="help-block">
+								</span>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label for="planned_end_date" class="col-sm-2 control-label">Fecha de Fin</label>
-						<div class="col-sm-10">
-							<input type="text" class="form-control csi-date-range-input" id="planned_end_date" name="planned_end_date" data-single-date-picker="true"/>
-							<span class="help-block">
-								Indica la fecha de GoLive del proyecto.<br/>
-								En caso que el GoLive no coincida con la fecha de fin del proyecto, es importante indicar este detalle en la Descripción del Proyecto.
-							</span>
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10 text-right">
+								<kbd>Javier, antes de implementar la función, quiero saber si los campos están OK</kbd><br/>
+								<button type="reset" class="btn btn-default"><i class="fa fa-fw fa-history"></i>Cancelar</button>
+								<button type="submit" class="btn btn-primary disabled" disabled><i class="fa fa-fw fa-plus"></i>Crear Proyecto</button>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<div class="col-sm-offset-1 col-sm-10">
-							<p class=" text-justify">
-								La creación de un Plan de Corrección o Mantenimiento aparecerá de modo inmediato en los planes del cliente seleccionado.
-							</p>
-						</div>
-					</div>
-					<div class="form-group">
-						<div class="col-sm-offset-2 col-sm-10 text-right">
-							<button type="reset" class="btn btn-danger">Cancelar</button>
-							<button type="submit" class="btn btn-primary">Entiendo, Crear Solicitud de Proyecto</button>
-						</div>
-					</div>
-				</form>
+					</form>
+				</div>
 			</div>
-		</div>
-	</div><!-- .container -->';
+		</div><!-- .container -->';
+	}else{
+		$o.=self::no_permissions_msg();
+	}
 
 	$response['message']=$o;
 	echo json_encode($response);
@@ -1114,7 +1570,6 @@ protected function csi_pm_panel_builder ( $post ) {
 						<th>Nombre de Proyecto</th>
 						<th>PM</th>
 						<th>L&iacute;der T&eacute;cnico</th>
-						<th>KAM</th>
 						<th>Fecha plan inicio</th>
 						<th>Fecha plan fin</th>
 						<th>Status</th>
@@ -1131,7 +1586,6 @@ protected function csi_pm_panel_builder ( $post ) {
 						<td class="small"><a href="#!showproject?project_id=' . $project['project_id'] . '">' . $project['short_name'] . '</a></td>
 						<td>PM</td>
 						<td>lider</td>
-						<td>kam</td>
 						<td>' . $project['planned_start_date'] . '</td>
 						<td>' . $project['planned_end_date'] . '</td>
 						<td class="' . $project['status_class'] . '">' . $project['status_short_name'] . '</td>
@@ -1176,12 +1630,17 @@ public function csi_pm_build_page_list_projects(){
 	$o='
 	<div class="container">
 		<div class="page-header row">
-			<h3 class="col-sm-10">Planes de Corrección o Mantenimiento</h3>
+			<h3 class="col-sm-10">Planes de Corrección o Mantenimiento</h3>';
+	if ( current_user_can ( 'csi_create_projects' ) ){
+		$o.='
 			<h3 class="col-sm-2">
 				<a href="#!addproject" class="btn btn-success">
 					<i class="fa fa-plus"></i> Nuevo Proyecto
 				</a>
 			</h3>
+		';
+	}
+	$o.='
 		</div>
 		<div class="panel panel-default row">
 			<div class="panel-heading">
@@ -1220,7 +1679,7 @@ public function csi_pm_build_page_list_projects(){
 								<label for="show_plan">Desplegar Plan</label>
 							</div>
 							<div class="">
-								<input type="checkbox" name="show_table" id="show_table" value="1" class="form-control csi-cool-checkbox" checked>
+								<input type="checkbox" name="show_table" id="show_table" value="0" class="form-control csi-cool-checkbox" checked>
 								<label for="show_table">Desplegar Tabla</label>
 							</div>
 							<p class="help-block">
@@ -1345,7 +1804,7 @@ public function csi_pm_build_page_show_project(){
 			<h3 class="clearfix">
 				<span class="col-sm-10">' . $project->short_name . ' <small>' . $project->customer_short_name . '</small></span>
 				<p class="col-sm-2 text-right">
-					<a href="#!editproject?plan_id=' . $project_id . '" class="btn btn-default">
+					<a href="#!editproject?p=' . $project_id . '" class="btn btn-default">
 						<i class="fa fa-pencil"></i> Editar
 					</a>
 				</p>
@@ -1405,10 +1864,6 @@ public function csi_pm_build_page_show_project(){
 						</tr>
 						<tr>
 							<th class="small text-muted">Líder Técnico</th>
-							<td>Javier Caballero</td>
-						</tr>
-						<tr>
-							<th class="small text-muted">KAM</th>
 							<td>Javier Caballero</td>
 						</tr>
 						<tr>
@@ -1509,17 +1964,28 @@ public function csi_pm_build_page_intro(){
 					<h3><i class="fa fa-tasks"></i> Proyectos</h3>
 					<p class="text-justify">Proyectos Novis.</p>
 				</a>
-			</div>
+			</div>';
+	if ( current_user_can ( 'csi_create_projects' ) ){
+		$o.='
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!addproject" class="list-group-item active">
-					<h3><i class="fa fa-plus"></i> Solicitud de Proyecto</h3>
+					<h3><i class="fa fa-plus"></i> Nuevo Proyecto</h3>
 					<p class="text-justify">Aqui puedes solicitar o proponer un nuevo Proyecto.</p>
 				</a>
 			</div>
+		';
+	}
+	$o.='
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!pm_dashboard" class="list-group-item list-group-item-success">
 					<h3><i class="fa fa-dashboard"></i> Dashboards</h3>
 					<p class="text-justify">Vsitas pre-fabricadas para la gestión de Proyectos.</p>
+				</a>
+			</div>
+			<div class="list-group col-sm-6 col-md-4">
+				<a href="#!pm_dashboard" class="list-group-item list-group-item-danger">
+					<h3><i class="fa fa-certificate"></i> Nuevas Solicitudes de Proyecto</h3>
+					<p class="text-justify">Nuevas Solicitudes de PRoyecto.</p>
 				</a>
 			</div>
 		</div>

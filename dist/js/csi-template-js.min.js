@@ -31,14 +31,21 @@ var ajaxPages={
 	'dashboard'		:	'csi_cmp_dashboard_build_page',
 	'capacity'		:	'csi_cmp_capacity_build_page',
 	'keynote'		:	'csi_cmp_keynote_build_page',
+	//Project Management Module
+	'newprojectrequest'		:	'csi_pm_new_pr_form',
+	'ownprojectrequest'		:	'csi_pm_build_page_own_project_request',
+	'showprojectrequest'	:	'csi_pm_build_page_show_project_request',
+	'editprojectrequest'	:	'csi_pm_build_page_edit_project_request_form',
 	'addproject'	:	'csi_pm_new_project_request',
+	'editproject'	:	'csi_pm_build_page_edit_project_form',
 	'listprojects'	:	'csi_pm_build_page_list_projects',
 	'showproject'  	:   'csi_pm_build_page_show_project',
-	'addissue'		:	'csi_issue_new_issue_form',
+	'addissue'		:	'csi_issue_create_issue_form',
 	'searchissues'	:	'csi_issue_build_page_search_issue',
 	'showissue'  	:   'csi_issue_build_page_show_issue',
 	'editissue'		:	'csi_issue_edit_issue_form',
-
+	'ownissues'		:	'csi_issue_my_issues',
+	'issuerevprev'	:	'csi_issue_build_page_preview_issue_rev'
 };
 ajaxPages.intro		=	cmpMainContent.data('default-action');
 
@@ -437,6 +444,10 @@ function csiSoftRefreshEventListener(pageResponse){
 		$(this).css ( 'padding-right', '1em' );
 		$(this).after(editLink);
 	});
+	$('.csi-delete-dynamic-field-button').off('click').click(function(event){
+		event.preventDefault();
+		$(this).closest('.input-group').remove();
+	});
 	$('.input-dynamic').each( function(){
 		if ( undefined !== response.dynamicFields ){
 			if ( undefined !== $(this).data('dynamic-input') ){
@@ -444,9 +455,9 @@ function csiSoftRefreshEventListener(pageResponse){
 				if ( undefined !== response.dynamicFields[inputField] ){
 					inputField = response.dynamicFields[inputField];
 					var inputBox = $(this);
-					var count = 0;
 					$(this).next().html(inputField.addButton).click(function(event){
 						event.preventDefault();
+						var count = $(this).closest('.form-group').find('.input-group').size();
 						if ( count < inputField.maxFields ){
 							inputBox.append(inputField.fieldBox);
 							inputBox.find('.select2').select2({
@@ -456,13 +467,10 @@ function csiSoftRefreshEventListener(pageResponse){
 								theme: 'bootstrap',
 							});
 
-							$('.csi-cmp-delete-dynamic-field-button').click(function(event){
-								console.log ( $(this) );
+							$('.csi-delete-dynamic-field-button').off('click').click(function(event){
 								event.preventDefault();
-								$(this).parent().parent().remove();
-								count--;
+								$(this).closest('.input-group').remove();
 							});
-							count++;
 						}else{
 							$.alert({
 								icon					: 'fa fa-exclamation-triangle fa-sm',

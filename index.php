@@ -55,7 +55,8 @@ $novis_csi_vars = array(
 	'ewa_status'					."_network_class"	=> TRUE,
 	'ewa'							."_network_class"	=> TRUE,
 	##Project Management Module
-	'project_urgency'				."_network_class"	=> TRUE,
+	'project_request_status'		."_network_class"	=> TRUE,
+	'project_request'				."_network_class"	=> TRUE,
 	'project_status'				."_network_class"	=> TRUE,
 	'project_entrance'				."_network_class"	=> TRUE,
 	'project'						."_network_class"	=> TRUE,
@@ -69,6 +70,7 @@ $novis_csi_vars = array(
 	'cmp_task_step'					."_network_class"	=> TRUE,
 	'cmp_task_step_type'			."_network_class"	=> TRUE,
 	##Issue Management Module
+	'issue_status'					."_network_class"	=> TRUE,
 	'issue_event'					."_network_class"	=> TRUE,
 	'issue'							."_network_class"	=> TRUE,
 
@@ -95,8 +97,9 @@ $novis_csi_vars = array(
 	'ewa_status'					."_menu_slug"	=> 'csi_'		.'ewa_status',
 	'ewa'							."_menu_slug"	=> 'csi_'		.'ewa',
 	##Project Management Module
+	'project_request_status'		."_menu_slug"	=> 'csi_'		.'project_request_status',
+	'project_request'				."_menu_slug"	=> 'csi_'		.'project_request',
 	'project_status'				."_menu_slug"	=> 'csi_'		.'project_status',
-	'project_urgency'				."_menu_slug"	=> 'csi_'		.'project_urgency',
 	'project_entrance'				."_menu_slug"	=> 'csi_'		.'project_entrance',
 	'project'						."_menu_slug"	=> 'csi_'		.'project',
 	##Change Management Module
@@ -109,6 +112,7 @@ $novis_csi_vars = array(
 	'cmp_task_step'					."_menu_slug"	=> 'csi_'		.'cmp_task_step',
 	'cmp_task_step_type'			."_menu_slug"	=> 'csi_'		.'cmp_task_step_type',
 	##Issue Management Module
+	'issue_status'					."_menu_slug"	=> 'csi_'		.'issue_status',
 	'issue_event'					."_menu_slug"	=> 'csi_'		.'issue_event',
 	'issue'							."_menu_slug"	=> 'csi_'		.'issue',
 
@@ -135,8 +139,9 @@ $novis_csi_vars = array(
 	'ewa_status'					."_menu_cap"		=> 'manage_options',
 	'ewa'							."_menu_cap"		=> 'manage_options',
 	##Project Management Module
+	'project_request_status'		."_menu_cap"		=> 'manage_options',
+	'project_request'				."_menu_cap"		=> 'manage_options',
 	'project_status'				."_menu_cap"		=> 'manage_options',
-	'project_urgency'				."_menu_cap"		=> 'manage_options',
 	'project_entrance'				."_menu_cap"		=> 'manage_options',
 	'project'						."_menu_cap"		=> 'manage_options',
 	##Change MAnagement Module
@@ -149,11 +154,13 @@ $novis_csi_vars = array(
 	'cmp_task_step'					."_menu_cap"		=> 'manage_options',
 	'cmp_task_step_type'			."_menu_cap"		=> 'manage_options',
 	##Issue Management Module
+	'issue_status'					."_menu_cap"		=> 'manage_options',
 	'issue_event'					."_menu_cap"		=> 'manage_options',
 	'issue'							."_menu_cap"		=> 'manage_options',
 );
 
-
+global $csi_capabilities;
+$csi_capabilities = array();
 
 
 
@@ -379,11 +386,13 @@ require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-dashboard.php"
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-capacity.php");
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-keynote.php");
 ## Issue Management Module
+require_once(CSI_PLUGIN_DIR."/classes/issue-management/class-issue-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/issue-management/class-issue-event.php");
 require_once(CSI_PLUGIN_DIR."/classes/issue-management/class-issue.php");
-
+## Project Management Module
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-request-status.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-request.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-status.php");
-require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-urgency.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-entrance.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project.php");
 

@@ -471,6 +471,7 @@ public function csi_cmp_popup_user_info(){
 public function user_profile_fields( $user ) {
 	//Global Variables
 	global $wpdb;
+	global $csi_capabilities;
 	global $NOVIS_CSI_USER_TEAM;
 	global $NOVIS_CSI_COUNTRY;
 	//Local Variables
@@ -505,7 +506,7 @@ public function user_profile_fields( $user ) {
 	}
 	//only if user has other than backwpup role
 	$o='
-		<h3>CSI </h3>
+		<h3>CSI</h3>
 		<table class="form-table">
 			<tr>
 				<th>
@@ -561,6 +562,14 @@ public function user_profile_fields( $user ) {
 			</tr>
 		</table>
 	';
+	$o.='<h3><i>Objetos de autorizaci&oacute;n</i> del Plugin de CSI</h3>';
+	foreach ( $csi_capabilities as $cap_class ){
+		$o.='<strong>' . $cap_class['name'] . '</strong><br/>';
+		foreach($cap_class['caps'] as $cap){
+			$checked = user_can ( $user, $cap ) ? 'checked' : '';
+			$o.='<input type="checkbox" name="' . $this->plugin_post . '[cap][' . $cap . ']" value="1" ' . $checked . '>' . $cap . '<br>';
+		}
+	}
 	_e ( $o );
 }
 /**
@@ -571,11 +580,27 @@ public function user_profile_fields( $user ) {
 public function save_profile_update( $user_id ) {
 	//Global Variables
 	global $wpdb;
+	global $csi_capabilities;
 	//Local Variables
 	$editArray				= array();
-	$post					= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$post = isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	self::write_log ( $post );
 	$current_user		= get_userdata ( get_current_user_id() );
 	$current_datetime	= new DateTime();
+	//--------------------------------------------------------------------------
+	$user = new WP_User( $user_id );
+	foreach ( $csi_capabilities as $cap_class ){
+		foreach($cap_class['caps'] as $cap){
+			if ( isset ( $post['cap'][$cap] ) ) {
+				$user->add_cap( $cap );
+			}else{
+				$user->remove_cap( $cap );
+			}
+		}
+	}
+	//--------------------------------------------------------------------------
+
+
 
 	$editArray['id']							= intval ( $user_id );
 	$editArray['active_flag']					= isset ( $post['active_flag'] ) ? 1 : NULL;

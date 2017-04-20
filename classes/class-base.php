@@ -946,6 +946,30 @@ protected function findMonday($date = null){
 		return $date->modify('last monday');
 	}
 }
+public function no_permissions_msg(){
+	$o='
+	<div class="container">
+		<div class="well">
+			<h3 class="text-danger"><i class="fa fa-fw fa-exclamation-circle"></i>Cuidado</h3>
+			<p>No tienes autorización para acceder a esta funci&oacute;n.</p>
+			<p>Si has llegado a esta p&aacute;gina mediante un enlace, por favor ponte en contacto con el administrador: <a href="mailto:' . get_bloginfo('admin_email') . '"><i class="fa fa-fw fa-envelope-o"></I>' . get_bloginfo('admin_email') . '</a> con la siguiente informaci&oacute;n:</p>
+			<h4>Información t&eacute;cnica</h4>
+			<p><pre>' .
+				date('Y/m/d H:i:s P') .
+				'<br/>' .
+				$_SERVER['HTTP_REFERER'] .
+				'<br/>' .
+				var_export ( get_userdata ( get_current_user_id() )->caps, true) .
+				'<br/>' .
+				var_export ( get_userdata ( get_current_user_id() )->data, true) .
+				'<br/>' .
+				var_export($_POST, true) .
+			'</pre></p>
+		</div>
+	</div>
+	';
+	return $o;
+}
 //END OF CLASS
 }
 ?>
