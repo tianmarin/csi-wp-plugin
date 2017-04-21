@@ -3,7 +3,6 @@ defined('ABSPATH') or die("No script kiddies please!");
 
 class NOVIS_CSI_ISSUE_CLASS extends NOVIS_CSI_CLASS{
 public $default_status_code			= 'draft';
-public $unwanted_status				= array ( '"draft"', '"obsolete"' );
 public $more_info_link				= 'http://intranetmx.noviscorp.com/novis/kb/issues-mgmt/more-info/';
 /**
 * __construct
@@ -251,7 +250,7 @@ public function __construct(){
 			'user_input'				=>true,
 		),
 	);
-//	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'							));
+	//register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'							));
 	add_action( 'plugins_loaded',								array( $this , 'db_install' )						);
 	//in a new blog creation, create the db for new blog
 	//Applies only for non-network classes
@@ -279,36 +278,36 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_issue_new_issue_form_md_preview', 	array( $this , 'csi_issue_new_issue_form_md_preview'));
 	add_action( 'wp_ajax_csi_issue_popup_markdown_info',	 	array( $this , 'csi_issue_popup_markdown_info'		));
 	add_action( 'wp_ajax_csi_issue_my_issues',				 	array( $this , 'csi_issue_my_issues'				));
-/*
-create_issue
-create_issue_form
-create_issue_revision
-create_issue_revision_form
-fetch_issue_events
-add_issue_event
-add_issue_event_form
-edit_issue_event
-edit_issue_event_form
-delete_issue
-delete_issue_event_form
-edit_revision
-save_revision_form
-delete_revision
-delete_revision_form
-request_issue_approval
-approve_issue_revision
-reject_issue_revision
-show_issue
-show_revision
-my_issues
-reassign_issue
-approval_pending_list
-dashboard_issues_by_author
-csi_issue_popup_issue_status_info
-add_user_capability
-*/
+	/*
+	create_issue
+	create_issue_form
+	create_issue_revision
+	create_issue_revision_form
+	fetch_issue_events
+	add_issue_event
+	add_issue_event_form
+	edit_issue_event
+	edit_issue_event_form
+	delete_issue
+	delete_issue_event_form
+	edit_revision
+	save_revision_form
+	delete_revision
+	delete_revision_form
+	request_issue_approval
+	approve_issue_revision
+	reject_issue_revision
+	show_issue
+	show_revision
+	my_issues
+	reassign_issue
+	approval_pending_list
+	dashboard_issues_by_author
+	csi_issue_popup_issue_status_info
+	add_user_capability
+	*/
 
-//	add_action( 'wp_ajax_nopriv_csi_new_issue_request', 		array( $this , 'new_issue_request'		));
+	//	add_action( 'wp_ajax_nopriv_csi_new_issue_request', 		array( $this , 'new_issue_request'		));
 }
 public function csi_issue_popup_markdown_info(){
 	//Global Variables
@@ -684,101 +683,6 @@ public function csi_issue_create_issue(){
 	echo json_encode($response);
 	wp_die();
 }
-public function csi_pm_filtered_panel(){
-	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
-	$o = $this->csi_pm_panel_builder ( $post );
-	$response['message']=$o;
-	echo json_encode($response);
-	wp_die();
-}
-protected function csi_pm_panel_builder ( $post ) {
-	//Global Variables
-	global $NOVIS_CSI_CUSTOMER;
-	global $NOVIS_CSI_ISSUE_STATUS;
-	//Local Variables
-
-	//self::write_log ( $post );
-
-	$status					= $post['status'];
-	$show_plan				= isset ( $post['show_plan'] ) ? TRUE : NULL ;
-	$plan					= '';
-	$show_table				= isset ( $post['show_table'] ) ? TRUE : NULL ;
-	$table					= '';
-	$group_by				= '';
-	$order_by				= '';
-	$start_date				= new DateTime ( explode ( ' - ', $post['date_range'] )[0] );
-	$end_date				= new DateTime ( explode ( ' - ', $post['date_range'] )[1] );
-	//--------------------------------------------------------------------------
-	$sql = '
-		SELECT
-			T00.*,
-			T00.id as issue_id,
-			T01.id as customer_id,
-			T01.code as customer_code,
-			T02.short_name as status_short_name,
-			T02.css_class as status_class,
-			IF ( T00.registered_customer_flag , T01.short_name, T00.non_registered_customer_name ) as customer_short_name
-		FROM
-			' . $this->tbl_name . ' as T00
-			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T01
-				ON T00.registered_customer_id = T01.id
-			LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T02
-				ON T00.status_id = T02.id
-		WHERE
-			T00.status_id IN (' . $status . ')
-			AND T00.planned_end_date > "' . $start_date->format('Y-m-d') . '"
-			AND T00.planned_start_date < "' . $end_date->format('Y-m-d') . '"
-	';
-	//--------------------------------------------------------------------------
-	if ( $show_plan ){
-		$plan.=$this->csi_pm_build_gantt ( $sql, $post, $start_date, $end_date );
-	}
-	//--------------------------------------------------------------------------
-	if ( $show_table ){
-		$table.='
-			<table class="table table-condensed table-striped">
-				<thead>
-					<tr>
-						<th>Cliente</th>
-						<th>Nombre de Proyecto</th>
-						<th>PM</th>
-						<th>L&iacute;der T&eacute;cnico</th>
-						<th>KAM</th>
-						<th>Fecha plan inicio</th>
-						<th>Fecha plan fin</th>
-						<th>Status</th>
-					</tr>
-				</thead>
-				<tbody>
-		';
-		$issues = $this->get_sql ( $sql );
-		foreach ( $issues as $issue ){
-			$customer_name = ( NULL != $issue['customer_id'] ) ? $issue['customer_short_name'] : $issue['non_registered_customer_name'];
-			$table.='
-					<tr>
-						<td class="small">' . $issue['customer_short_name'] . '</td>
-						<td class="small"><a href="#!showissue?issue_id=' . $issue['issue_id'] . '">' . $issue['short_name'] . '</a></td>
-						<td>PM</td>
-						<td>lider</td>
-						<td>kam</td>
-						<td>' . $issue['planned_start_date'] . '</td>
-						<td>' . $issue['planned_end_date'] . '</td>
-						<td class="' . $issue['status_class'] . '">' . $issue['status_short_name'] . '</td>
-					</tr>
-			';
-		}
-		$table.='
-				</tbody>
-			</table>
-		';
-	}
-	$o=$plan;
-	$o.=$table;
-	return $o;
-	$response['message']=$o;
-	echo json_encode($response);
-	wp_die();
-}
 public function csi_issue_build_page_search_issue(){
 	//Global Variables
 	global $NOVIS_CSI_ISSUE_STATUS;
@@ -786,16 +690,6 @@ public function csi_issue_build_page_search_issue(){
 	//Local Variables
 	$status_checkboxes		= '';
 	//Execution
-	//--------------------------------------------------------------------------
-	$sql = ' SELECT * FROM ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' WHERE code IN(' . implode (', ', $this->unwanted_status ) . ')';
-	$excluded_status = $this->get_sql ( $sql );
-	foreach ( $excluded_status as $checkbox ){
-		$status_checkboxes.='
-		<div class="col-sm-6">
-			<input type="checkbox" name="show_' . $checkbox['code'] . '" id="show_' . $checkbox['code'] . '" value="1" class="form-control csi-cool-checkbox" >
-			<label for="show_' . $checkbox['code'] . '">Mostrar notas en estado <i>' . $checkbox['short_name'] . '</i></label>
-		</div>';
-	}
 	//--------------------------------------------------------------------------
 	$o='
 	<div class="container">
@@ -805,14 +699,6 @@ public function csi_issue_build_page_search_issue(){
 		</div>
 		<div class="">
 			<form class="form-horizontal" id="csi-issue-filtered-issues-form" data-target="#csi-issue-filtered-issues,#csi-issue-filtered-issues-pagination">
-				<div class="form-group">
-					<div class="row">
-						' . $status_checkboxes . '
-					</div>
-					<p class="help-block collapse in">
-						Por defecto, estos estados no son inclu&iacute;dos en tu b&uacute;squeda. <a href="#" class="csi-popup" data-action="csi_issue_popup_issue_status_info"><i class="fa fa-question-circle"></i></a>
-					</p>
-				</div>
 				<div class="form-group">
 					<div class="input-group">
 						<input type="text" required="true" class="form-control input-lg" id="issue_text" name="issue_text" placeholder="Introduce los t&eacute;rminos de b&uacute;squeda" />
@@ -887,8 +773,8 @@ public function csi_issue_filtered_issues(){
 					<tr>
 						<td class="' . $class . '">
 							<h4>
-								<a href="#!showissue?i=' . $this->nov_id ( $result['id'] ) . '&issue_text=' . urlencode ( $post['issue_text'] ). '" target="_blank">
-									' . $this->nov_id ( $result['id'] ) . ' - ' . $result['title'] . '
+								<a href="#!showissue?i=' . $this->nov_id ( $result['issue_id'] ) . '&issue_text=' . urlencode ( $post['issue_text'] ). '" target="_blank">
+									' . $this->nov_id ( $result['issue_id'] ) . ' - ' . $result['title'] . '
 								</a>
 							</h4>
 							<dl class="dl-horizontal">
@@ -898,6 +784,8 @@ public function csi_issue_filtered_issues(){
 								<dd>' . $result['display_name'] . '</dd>
 								<dt>Creaci&oacute;n</dt>
 								<dd>' . $creation_date->format('d-m-Y') . '</dd>
+								<dt>Modificaci&oacute;n</dt>
+								<dd>' . $modification_date->format('d-m-Y') . '</dd>
 								<dt>Estado</dt>
 								<dd><span class="text-' . $result['status_class'] . '"><i class="fa fa-' . $result['status_icon'] . '"></i> ' . $result['status_name'] . '</span></dd>
 							</dl>
@@ -932,11 +820,10 @@ protected function csi_issue_filtered_issues_sql ( $post, $calculate_rows = TRUE
 	$page_size			= 20;
 	$page_no			= isset ( $post['pageNo'] ) ? intval ( $post['pageNo'] ) : 1 ;
 	$results			= array();
-	$excluded_status	= array();
-	//Execution
-	$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
-	$terms = preg_split ( $regex, $post['issue_text'] );
 	$conditions = array();
+	$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
+	//Execution
+	$terms = preg_split ( $regex, $post['issue_text'] );
 
 	$sql = '
 		FROM
@@ -952,6 +839,7 @@ protected function csi_issue_filtered_issues_sql ( $post, $calculate_rows = TRUE
 			LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T05
 				ON T00.status_id = T05.id
 		WHERE
+			T05.released_flag AND
 		';
 	foreach ( $terms as $term ){
 		$term = str_replace ( '\"', '', $term );
@@ -970,27 +858,17 @@ protected function csi_issue_filtered_issues_sql ( $post, $calculate_rows = TRUE
 		array_push ( $conditions, $text );
 	}
 	$sql.=implode (' AND ', $conditions );
-	foreach ( $this->unwanted_status as $status ){
-		if ( isset ( $post['show_' . str_replace( '"', '', $status )] ) ){
-			//No lo agregues
-		}else{
-			array_push ( $excluded_status, $status );
-		}
-	}
-	if ( 0 < sizeof ( $excluded_status ) ) {
-		$sql.= ' AND T05.code NOT IN (' . implode ( ',', $excluded_status ) . ') ';
-	}
+	$group_by=' GROUP BY T00.issue_id';
 	//self::write_log ( $sql );
-	$results['total_rows']	= $wpdb->get_var ( 'SELECT COUNT(DISTINCT T00.id) as total ' . $sql );
+	$results['total_rows']	= $wpdb->get_var ( 'SELECT COUNT(T00.issue_id) as total ' . $sql );
 	if ( $results['total_rows'] <= $page_size ){
 		$page_no = 1;
 	}
 	if ( $calculate_rows ){
-		$rows = 'SELECT DISTINCT T00.id, T00.title, T00.creation_date, T00.last_modified_date, T00.summary , T04.display_name as display_name, T05.short_name as status_name, T05.code as status_code, T05.icon as status_icon, T05.css_class as status_class';
+		$rows = 'SELECT T00.issue_id, T00.title, T00.creation_date, T00.last_modified_date, T00.summary , T04.display_name as display_name, T05.short_name as status_name, T05.code as status_code, T05.icon as status_icon, T05.css_class as status_class';
 		$limit = ' LIMIT ' . ( $page_no - 1 ) * $page_size . ',' . $page_size ;
 		$order = ' ORDER BY T00.creation_date DESC ';
-		$results['rows']		= $this->get_sql (  $rows . $sql . $order . $limit );
-		//self::Write_log ( $results['rows'] );
+		$results['rows']		= $this->get_sql (  $rows . $sql . $group_by . $order . $limit );
 	}
 	$results['pages']		= ceil ( $results['total_rows'] / $page_size );
 	$results['page_no']		= $page_no;
@@ -1020,7 +898,7 @@ public function csi_issue_filtered_issues_pagination(){
 						</button>
 					</li>
 			';
-			for ( $i = 1 ; $i <= $page_count ; $i++ ){
+			for ( $i = 1 ; $i < $page_count ; $i++ ){
 				$pagination.= '
 					<li class="">
 						<button data-refresh-elements="#csi-issue-filtered-issues,#csi-issue-filtered-issues-pagination" data-page-no="' . $i . '" class="refresh-button btn btn-' . ( $i == $page_no ? 'primary' : 'default' ). ' btn-sm">
@@ -1181,11 +1059,18 @@ public function csi_issue_build_page_show_issue(){
 	//--------------------------------------------------------------------------
 	$sql = '
 		SELECT
-			*
+			T00.*
 		FROM
 			' . $this->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
+				ON T00.status_id = T01.id
 		WHERE
 			T00.issue_id ="' . $issue_id . '"
+			AND T01.released_flag
+		ORDER BY
+			T00.revision_id DESC
+		LIMIT
+			1
 	';
 	$issue = $wpdb->get_row ( $sql );
 	//--------------------------------------------------------------------------
@@ -1217,17 +1102,62 @@ public function csi_issue_build_page_show_issue(){
 	<div class="container">
 
 		<div class="page-header row">
+			<!--
 			<a href="#!searchissues" class="hidden-print"><i class="fa fa-angle-left fa-fw"></i> Buscador de Notas Novis</a>
+			-->
 			<h3 class="">
 				<samp class="col-sm-10">
 					<p class="text-muted small">' . $issue->issue_id . '</p>
 					' . $issue->title . '
 				</samp>
+	';
+	if ( preg_replace ( '/[^0-9]/', '', $issue->author_id ) == get_current_user_id() ){
+		$sql = '
+			SELECT
+				COUNT(T00.id) as rev,
+				NOT(T01.prevent_edition_flag) as editable
+			FROM
+				' . $this->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
+					ON T00.status_id = T01.id
+			WHERE
+				T00.issue_id = "' . preg_replace ( '/[^0-9]/', '', $issue->issue_id ) . '"
+				AND T00.revision_id > "' . preg_replace ( '/[^0-9]/', '', $issue->revision_id ) . '"
+			ORDER BY
+				T00.revision_id DESC
+			LIMIT
+				1
+		';
+		$revision = $wpdb->get_row ( $sql );
+		if ( $revision->rev ){
+			if ( $revision->editable ){
+				$o.='
+				<p class="col-sm-2 text-right hidden-print">
+				<a href="#!editissue?i=' . $this->nov_id( $issue_id ) . '" class="btn btn-default">
+						<i class="fa fa-pencil-square-o"></i> Seguir trabajando en revision
+					</a>
+				</p>
+				';
+			}else{
+				$o.='
+				<p class="col-sm-2 text-right hidden-print">
+					<a href="#!issuerevprev?i=' . $this->nov_id( $issue_id ) . '" class="btn btn-default">
+						<i class="fa fa-bolt"></i> Ver status de aprobaci&oacute;n
+					</a>
+				</p>
+				';
+			}
+		}else{
+			$o.='
 				<p class="col-sm-2 text-right hidden-print">
 					<a href="#!newissuerevision?issue_id=' . $this->nov_id( $issue_id ) . '" class="btn btn-default">
 						<i class="fa fa-clone"></i> Crear revisi&oacute;n
 					</a>
 				</p>
+			';
+		}
+	}
+	$o.='
 			</h3>
 		</div><!-- .page-header -->
 		<div class="row csi-issue-display-note">
@@ -1326,6 +1256,12 @@ public function csi_issue_build_page_intro(){
 					<p class="text-justify">visualiza las notas que has escrito</p>
 				</a>
 			</div>
+			<div class="list-group col-sm-6 col-md-4">
+				<a href="#!searchissues" class="list-group-item list-group-item-danger">
+					<h3><i class="fa fa-users"></i> Comité de Aprobadores</h3>
+					<p class="text-justify">Acciones para el Issue Advisory Board</p>
+				</a>
+			</div>
 		</div>
 	</nav><!-- .container -->
 	';
@@ -1338,146 +1274,164 @@ public function csi_issue_edit_issue_form(){
 	//Global Variables
 	global $NOVIS_CSI_COUNTRY;
 	global $NOVIS_CSI_USER_TEAM;
+	global $NOVIS_CSI_ISSUE_STATUS;
 	global $wpdb;
 	//Local Variables
 	$o				= '';
 	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	//--------------------------------------------------------------------------
 	$issue_id = preg_replace ( '/[^0-9]/', '', $post['i'] );
-	$sql = 'SELECT * FROM ' . $this->tbl_name . ' WHERE issue_id = "' . $issue_id . '" ORDER BY revision_id ASC LIMIT 1';
+	$sql = '
+		SELECT
+			T00.*
+		FROM
+			' . $this->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
+				ON T00.status_id = T01.id
+		WHERE
+			T00.issue_id ="' . $issue_id . '"
+			AND NOT(T01.prevent_edition_flag)
+		ORDER BY
+			T00.revision_id ASC
+		LIMIT
+			1';
 	$issue = $wpdb->get_row ( $sql );
 	//--------------------------------------------------------------------------
-	$o.='
-	<div class="container">
-		<div class="panel panel-default row">
-			<div class="panel-heading">
-				<h2 class="">Editar Nota Novis</h2>
-			</div>
-			<div class="panel-body">
-				<div class="row">
-					<div class="">
-						<p class="text-justify">Para la publicar una <strong>Nota NOVIS</strong> debes seguir el <strong>flujo de aprobación de Notas NOVIS</strong>. Aqu&iacute; puedes comenzar a escribir una nueva nota y una vez que est&eacute; lista para publicar debes solicitar la aprobaci&oacute;n del Comit&eacute; de Notas NOVIS, desde la p&aacute;gina <a href="#!ownissues"><samp>Mis notas</samp></a>.</p>
-						<p>Si tienes dudas o quieres aprender m&aacute;s puedes revisar la <a href="' . $this->more_info_link . '" target="_blank">documentaci&oacute;n de la Gesti&oacute;n de Base de Conocimiento - Notas NOVIS<i class="fa fa-fw fa-external-link"></i></a> en nuestra intranet.</p>
-						<button class="btn btn-primary btn-sm" type="button" data-toggle="collapse" data-target=".help-block" aria-expanded="false" aria-controls="collapseExample">
-							Desactivar ayuda
-						</button>
-					</div>
+	if ( $issue->author_id == get_current_user_id() ){
+		$o.='
+		<div class="container">
+			<div class="panel panel-default row">
+				<div class="panel-heading">
+					<h2 class="">Editar Nota Novis</h2>
 				</div>
-				<hr/>
-				<form class="form-horizontal" data-function="csi_issue_edit_issue" style="position:relative;">
-					<input type="hidden" name="id" id="id" value="' . $issue->id . '"/>
-					<div class="form-group">
-						<label class="col-sm-2 control-label">N&uacute;mero de nota</label>
-						<div class="col-sm-10">
-							<input type="text" class="form-control disabled" name="issue_id" id="issue_id" value="' . $this->nov_id ( $issue_id ) . '" style="text-align: right;" disabled/>
-							<span class="help-block collapse in">' . $this->db_fields['issue_id']['form_help_text'] . '</span>
+				<div class="panel-body">
+					<div class="row">
+						<div class="">
+							<p class="text-justify">Para la publicar una <strong>Nota NOVIS</strong> debes seguir el <strong>flujo de aprobación de Notas NOVIS</strong>. Aqu&iacute; puedes comenzar a escribir una nueva nota y una vez que est&eacute; lista para publicar debes solicitar la aprobaci&oacute;n del Comit&eacute; de Notas NOVIS, desde la p&aacute;gina <a href="#!ownissues"><samp>Mis notas</samp></a>.</p>
+							<p>Si tienes dudas o quieres aprender m&aacute;s puedes revisar la <a href="' . $this->more_info_link . '" target="_blank">documentaci&oacute;n de la Gesti&oacute;n de Base de Conocimiento - Notas NOVIS<i class="fa fa-fw fa-external-link"></i></a> en nuestra intranet.</p>
+							<button class="btn btn-primary btn-sm" type="button" data-toggle="collapse" data-target=".help-block" aria-expanded="false" aria-controls="collapseExample">
+								Desactivar ayuda
+							</button>
 						</div>
 					</div>
-					<div class="form-group">
-						<label class="col-sm-2 control-label">Revisi&oacute;n</label>
-						<div class="col-sm-10">
-							<input type="number" class="form-control disabled" name="revision_id" id="revision_id" value="' . $issue->revision_id . '" style="text-align: right;" disabled/>
-							<span class="help-block collapse in">' . $this->db_fields['revision_id']['form_help_text'] . '</span>
+					<hr/>
+					<form class="form-horizontal" data-function="csi_issue_edit_issue" style="position:relative;">
+						<input type="hidden" name="id" id="id" value="' . $issue->id . '"/>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">N&uacute;mero de nota</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control disabled" name="issue_id" id="issue_id" value="' . $this->nov_id ( $issue_id ) . '" style="text-align: right;" disabled/>
+								<span class="help-block collapse in">' . $this->db_fields['issue_id']['form_help_text'] . '</span>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
-						<div class="col-sm-10">
-							<input type="text" name="title" id="title" class="form-control" required="true" placeholder="T&iacute;tulo" value="' . $issue->title . '"/>
-							<p class="help-block collapse in">' . $this->db_fields['title']['form_help_text'] . '</p>
+						<div class="form-group">
+							<label class="col-sm-2 control-label">Revisi&oacute;n</label>
+							<div class="col-sm-10">
+								<input type="number" class="form-control disabled" name="revision_id" id="revision_id" value="' . $issue->revision_id . '" style="text-align: right;" disabled/>
+								<span class="help-block collapse in">' . $this->db_fields['revision_id']['form_help_text'] . '</span>
+							</div>
 						</div>
-					</div>
-	';
-	$o.=self::csi_issue_new_issue_form_textarea ( array(
-		'id'			=> 'summary',
-		'title'			=> 'Resumen',
-		'placeholder'	=> 'Resumen',
-		'maxlength'		=> 1000,
-		'rows'			=> 6,
-		'required'		=> true,
-		'help'			=> 'El Resumen de una <strong>Nota NOVIS</strong> describe brevemente la situaci&oacute;n del error.',
-		'value'			=> $issue->summary,
-	)) ;
-	$o.=self::csi_issue_new_issue_form_textarea ( array(
-		'id'			=> 'symptom',
-		'title'			=> 'S&iacute;ntomas',
-		'placeholder'	=> 'S&iacute;ntomas',
-		'maxlength'		=> 1000,
-		'rows'			=> 6,
-		'required'		=> true,
-		'help'			=> 'hola',
-		'value'			=> $issue->symptom,
-	)) ;
-	$o.=self::csi_issue_new_issue_form_textarea ( array(
-		'id'			=> 'terms',
-		'title'			=> 'Otros t&eacute;rminos',
-		'placeholder'	=> 'Otros t&eacute;rminos',
-		'maxlength'		=> 500,
-		'rows'			=> 4,
-		'required'		=> true,
-		'help'			=> 'hola',
-		'value'			=> $issue->terms,
-	)) ;
-	$o.=self::csi_issue_new_issue_form_textarea ( array(
-		'id'			=> 'reason',
-		'title'			=> 'Causa y Pre-Requisitos',
-		'placeholder'	=> 'Soluci&oacute;n',
-		'maxlength'		=> 1000,
-		'rows'			=> 6,
-		'required'		=> true,
-		'help'			=> 'hola',
-		'value'			=> $issue->reason,
-	)) ;
-	$o.=self::csi_issue_new_issue_form_textarea ( array(
-		'id'			=> 'solution',
-		'title'			=> 'Soluci&oacute;n',
-		'placeholder'	=> 'Soluci&oacute;n',
-		'maxlength'		=> 1000,
-		'rows'			=> 6,
-		'required'		=> true,
-		'help'			=> 'La Soluci&oacute;n de una <strong>Nota NOVIS</strong> describe las acciones requeridas para solventar el error. Es v&aacute;lido que las acciones no resuelvan la causa raíz del error y pueden proporcionar un mecanismo de <i>workaround</i>.',
-		'value'			=> $issue->solution,
-	)) ;
-	$o.='
-					<div class="form-group">
-						<label for="title" class="col-sm-2 control-label">Documentos Relacionados</label>
-						<div class="col-sm-10">
-							<div class="input-dynamic" data-dynamic-input="related-docs"></div>
-							<div class="text-center"></div>
-							<p class="help-block collapse in">
-								Los Documentos Relacionados, son enlaces a diferentes documentos, notas SAP, u otros que sirvan como referencia a una <strong>Nota NOVIS</strong>. En caso de utilizar un documento creado para esta nota importante seguir la <a href="#" target="_blank">gu&iacute;a de Documentos Relacionados de una <strong>Nota NOVIS</strong><i class="fa fa-fw fa-external-link"></i></a>.
-							</p>
+						<div class="form-group">
+							<label for="title" class="col-sm-2 control-label">T&iacute;tulo</label>
+							<div class="col-sm-10">
+								<input type="text" name="title" id="title" class="form-control" required="true" placeholder="T&iacute;tulo" value="' . $issue->title . '"/>
+								<p class="help-block collapse in">' . $this->db_fields['title']['form_help_text'] . '</p>
+							</div>
 						</div>
-					</div>
-					<div class="form-group">
-						<div class="col-sm-offset-2 col-sm-10 text-right">
-							<button type="reset" class="btn btn-default"><i class="fa fa-fw fa-history"></i>Cancelar</button>
-							<button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-save"></i>Guardar</button>
+		';
+		$o.=self::csi_issue_new_issue_form_textarea ( array(
+			'id'			=> 'summary',
+			'title'			=> 'Resumen',
+			'placeholder'	=> 'Resumen',
+			'maxlength'		=> 1000,
+			'rows'			=> 6,
+			'required'		=> true,
+			'help'			=> 'El Resumen de una <strong>Nota NOVIS</strong> describe brevemente la situaci&oacute;n del error.',
+			'value'			=> $issue->summary,
+		)) ;
+		$o.=self::csi_issue_new_issue_form_textarea ( array(
+			'id'			=> 'symptom',
+			'title'			=> 'S&iacute;ntomas',
+			'placeholder'	=> 'S&iacute;ntomas',
+			'maxlength'		=> 1000,
+			'rows'			=> 6,
+			'required'		=> true,
+			'help'			=> 'hola',
+			'value'			=> $issue->symptom,
+		)) ;
+		$o.=self::csi_issue_new_issue_form_textarea ( array(
+			'id'			=> 'terms',
+			'title'			=> 'Otros t&eacute;rminos',
+			'placeholder'	=> 'Otros t&eacute;rminos',
+			'maxlength'		=> 500,
+			'rows'			=> 4,
+			'required'		=> true,
+			'help'			=> 'hola',
+			'value'			=> $issue->terms,
+		)) ;
+		$o.=self::csi_issue_new_issue_form_textarea ( array(
+			'id'			=> 'reason',
+			'title'			=> 'Causa y Pre-Requisitos',
+			'placeholder'	=> 'Soluci&oacute;n',
+			'maxlength'		=> 1000,
+			'rows'			=> 6,
+			'required'		=> true,
+			'help'			=> 'hola',
+			'value'			=> $issue->reason,
+		)) ;
+		$o.=self::csi_issue_new_issue_form_textarea ( array(
+			'id'			=> 'solution',
+			'title'			=> 'Soluci&oacute;n',
+			'placeholder'	=> 'Soluci&oacute;n',
+			'maxlength'		=> 1000,
+			'rows'			=> 6,
+			'required'		=> true,
+			'help'			=> 'La Soluci&oacute;n de una <strong>Nota NOVIS</strong> describe las acciones requeridas para solventar el error. Es v&aacute;lido que las acciones no resuelvan la causa raíz del error y pueden proporcionar un mecanismo de <i>workaround</i>.',
+			'value'			=> $issue->solution,
+		)) ;
+		$o.='
+						<div class="form-group">
+							<label for="title" class="col-sm-2 control-label">Documentos Relacionados</label>
+							<div class="col-sm-10">
+								<div class="input-dynamic" data-dynamic-input="related-docs"></div>
+								<div class="text-center"></div>
+								<p class="help-block collapse in">
+									Los Documentos Relacionados, son enlaces a diferentes documentos, notas SAP, u otros que sirvan como referencia a una <strong>Nota NOVIS</strong>. En caso de utilizar un documento creado para esta nota importante seguir la <a href="#" target="_blank">gu&iacute;a de Documentos Relacionados de una <strong>Nota NOVIS</strong><i class="fa fa-fw fa-external-link"></i></a>.
+								</p>
+							</div>
 						</div>
-					</div>
-				</form>
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-10 text-right">
+								<button type="reset" class="btn btn-default"><i class="fa fa-fw fa-history"></i>Cancelar</button>
+								<button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-save"></i>Guardar</button>
+							</div>
+						</div>
+					</form>
+				</div>
 			</div>
-		</div>
-	</div><!-- .container -->';
-	$dynamic_fields=array(
-		'related-docs'			=> array(
-			'maxFields'		=> 5,
-			'addButton'		=> '<button type="button" class="btn btn-sm btn-success" id="doc-plus"><i class="fa fa-plus"></i> Agregar Documento Relacionado</button>',
-			'fieldBox'		=> '
-				<p>
-					<div class="input-group">
-						<span class="input-group-addon"><i class="fa fa-file-text-o"></i></span>
-						<input type="text" class="form-control" placeholder="T&iacute;tulo del documento" name="related-doc-title[]" required="true"/>
-						<input type="text" class="form-control" placeholder="Descripci&oacute;n breve del documento" name="related-doc-description[]" required="true"/>
-						<input type="text" class="form-control" placeholder="URL del Documento" name="related-doc-url[]" required="true"/>
-						<button type="button" href="#" class="btn btn-danger btn-block btn-sm csi-delete-dynamic-field-button">
-							<i class="fa fa-fw fa-times"></i>Eliminar Documento Relacionado
-						</button>
-					</div>
-				</p>',
-		),
-	);
-	$response['dynamicFields'] = $dynamic_fields;
+		</div><!-- .container -->';
+		$dynamic_fields=array(
+			'related-docs'			=> array(
+				'maxFields'		=> 5,
+				'addButton'		=> '<button type="button" class="btn btn-sm btn-success" id="doc-plus"><i class="fa fa-plus"></i> Agregar Documento Relacionado</button>',
+				'fieldBox'		=> '
+					<p>
+						<div class="input-group">
+							<span class="input-group-addon"><i class="fa fa-file-text-o"></i></span>
+							<input type="text" class="form-control" placeholder="T&iacute;tulo del documento" name="related-doc-title[]" required="true"/>
+							<input type="text" class="form-control" placeholder="Descripci&oacute;n breve del documento" name="related-doc-description[]" required="true"/>
+							<input type="text" class="form-control" placeholder="URL del Documento" name="related-doc-url[]" required="true"/>
+							<button type="button" href="#" class="btn btn-danger btn-block btn-sm csi-delete-dynamic-field-button">
+								<i class="fa fa-fw fa-times"></i>Eliminar Documento Relacionado
+							</button>
+						</div>
+					</p>',
+			),
+		);
+		$response['dynamicFields'] = $dynamic_fields;
+	}else{
+		$o.= self::no_permissions_msg();
+	}
 
 	$response['message']=$o;
 	echo json_encode($response);
@@ -1491,82 +1445,119 @@ public function csi_issue_edit_issue(){
 	$whereArray			= array();
 	$response			= array();
 	$post	= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
-	//self::write_log ( $post );
-	$current_user		= get_userdata ( get_current_user_id() );
-	$current_datetime	= new DateTime();
+	$sql = '
+		SELECT
+			T00.id,
+			T00.author_id,
+			T01.prevent_edition_flag
+		FROM
+			' . $this->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
+				ON T00.status_id = T01.id
+		WHERE
+			T00.id ="' . intval ( $post['id'] ) . '"
+	';
+	$revision = $wpdb->get_row ( $sql );
 
-	$whereArray['id']						= intval ( $post['id'] );
-	$whereArray['issue_id']					= intval ( preg_replace ( '/[^0-9]/', '', $post['issue_id'] ) );
-	$whereArray['revision_id']				= intval ( $post['revision_id'] );
+	if ( $revision->author_id == get_current_user_id() && !$revision->prevent_edition_flag ){
+		//self::write_log ( $post );
+		$current_user		= get_userdata ( get_current_user_id() );
+		$current_datetime	= new DateTime();
 
-	$editArray['title']						= strip_tags(stripslashes( $post['title'] ) );
-	$editArray['summary']					= strip_tags(stripslashes( $post['summary'] ) );
-	$editArray['symptom']					= strip_tags(stripslashes( $post['symptom'] ) );
-	$editArray['terms']						= strip_tags(stripslashes( $post['terms'] ) );
-	$editArray['reason']					= strip_tags(stripslashes( $post['reason'] ) );
-	$editArray['solution']					= strip_tags(stripslashes( $post['solution'] ) );
+		$whereArray['id']						= intval ( $post['id'] );
+		$whereArray['issue_id']					= intval ( preg_replace ( '/[^0-9]/', '', $post['issue_id'] ) );
+		$whereArray['revision_id']				= intval ( $post['revision_id'] );
 
-	$editArray['last_modified_user_id']		= $current_user->ID;
-	$editArray['last_modified_user_email']	= $current_user->user_email;
-	$editArray['last_modified_date']		= $current_datetime->format('Y-m-d');
-	$editArray['last_modified_time']		= $current_datetime->format('H:i:s');
-	//self::write_log ( $post );
-	//self::write_log ( $editArray );
-	$result = $wpdb->update ( $this->tbl_name, $editArray, $whereArray );
-	if( $result === false ){
+		$editArray['title']						= strip_tags(stripslashes( $post['title'] ) );
+		$editArray['summary']					= strip_tags(stripslashes( $post['summary'] ) );
+		$editArray['symptom']					= strip_tags(stripslashes( $post['symptom'] ) );
+		$editArray['terms']						= strip_tags(stripslashes( $post['terms'] ) );
+		$editArray['reason']					= strip_tags(stripslashes( $post['reason'] ) );
+		$editArray['solution']					= strip_tags(stripslashes( $post['solution'] ) );
+
+		$editArray['last_modified_user_id']		= $current_user->ID;
+		$editArray['last_modified_user_email']	= $current_user->user_email;
+		$editArray['last_modified_date']		= $current_datetime->format('Y-m-d');
+		$editArray['last_modified_time']		= $current_datetime->format('H:i:s');
+		//self::write_log ( $post );
+		//self::write_log ( $editArray );
+		$result = $wpdb->update ( $this->tbl_name, $editArray, $whereArray );
+		if( $result === false ){
+			$response['error']=true;
+			$response['notification']=array(
+				'buttons'			=> array(
+					'OK'			=> array(
+						'text'		=> 'OK',
+						'btnClass'	=> 'btn-danger',
+					),
+				),
+				'icon'				=> 'fa fa-exclamation-circle fa-sm',
+				'closeIcon'			=> true,
+				'columnClass'		=> 'large',
+				'content'			=> 'Hubo un error al editar el ' . $this->name_single . '; intenta nuevamente. :)',
+				'title'				=> 'Bien!',
+				'type'				=> 'red',
+				'autoClose'			=> 'OK|3000',
+			);
+		}elseif ( $result == 0){
+			$response['error']=true;
+			$response['notification']=array(
+				'buttons'			=> array(
+					'OK'			=> array(
+						'text'		=> 'OK',
+						'btnClass'	=> 'btn-warning',
+					),
+				),
+				'icon'				=> 'fa fa-exclamation-triangle fa-sm',
+				'closeIcon'			=> true,
+				'columnClass'		=> 'large',
+				'content'			=> 'Los valores son iguales. ' . $this->name_single . ' no modificado',
+				'title'				=> 'Bien!',
+				'type'				=> 'orange',
+				'autoClose'			=> 'OK|3000',
+			);
+		}else{
+			$response['postSubmitAction']	='changeHash';
+			//$response['newId']				= '#!showissue?i=' . $post['issue_id'];
+			$response['newId']				= '#!ownissues';
+			$response['notification']=array(
+				'buttons'			=> array(
+					'OK'			=> array(
+						'text'		=> 'OK',
+						'btnClass'	=> 'btn-success',
+					),
+				),
+				'icon'				=> 'fa fa-exclamation-triangle fa-sm',
+				'closeIcon'			=> true,
+				'columnClass'		=> 'large',
+				'content'			=> $this->name_single . ' editado exitosamente.',
+				'title'				=> 'Bien!',
+				'type'				=> 'green',
+				'autoClose'			=> 'OK|3000',
+			);
+		}
+	}else{
 		$response['error']=true;
+		$response['postSubmitAction']	='changeURL';
+		$response['newUrl'] = 'https://www.fbi.gov/investigate/cyber';
 		$response['notification']=array(
 			'buttons'			=> array(
 				'OK'			=> array(
-					'text'		=> 'OK',
+					'text'		=> ':( Lo siento',
 					'btnClass'	=> 'btn-danger',
 				),
 			),
 			'icon'				=> 'fa fa-exclamation-circle fa-sm',
 			'closeIcon'			=> true,
 			'columnClass'		=> 'large',
-			'content'			=> 'Hubo un error al editar el ' . $this->name_single . '; intenta nuevamente. :)',
-			'title'				=> 'Bien!',
+			'content'			=> 'Estás tratando de hacer trampa. Que verg&uuml;enza',
+			'title'				=> 'Cuidado!',
 			'type'				=> 'red',
-			'autoClose'			=> 'OK|3000',
 		);
-	}elseif ( $result == 0){
-		$response['error']=true;
-		$response['notification']=array(
-			'buttons'			=> array(
-				'OK'			=> array(
-					'text'		=> 'OK',
-					'btnClass'	=> 'btn-warning',
-				),
-			),
-			'icon'				=> 'fa fa-exclamation-triangle fa-sm',
-			'closeIcon'			=> true,
-			'columnClass'		=> 'large',
-			'content'			=> 'Los valores son iguales. ' . $this->name_single . ' no modificado',
-			'title'				=> 'Bien!',
-			'type'				=> 'orange',
-			'autoClose'			=> 'OK|3000',
-		);
-	}else{
-		$response['postSubmitAction']	='changeHash';
-		//$response['newId']				= '#!showissue?i=' . $post['issue_id'];
-		$response['newId']				= '#!ownissues';
-		$response['notification']=array(
-			'buttons'			=> array(
-				'OK'			=> array(
-					'text'		=> 'OK',
-					'btnClass'	=> 'btn-success',
-				),
-			),
-			'icon'				=> 'fa fa-exclamation-triangle fa-sm',
-			'closeIcon'			=> true,
-			'columnClass'		=> 'large',
-			'content'			=> $this->name_single . ' editado exitosamente.',
-			'title'				=> 'Bien!',
-			'type'				=> 'green',
-			'autoClose'			=> 'OK|3000',
-		);
+
 	}
+
+
 	echo json_encode($response);
 	wp_die();
 }// csi_edit_project_entrance
@@ -1615,66 +1606,100 @@ public function csi_issue_my_issues(){
 			<table class="table table-hover">
 				<thead>
 					<tr>
-						<th style="vertical-align:top;">Nota Novis</th>
-						<th style="vertical-align:top;" class="hidden-xs text-center">Revisiones</th>
-						<th style="vertical-align:top;" class="hidden-xs text-center">&Uacute;ltima<br/>liberación</th>
-						<th style="vertical-align:top;" class="text-right">Acciones</th>
+						<th>Nota Novis</th>
+						<th class="hidden-xs">Liberada</th>
+						<th class="hidden-xs">Revisiones</th>
+						<th class="hidden-xs">Status de &uacute;ltima revisi&oacute;n</th>
+						<th class="text-right">Acciones</th>
 					</tr>
 				</thead>
 				<tbody>';
 	$sql = '
 		SELECT
-			T00.*,
+			T00.issue_id,
+		    T00.title,
+		    COUNT(T00.revision_id) as revisions,
+			SUM(IF(T01.released_flag = 1,1,0)) as released,
+			SUM(IF(NOT(T01.prevent_edition_flag) = 1,1,0)) as editable,
+		    T01.css_class as status_class,
 			T01.short_name as status_name,
-			T01.css_class as status_class,
 			T01.icon as status_icon
 		FROM
 			' . $this->tbl_name . ' as T00
 			LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
 				ON T00.status_id = T01.id
 		WHERE
-			T00.author_id = "' . get_current_user_id() . '"
+			author_id = "' . get_current_user_id() . '"
+		GROUP BY
+			T00.issue_id
 		ORDER BY
 			T00.last_modified_date DESC,
 			T00.last_modified_time DESC,
 			T00.creation_date DESC,
 			T00.creation_time DESC
 	';
+
+	self::write_log ( $sql );
 	$issues = $this->get_sql ( $sql );
 	foreach ( $issues as $issue ){
-		if ( NULL != $issue['last_modified_date'] ){
-			$modification_date = new DateTime( $issue['last_modified_date'] );
-			$mod_date = $modification_date->format ( 'd-m-Y' );
-		}else{
-			$mod_date = '--';
-		}
 		$o.='
-					<tr class="' . $issue['status_class'] . '">
+					<tr>
 						<td class="">
-							' . $this->nov_id ( $issue['id'] ) . '<br/>
+							' . $this->nov_id ( $issue['issue_id'] ) . '<br/>
 							' . $issue['title'] . '
 						</td>
-						<td class="hidden-xs">nose</td>
-						<td class="small hidden-xs text-center">' . $mod_date . '</td>
+						<td>
+							<i class="fa fa-fw fa-' . ( $issue['released'] ? 'check-square-o' : 'square-o' ) .'"></i>
+						</td>
+						<td class="hidden-xs">' . $issue['revisions'] . '</td>
+						<td class="' . $issue['status_class'] . '">
+							<i class="fa fa-fw fa-' . $issue['status_icon'] . '"></i>' . $issue['status_name'] . '
+						</td>
 						<td class="text-right">
 							<div class="dropdown">
-								<button class="btn btn-default dropdown-toggle" type="button" id="own_issues_' . $issue['id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+								<button class="btn btn-default dropdown-toggle" type="button" id="own_issues_' . $issue['issue_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
 									Acciones<i class="fa fa-fw fa-caret-down"></i>
 								</button>
-								<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="own_issues_' . $issue['id'] . '">
-									<li>
-										<a href="#!showissue?i=' . $this->nov_id ( $issue['id'] ) . '" target="_blank">
-											<i class="fa fa-fw fa-file-text-o"></i>Ver revisi&oacute;n liberada
-										</a>
-									</li>
-									<li>
-										<a href="#!editissue?i=' . $this->nov_id ( $issue['id'] ) . '">
-											<i class="fa fa-fw fa-pencil-square-o"></i>Editar revisi&oacute;n en curso
-										</a>
-									</li>
-									<li><a href="#"><i class="fa fa-fw fa-clone"></i>Crear revisi&oacute;n</a></li>
-									<li role="separator" class="divider"></li>
-									<li><a href="#!issuerevprev?i=' . $this->nov_id ( $issue['id'] ) . '"><i class="fa fa-fw fa-bolt"></i>Solicitar aprobaci&oacute;n de revisi&oacute;n</a></li>
+								<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="own_issues_' . $issue['issue_id'] . '">
+		';
+		if ( $issue['released'] ){
+			$o.='<li>
+					<a href="#!showissue?i=' . $this->nov_id ( $issue['issue_id'] ) . '" >
+						<i class="fa fa-fw fa-file-text-o"></i>Ver revisi&oacute;n liberada
+					</a>
+				</li>';
+		}
+		if ( $issue['editable'] ){
+			$o.='<li>
+					<a href="#!editissue?i=' . $this->nov_id ( $issue['issue_id'] ) . '">
+						<i class="fa fa-fw fa-pencil-square-o"></i>Editar revisi&oacute;n en curso
+					</a>
+				</li>';
+		}
+		if ( !$issue['editable'] && $issue['released'] ){
+			$o.='<li>
+					<a href="#!editissue?i=' . $this->nov_id ( $issue['issue_id'] ) . '">
+						<i class="fa fa-fw fa-clone"></i>Crear revisi&oacute;n
+					</a>
+				</li>';
+		}
+		if ( !$issue['editable'] && !$issue['released'] ){
+			$o.='<li>
+					<a href="#!editissue?i=' . $this->nov_id ( $issue['issue_id'] ) . '">
+						<i class="fa fa-fw fa-bolt"></i>Consultar estado de aprobaci&oacute;n
+					</a>
+				</li>';
+		}
+		if ( $issue['editable'] ){
+			$o.='<li role="separator" class="divider"></li>
+				<li>
+					<a href="#!issuerevprev?i=' . $this->nov_id ( $issue['issue_id'] ) . '">
+						<i class="fa fa-fw fa-bolt"></i>Solicitar aprobaci&oacute;n de revisi&oacute;n
+					</a>
+				</li>';
+		}
+		$o.='
+
 								</ul>
 							</div>
 						</td>
