@@ -36,7 +36,8 @@ var ajaxPages={
 	'ownprojectrequest'		:	'csi_pm_build_page_own_project_request',
 	'showprojectrequest'	:	'csi_pm_build_page_show_project_request',
 	'editprojectrequest'	:	'csi_pm_build_page_edit_project_request_form',
-	'addproject'	:	'csi_pm_new_project_request',
+	'listprojectrequests'	:	'csi_pm_build_page_list_project_requests',
+	'newproject'	:	'csi_pm_new_project_form',
 	'editproject'	:	'csi_pm_build_page_edit_project_form',
 	'listprojects'	:	'csi_pm_build_page_list_projects',
 	'showproject'  	:   'csi_pm_build_page_show_project',
@@ -45,7 +46,8 @@ var ajaxPages={
 	'showissue'  	:   'csi_issue_build_page_show_issue',
 	'editissue'		:	'csi_issue_edit_issue_form',
 	'ownissues'		:	'csi_issue_my_issues',
-	'issuerevprev'	:	'csi_issue_build_page_preview_issue_rev'
+	'issuerevprev'	:	'csi_issue_build_page_preview_issue_rev',
+	'issueiab'		:	'csi_issue_iab_list',
 };
 ajaxPages.intro		=	cmpMainContent.data('default-action');
 
@@ -820,6 +822,9 @@ function csiSoftRefreshEventListener(pageResponse){
 							case 'refreshParent':
 								response.notification.onClose = csiTemplateCmpFetchTableContent.bind(null,form.closest('.refreshable'));
 								break;
+							case 'changeURL':
+								response.notification.onClose = function() {window.location.href = response.newUrl;};
+								break;
 							default:
 								response.notification.onClose = function(){};
 						}
@@ -832,6 +837,9 @@ function csiSoftRefreshEventListener(pageResponse){
 									break;
 								case 'refreshParent':
 									csiTemplateCmpFetchTableContent( form.closest('.refreshable') );
+									break;
+								case 'changeURL':
+									window.location(response.newUrl);
 									break;
 							}
 						}

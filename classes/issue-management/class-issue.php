@@ -278,6 +278,8 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_issue_new_issue_form_md_preview', 	array( $this , 'csi_issue_new_issue_form_md_preview'));
 	add_action( 'wp_ajax_csi_issue_popup_markdown_info',	 	array( $this , 'csi_issue_popup_markdown_info'		));
 	add_action( 'wp_ajax_csi_issue_my_issues',				 	array( $this , 'csi_issue_my_issues'				));
+	add_action( 'wp_ajax_csi_issue_iab_list',				 	array( $this , 'csi_issue_iab_list'				));
+
 	/*
 	create_issue
 	create_issue_form
@@ -946,8 +948,19 @@ public function csi_issue_build_page_preview_issue_rev(){
 			' . $this->tbl_name . ' as T00
 		WHERE
 			T00.issue_id ="' . $issue_id . '"
+		ORDER BY
+			T00.revision_id DESC
+		LIMIT 2
 	';
-	$issue = $wpdb->get_row ( $sql );
+	$issues = $this->get_sql ( $sql, 'OBJECT' );
+	if ( 1 < sizeof ( $issues ) ){
+		$issue = $issues[0];
+		$old_issue = $issues[1];
+		$have_old = TRUE;
+	}else{
+		$issue = $issues[0];
+		$have_old = FALSE;
+	}
 	//--------------------------------------------------------------------------
 	$pd = new Parsedown();
 	//--------------------------------------------------------------------------
@@ -960,23 +973,29 @@ public function csi_issue_build_page_preview_issue_rev(){
 		}elseif ( $key == 'issue_id' ){
 			$issue->$key = $this->nov_id ( $value );
 		}else{
-			$issue->$key = $pd->text( $issue->$key );
-			$issue->$key = str_replace ( '<table>', '<table class="table">', $issue->$key);
-			if ( isset ( $post['issue_text'] ) AND 0 != strlen ($post['issue_text'] ) ) {
-				$regex = '~"[^"]*"(*SKIP)(*F)|[ /]+~';
-				$terms = preg_split ( $regex, urldecode ( $post['issue_text'] ) ) ;
-				foreach ( $terms as $term ){
-					//self::write_log (  urldecode ( $post['issue_text'] ));
-					$conditions = array();
-					$pattern = preg_quote($term);
-					$issue->$key  = preg_replace("/($pattern)/i", '<mark>$1</mark>', $issue->$key);
-				}
+			if ( $have_old ){
+				$old_text = $old_issue->$key ;
+				$new_text = $issue->$key;
+				/*
+				$old_text = $pd->text ( $old_issue->$key );
+				$old_text = str_replace ( '<table>', '<table class="table">', $old_text);
+				$new_text = $pd->text ( $issue->$key );
+				$new_text = str_replace ( '<table>', '<table class="table">', $new_text);
+				*/
+				$opcodes = FineDiff::getDiffOpcodes($old_text, $new_text,   FineDiff::$wordGranularity );
+				$issue->$key = FineDiff::renderDiffToHTMLFromOpcodes($old_text, $opcodes);
+				$issue->$key = $pd->text( $issue->$key );
+				$issue->$key = str_replace ( '<table>', '<table class="table">', $issue->$key);
+
+			}else{
+				$issue->$key = $pd->text( $issue->$key );
+				$issue->$key = str_replace ( '<table>', '<table class="table">', $issue->$key);
 			}
-		}
+ 		}
 	}
 	//--------------------------------------------------------------------------
 	$o = '
-	<div class="container">
+	<div class="container csi_issue_revision_comparison">
 		<div class="page-header row">
 			<h3 class="">
 				<samp class="col-sm-10">
@@ -1257,7 +1276,7 @@ public function csi_issue_build_page_intro(){
 				</a>
 			</div>
 			<div class="list-group col-sm-6 col-md-4">
-				<a href="#!searchissues" class="list-group-item list-group-item-danger">
+				<a href="#!issueiab" class="list-group-item list-group-item-danger">
 					<h3><i class="fa fa-users"></i> Comité de Aprobadores</h3>
 					<p class="text-justify">Acciones para el Issue Advisory Board</p>
 				</a>
@@ -1440,6 +1459,7 @@ public function csi_issue_edit_issue_form(){
 public function csi_issue_edit_issue(){
 	//Globa Variables
 	global $wpdb;
+	global $NOVIS_CSI_ISSUE_STATUS;
 	//Local Variables
 	$editArray			= array();
 	$whereArray			= array();
@@ -1458,9 +1478,8 @@ public function csi_issue_edit_issue(){
 			T00.id ="' . intval ( $post['id'] ) . '"
 	';
 	$revision = $wpdb->get_row ( $sql );
-
 	if ( $revision->author_id == get_current_user_id() && !$revision->prevent_edition_flag ){
-		//self::write_log ( $post );
+
 		$current_user		= get_userdata ( get_current_user_id() );
 		$current_datetime	= new DateTime();
 
@@ -1685,7 +1704,7 @@ public function csi_issue_my_issues(){
 		}
 		if ( !$issue['editable'] && !$issue['released'] ){
 			$o.='<li>
-					<a href="#!editissue?i=' . $this->nov_id ( $issue['issue_id'] ) . '">
+					<a href="#!issuerevprev?i=' . $this->nov_id ( $issue['issue_id'] ) . '">
 						<i class="fa fa-fw fa-bolt"></i>Consultar estado de aprobaci&oacute;n
 					</a>
 				</li>';
@@ -1712,6 +1731,89 @@ public function csi_issue_my_issues(){
 		</div>
 	</div>
 	';
+	$response['message'] = $o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_issue_iab_list(){
+	//Globa Variables
+	global $wpdb;
+	global $NOVIS_CSI_ISSUE_STATUS;
+	global $NOVIS_CSI_USER;
+	//Local Variables
+	$response			= array();
+	$o					= '';
+	//Execution
+	$sql = '
+		SELECT
+			T00.issue_id,
+			T00.author_id,
+			T00.title,
+			T00.last_modified_date,
+			T00.last_modified_time,
+			COUNT(T00.revision_id) as revisions,
+			SUM(IF(T01.code="pending", 1, 0)) as pending,
+			SUM(IF(T01.released_flag = 1,1,0)) as released,
+			SUM(IF(NOT(T01.prevent_edition_flag) = 1,1,0)) as editable,
+			T03.display_name as author_name
+		FROM
+			' . $this->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
+				ON T00.status_id = T01.id
+			LEFT JOIN ' . $NOVIS_CSI_USER->tbl_name . ' as T02
+				ON T00.author_id = T02.id
+			LEFT JOIN ' . $wpdb->base_prefix . 'users as T03
+				ON T02.id = T03.ID
+		GROUP BY
+			T00.issue_id
+		ORDER BY
+			T00.last_modified_date ASC,
+			T00.last_modified_time ASC
+	';
+	$requests = $this->get_sql ( $sql );
+	$o.='
+	<div class="container">
+		<div class="page-header row">
+			<h2 class="">Lista de revisiones en espera de aprobaci&oacute;n</h2>
+			<p class="text-muted text-justify">El siguiente listado permite que el <i>Comit&eacute; de Notas NOVIS</i> eval&uacute;e y autorice/rechace solicitudes de aprobaci&oacute;n.</p>
+		</div>
+		<div class="row">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Nota Novis</th>
+						<th>Autor</th>
+						<th>Liberada</th>
+						<th class="hidden-xs">Revisiones</th>
+						<th>Fecha de Solicitud</th>
+					</tr>
+				</thead>
+				<tbody>';
+	foreach ( $requests as $request ){
+		if ( $request['pending'] ){
+			$last_modified = new DateTime ( $request['last_modified_date'] . ' ' . $request['last_modified_time']);
+			$last_modified->setTimezone ( new DateTimeZone('America/Mexico_City') );
+			$o.='
+						<tr>
+							<td>
+								<a href="#!issuerevprev?i=' . $this->nov_id ( $request['issue_id'] ) . '">
+									' . $this->nov_id ( $request['issue_id'] ) . '<br/>
+									' . $request['title'] . '
+								</a>
+							</td>
+							<td>' . $request['author_name'] . '</td>
+							<td><i class="fa fa-fw fa-' . ( $request['released'] ? 'check-square-o' : 'square-o' ) .'"></i></td>
+							<td class="hidden-xs">' . $request['revisions'] . '</td>
+							<td class="small">' . $last_modified->format('d/m/Y H:i:s') . '</td>
+						</tr>
+			';
+		}
+	}
+	$o.='
+				</tbody>
+			</table>
+		</div>
+	</div>';
 	$response['message'] = $o;
 	echo json_encode($response);
 	wp_die();

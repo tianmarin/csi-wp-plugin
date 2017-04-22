@@ -115,6 +115,7 @@ gulp.task('third-party-classes', function() {
     return gulp.src(
 			[
 				config.bowerDir + '/parsedown/Parsedown.php',
+				config.bowerDir + '/PHP-FineDiff/finediff.php',
 			]
 		)
         .pipe(gulp.dest('./dist/third-party-classes'));
