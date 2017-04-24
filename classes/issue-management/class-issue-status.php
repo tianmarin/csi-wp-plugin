@@ -41,8 +41,8 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.0.6';
-	$this->data_db_version	= '0.0.6';
+	$this->db_version	= '0.0.7';
+	$this->data_db_version	= '0.0.7';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -53,9 +53,9 @@ public function __construct(){
 			id tinyint(1) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
 			code varchar(10) not null COMMENT 'Code ID for programming calls',
 			short_name varchar(50) not null COMMENT 'Short name of status',
-			released_flag tinyint(1) unsigned null COMMENT 'Indicates if status provides visibility to final users',
-			prevent_edition_flag tinyint(1) unsigned null COMMENT 'Indicates if status should allow editors to modify revision',
-			revision_requested_flag tinyint(1) unsigned null COMMENT 'Indicates if status is approval state',
+			released_flag tinyint(1) unsigned not null COMMENT 'Indicates if status provides visibility to final users',
+			prevent_edition_flag tinyint(1) unsigned not null COMMENT 'Indicates if status should allow editors to modify revision',
+			revision_requested_flag tinyint(1) unsigned not null COMMENT 'Indicates if status is approval state',
 			icon varchar(50) null COMMENT 'Icon of rating',
 			css_class varchar(100) null COMMENT 'Bootstrap Class',
 			hex_color varchar(6) null COMMENT 'HEX Color of Rating',
@@ -96,9 +96,9 @@ public function db_install_data(){
 				'id'					=> $i++,
 				'code'					=> 'draft',
 				'short_name'			=> 'Borrador',
-				'released_flag'			=> NULL,
-				'prevent_edition_flag'	=> NULL,
-				'revision_requested_flag'	=> NULL,
+				'released_flag'			=> 0,
+				'prevent_edition_flag'	=> 0,
+				'revision_requested_flag'	=> 0,
 				'icon'					=> 'pencil-square-o',
 				'css_class'				=> 'default',
 				'hex_color'				=> '',
@@ -114,7 +114,7 @@ public function db_install_data(){
 				'id'					=> $i++,
 				'code'	  				=> 'pending',
 				'short_name'			=> 'Solicitud de Aprobaci&oacute;n',
-				'released_flag'			=> NULL,
+				'released_flag'			=> 0,
 				'revision_requested_flag'	=> 1,
 				'prevent_edition_flag'	=> 1,
 				'icon'					=> 'clock-o',
@@ -134,7 +134,7 @@ public function db_install_data(){
 				'short_name'			=> 'Liberado',
 				'released_flag'			=> 1,
 				'prevent_edition_flag'	=> 1,
-				'revision_requested_flag'	=> NULL,
+				'revision_requested_flag'	=> 0,
 				'icon'					=> 'check',
 				'css_class'				=> 'success',
 				'hex_color'				=> '',
@@ -152,7 +152,7 @@ public function db_install_data(){
 				'short_name'			=> 'Obsoleto',
 				'released_flag'			=> 1,
 				'prevent_edition_flag'	=> 1,
-				'revision_requested_flag'	=> NULL,
+				'revision_requested_flag'	=> 0,
 				'icon'					=> 'paperclip',
 				'css_class'				=> 'active',
 				'hex_color'				=> '',
@@ -168,9 +168,9 @@ public function db_install_data(){
 				'id'					=> $i++,
 				'code'	  				=> 'rejected',
 				'short_name'			=> 'Rechazado',
-				'released_flag'			=> NULL,
-				'prevent_edition_flag'	=> NULL,
-				'revision_requested_flag'	=> NULL,
+				'released_flag'			=> 0,
+				'prevent_edition_flag'	=> 0,
+				'revision_requested_flag'	=> 0,
 				'icon'					=> 'times',
 				'css_class'				=> 'danger',
 				'hex_color'				=> '',
