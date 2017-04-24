@@ -3,6 +3,7 @@ defined('ABSPATH') or die("No script kiddies please!");
 
 class NOVIS_CSI_ISSUE_STATUS_CLASS extends NOVIS_CSI_CLASS{
 public $default_status_code			= 'draft';
+public $default_approval_code		= 'pending';
 /**
 * __construct
 *
@@ -40,8 +41,8 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.0.5';
-	$this->data_db_version	= '0.0.5';
+	$this->db_version	= '0.0.6';
+	$this->data_db_version	= '0.0.6';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -54,6 +55,7 @@ public function __construct(){
 			short_name varchar(50) not null COMMENT 'Short name of status',
 			released_flag tinyint(1) unsigned null COMMENT 'Indicates if status provides visibility to final users',
 			prevent_edition_flag tinyint(1) unsigned null COMMENT 'Indicates if status should allow editors to modify revision',
+			revision_requested_flag tinyint(1) unsigned null COMMENT 'Indicates if status is approval state',
 			icon varchar(50) null COMMENT 'Icon of rating',
 			css_class varchar(100) null COMMENT 'Bootstrap Class',
 			hex_color varchar(6) null COMMENT 'HEX Color of Rating',
@@ -96,6 +98,7 @@ public function db_install_data(){
 				'short_name'			=> 'Borrador',
 				'released_flag'			=> NULL,
 				'prevent_edition_flag'	=> NULL,
+				'revision_requested_flag'	=> NULL,
 				'icon'					=> 'pencil-square-o',
 				'css_class'				=> 'default',
 				'hex_color'				=> '',
@@ -112,6 +115,7 @@ public function db_install_data(){
 				'code'	  				=> 'pending',
 				'short_name'			=> 'Solicitud de Aprobaci&oacute;n',
 				'released_flag'			=> NULL,
+				'revision_requested_flag'	=> 1,
 				'prevent_edition_flag'	=> 1,
 				'icon'					=> 'clock-o',
 				'css_class'				=> 'info',
@@ -130,6 +134,7 @@ public function db_install_data(){
 				'short_name'			=> 'Liberado',
 				'released_flag'			=> 1,
 				'prevent_edition_flag'	=> 1,
+				'revision_requested_flag'	=> NULL,
 				'icon'					=> 'check',
 				'css_class'				=> 'success',
 				'hex_color'				=> '',
@@ -147,6 +152,7 @@ public function db_install_data(){
 				'short_name'			=> 'Obsoleto',
 				'released_flag'			=> 1,
 				'prevent_edition_flag'	=> 1,
+				'revision_requested_flag'	=> NULL,
 				'icon'					=> 'paperclip',
 				'css_class'				=> 'active',
 				'hex_color'				=> '',
@@ -164,6 +170,7 @@ public function db_install_data(){
 				'short_name'			=> 'Rechazado',
 				'released_flag'			=> NULL,
 				'prevent_edition_flag'	=> NULL,
+				'revision_requested_flag'	=> NULL,
 				'icon'					=> 'times',
 				'css_class'				=> 'danger',
 				'hex_color'				=> '',
