@@ -629,8 +629,8 @@ public function csi_issue_create_issue(){
 	$insertArray['creation_user_email']			= $current_user->user_email;
 	$insertArray['creation_date']				= $current_datetime->format('Y-m-d');
 	$insertArray['creation_time']				= $current_datetime->format('H:i:s');
-	self::write_log ( $post );
-	self::write_log ( $insertArray );
+	//self::write_log ( $post );
+	//self::write_log ( $insertArray );
 
 	if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
 		/*
@@ -1677,8 +1677,8 @@ public function csi_issue_request_approval(){
 			T00.revision_id	="' . $revision_id . '"
 	';
 	$revision = $wpdb->get_row ( $sql );
-	self::write_log ( $post );
-	self::write_log ( $revision );
+	//self::write_log ( $post );
+	//self::write_log ( $revision );
 
 	if ( $revision->author_id == get_current_user_id() && !$revision->prevent_edition_flag ){
 
@@ -1996,7 +1996,7 @@ public function csi_issue_my_issues(){
 			T00.creation_time DESC
 	';
 
-	self::write_log ( $sql );
+	//self::write_log ( $sql );
 	$issues = $this->get_sql ( $sql );
 	foreach ( $issues as $issue ){
 		$o.='
@@ -2168,7 +2168,7 @@ public function csi_issue_approve_revision(){
 	$whereArray			= array();
 	$response			= array();
 	$post	= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
-	self::write_log ( $post );
+	//self::write_log ( $post );
 	if ( current_user_can_for_blog ( 1, 'csi_issue_approve_revision' ) ) {
 
 		$current_user		= get_userdata ( get_current_user_id() );

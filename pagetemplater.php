@@ -68,7 +68,7 @@ class CSI_PageTemplater {
 		// Add your templates to this array.
         $this->templates = array(
 			'templates/template-ewa-upload.php'					=> 'CSI EWA Uploader',
-			'templates/template-ewa-control-center.php'			=> 'CSI Alert Management',
+			'templates/template-ewa-control-center.php'			=> 'CSI EWA Control Center',
 			'templates/template-ewa-mgmt-control-center.php'	=> 'CSI Control Center',
 			'templates/template-cmp-control-center.php'			=> 'CSI CMP Control Center',
 			'templates/template-pm-control-center.php'			=> 'CSI Project Management CC',

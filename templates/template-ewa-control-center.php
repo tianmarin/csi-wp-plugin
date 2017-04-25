@@ -1,6 +1,6 @@
 <?php
 /*
-* Template Name: CSI EWA Control Planner
+* Template Name: CSI EWA Control Center
 *
 * @author Cristian Marin
 */
@@ -20,6 +20,7 @@
 <!--<![endif]-->
 
 <head>
+	<base href="<?php _e(trailingslashit(get_permalink())); ?>"
 	<meta charset="<?php bloginfo( 'charset' ); ?>" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <?php
@@ -33,12 +34,11 @@
 		echo '<meta name="apple-mobile-web-app-capable" content="yes">';
 		echo '<meta name="apple-mobile-web-app-status-bar-style" content="black">';
 	}
-?>
-	<meta name="apple-mobile-web-app-title" content="Project Request">
+	?>
+	<meta name="apple-mobile-web-app-title" content="EWA Control Center">
 	<?php add_action( 'wp_head', 'address_mobile_address_bar' ); ?>
-	<link rel="shortcut icon" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/project-request/project-request-icon@180x180.png');?>">
-	<link rel="apple-touch-icon" sizes="180x180" href="<?php _e(CSI_PLUGIN_URL.'/img/icon/project-request/project-request-icon@180x180.png');?>">
-	<link rel="apple-touch-startup-image" href="<?php _e(CSI_PLUGIN_URL.'/img/splash/project-request-splash.png');?>">
+	<link rel="shortcut icon" href="<?php _e(CSI_PLUGIN_URL.'/dist/img/icon/cmp/template-cmp-control-center-icon@180x180.png');?>">
+	<link rel="apple-touch-icon" sizes="180x180" href="<?php _e(CSI_PLUGIN_URL.'/dist/img/icon/cmp/template-cmp-control-center-icon@180x180.png');?>">
 	<title><?php
 		/*
 		 * Print the <title> tag based on what is being viewed.
@@ -53,164 +53,126 @@
 			echo " | $site_description";
 		?>
 	</title>
-<?php
-	wp_register_script(
-	'csi-template-ewa-control-center',
-	CSI_PLUGIN_URL.'/js/templates/min/template-ewa-control-center-min.js' ,
-	array('jquery', 'jquery-ui-datepicker', 'justgage', 'bootstrap', 'jquery-confirm', 'amcharts','amcharts-serial','amcharts-responsive','amcharts-pie'),
-	'0.0.1'
-	);
-	wp_enqueue_script('csi-template-ewa-control-center');
-	wp_localize_script(
-		'csi-template-ewa-control-center',
-		'csiTemplateEwaControlCenter',
-		array (
-		'ajaxurl'	=> admin_url( 'admin-ajax.php' ),
-	)
-	);
-	wp_register_style(
-		"csi_client_style",
-		CSI_PLUGIN_URL.'/css/client.css' ,
-		null,
-		"1.0",
-		"all"
-	);
-	wp_enqueue_style("csi_client_style" );
-	wp_register_style(
-		"bootstrap",
-		CSI_PLUGIN_URL.'/external/bootstrap/dist/css/bootstrap.min.css' ,
-		null,
-		"1.0",
-		"all"
-	);
-	wp_enqueue_style("bootstrap" );
-	wp_register_style(
-		"bootstrap",
-		CSI_PLUGIN_URL.'/external/bootstrap/dist/css/bootstrap.min.css' ,
-		null,
-		"1.0",
-		"all"
-	);
-	wp_enqueue_style("bootstrap" );
+	<?php
+		function csi_template_cmp_control_center(){
+			wp_register_script(
+				'csiVendorScripts',
+				CSI_PLUGIN_URL.'/dist/js/vendor.min.js',
+				array('jquery', 'jquery-ui-sortable'),
+				'0.1.0',
+				true
+			);
+			wp_enqueue_script(
+				'csiTemplateScript',
+				CSI_PLUGIN_URL.'/dist/js/csi-template-js.min.js',
+				array('csiVendorScripts'),
+				'0.1.0',
+				true
+			);
+			//wp_enqueue_script('csiTemplateScript');
+			wp_localize_script(
+				'csiTemplateScript',
+				'csiTemplateScript',
+				array(
+					'ajaxUrl'						=> admin_url( 'admin-ajax.php' ),
+				)
+			);
 
-	wp_register_style(
-		"jquery-ui-bootstrap",
-		CSI_PLUGIN_URL.'/external/jquery-ui-bootstrap/css/custom-theme/jquery-ui-1.10.0.custom.css' ,
-		null,
-		"1.0",
-		"all"
-	);
-	wp_enqueue_style("jquery-ui-bootstrap" );
+		}
+		add_action( 'wp_enqueue_scripts', 'csi_template_cmp_control_center', 99);
+		//------------------------------------------
+		wp_register_style(
+			"csiTemplateStyle",
+			CSI_PLUGIN_URL.'/dist/css/csi-template-style.css',
+			null,
+			"1.0",
+			"all"
+		);
+		wp_enqueue_style("csiTemplateStyle" );
+        //------------------------------------------
+		remove_action( 'wp_head', 'feed_links_extra', 3 );                      //remove Category Feeds
+		remove_action( 'wp_head', 'feed_links', 2 );                            //remove Post and Comment Feeds
+		remove_action( 'wp_head', 'rsd_link' );                                 //remove EditURI link
+		remove_action( 'wp_head', 'parent_post_rel_link', 10, 0 );              //remove previous link
+		remove_action( 'wp_head', 'start_post_rel_link', 10, 0 );               //remove start link
+		remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );   //remove Links for Adjacent Posts
+		remove_action( 'wp_head', 'wp_generator' );                             //remove WP version
+		remove_action( 'admin_print_styles', 'print_emoji_styles' );
+		remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+		remove_action( 'wp_print_styles', 'print_emoji_styles' );
 
-	wp_register_style(
-		"jquery-confirm",
-		CSI_PLUGIN_URL.'/external/jquery-confirm/dist/jquery-confirm.min.css' ,
-		null,
-		"1.0",
-		"all"
-	);
-	wp_enqueue_style("jquery-confirm" );
+		add_filter('show_admin_bar', '__return_false');							//remove the admin_bar fucntion
+		remove_action('wp_head', '_admin_bar_bump_cb');							//remove the admin_bar style (html: padding)
 
-
-	remove_action( 'wp_head', 'feed_links_extra', 3 );                      // Category Feeds
-	remove_action( 'wp_head', 'feed_links', 2 );                            // Post and Comment Feeds
-	remove_action( 'wp_head', 'rsd_link' );                                 // EditURI link
-	remove_action( 'wp_head', 'parent_post_rel_link', 10, 0 );              // previous link
-	remove_action( 'wp_head', 'start_post_rel_link', 10, 0 );               // start link
-	remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 );   // Links for Adjacent Posts
-	remove_action( 'wp_head', 'wp_generator' );                             // WP version
-	remove_action( 'admin_print_styles', 'print_emoji_styles' );
-	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-	remove_action( 'wp_print_styles', 'print_emoji_styles' );
-	add_filter('show_admin_bar', '__return_false');							//remove the admin_bar fucntion
-	remove_action('wp_head', '_admin_bar_bump_cb');							//remove the admin_bar style (html: padding)
-		
 	wp_head();
 	?>
 	<link rel="profile" href="http://gmpg.org/xfn/11" />
 	<link rel="pingback" href="<?php bloginfo( 'pingback_url' ); ?>" />
-	<!--[if lt IE 9]>
-	<script src="<?php echo get_template_directory_uri(); ?>/js/html5.js" type="text/javascript"></script>
-	<![endif]-->
-
 </head>
-<body>
-	<div id="csi-ewa-template-control-center" class="container">
-		<div id="csi-ewa-template-control-center-navigator" class="row">
-		</div>
-		<div class="row">
-			<div class="page-header">
-				<h3 class="">Administraci&oacute;n de Alertas de EWA</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<body class="csi-template csi-template-cmp-control-center-body">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<nav class="navbar navbar-inverse navbar-fixed-top">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<a class="navbar-brand" href="<?php _e(trailingslashit(get_permalink())); ?>" title="EWA Control Center">
+					<i class="fa fa-fw fa-exclamation-triangle text-danger"></i>
+					EWA Control Center
+					<i id="csi-template-cmp-control-center-ajax" class="fa fa-spin fa-circle-o-notch text-primary"></i>
+				</a>
 			</div>
+		</div><!-- /.container-fluid -->
+	</nav>
+
+
+
+	<article id="csi-template-pm-control-center-main" style="min-height:100vh;" class="csi-template-main-content" data-default-action="csi_ewa_build_page_intro">
+	</article>
+
+
+	<div style="position:fixed; top:70px;" class="animated bounce">
+		<div class="alert alert-info alert-dismissible visible-xs hidden-print" role="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<strong>Atenci&oacute;n!</strong> Ciertas funcionalidades no pueden ser visibles en un dispositivo m&oacute;vil o una pantalla demasiada peque&ntilde;a. En caso que esto ocurra por favor <a href="#" class="alert-link">notif&iacute;canos</a> y pruba la versión de escritorio.
 		</div>
-		<div id="csi-ewa-template-control-center-infographics" class="row">
-		</div><!-- #csi-ewa-template-control-center-infographics -->
-		<div class="row">
-			<div class="panel panel-default">
-				<div class="panel-heading col-xs-12">
-					<div id="csi-ewa-template-control-center-ajax"></div>
-					<p class="col-xs-6 text-center">
-						<input type="date" id="csi-ewa-template-control-center-date-input"/>
-						<label for="csi-ewa-template-control-center-date-input">
-							<i class="fa fa-calendar fa-fw"></i> Semana 04 <small>2017-01-23 - 2017-01-29</small>
-						</label>
-					</p>
-					<p class="col-xs-6 text-center">
-						<input type="checkbox" id="csi-ewa-template-control-center-action-checkbox" />
-						<label for="csi-ewa-template-control-center-action-checkbox">
-							<i class="fa fa-square-o fa-fw"></i> Mostrar Alertas con acci&oacute;n
-						</label>
-					</p>
-				</div><!-- .panel-heading -->
-				<div class="alert alert-warning alert-dismissible animated bounce col-xs-10 col-xs-push-1" role="alert">
-					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<p class="text-muted">Las alertas que se hayan presentado la semana anterior, pueden ser gestionadas de manera automática auto-asignando las mismas características.</p>
-					<p class="text-center">
-						<button class="btn btn-warning btn-sm" id="csi-ewa-template-control-center-autoasign-button">
-							<i class="fa fa-magic fa-fw"></i> Autoasignar
-						</button>
-					</p>
-				</div>
-				<table id="csi-ewa-template-control-center-alerts" class="table table-condensed">
-					<thead>
-						<!--
-						<tr>
-							<th class="sortable"><a href="#">Cliente <i class="fa fa-sort-desc" aria-hidden="true"></i></a></th>
-							<th>SID</th>
-							<th class="sortable hidden-xs"><a href="#">Prioridad <i class="fa fa-sort-desc" aria-hidden="true"></i></a></th>
-							<th class="sortable hidden-xs"><a href="#">Grupo <i class="fa fa-sort-desc" aria-hidden="true"></i></a></th>
-							<th>Texto</th>
-							<th>Acci&oacute;n</th>
-						</tr>
-						-->
-					</thead>
-					<thead>
-						<tr>
-							<th><input type="text" placeholder="Cliente" id="csi-ewa-template-control-center-filter-customer"/></th>
-							<th><input type="text" placeholder="SID" id="csi-ewa-template-control-center-filter-sid"/></th>
-							<th class="hidden-xs">Prioridad</th>
-							<th><input type="text" placeholder="Grupo" id="csi-ewa-template-control-center-filter-alert-group"/></th>
-							<th><input type="text" placeholder="Texto" id="csi-ewa-template-control-center-filter-alert-text"/></th>
-							<th>Acci&oacute;n</th>
-						</tr>
-					</thead>
-					<!--
-					<tfoot>
-						<tr>
-							<th class="sortable"><a href="#">Cliente <i class="fa fa-sort-desc" aria-hidden="true"></i></a></th>
-							<th>SID</th>
-							<th class="sortable hidden-xs"><a href="#">Prioridad <i class="fa fa-sort-desc" aria-hidden="true"></i></a></th>
-							<th class="sortable hidden-xs"><a href="#">Grupo <i class="fa fa-sort-desc" aria-hidden="true"></i></a></th>
-							<th>Texto</th>
-							<th>Acci&oacute;n</th>
-						</tr>
-					</tfoot>
-					-->
-					<tbody>
-					</tbody>
-				</table><!-- table#csi-ewa-template-control-center-alerts -->
-			</div><!-- .panel .panel-default -->
-		</div>
-	</div><!-- #csi-template-ewa-control-center -->
+	</div>
+
+
+
+
+
+<?php
+	wp_footer();
+?>
 </body>
 </html>

@@ -48,6 +48,8 @@ var ajaxPages={
 	'ownissues'		:	'csi_issue_my_issues',
 	'issuerevprev'	:	'csi_issue_build_page_preview_issue_rev',
 	'issueiab'		:	'csi_issue_iab_list',
+
+	'ewaanalyzer'	:	'csi_ewa_build_page_ewa_analyzer',
 };
 ajaxPages.intro		=	cmpMainContent.data('default-action');
 
