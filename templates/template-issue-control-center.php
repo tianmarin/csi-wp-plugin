@@ -146,7 +146,7 @@
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
 				<a class="navbar-brand" href="<?php _e(trailingslashit(get_permalink())); ?>" title="Notas Novis">
-					<i class="fa fa-tasks"></i> Notas Novis
+					<i class="fa fa-fw fa-file-text"></i> Notas Novis
 					<i id="csi-template-cmp-control-center-ajax" class="fa fa-spin fa-circle-o-notch text-primary"></i>
 				</a>
 			</div>

@@ -542,7 +542,7 @@ public function csi_fetch_issue_event_list_info(){
 	$o					= '';
 	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	//--------------------------------------------------------------------------
-	$issue_id = $post['issueId'];
+	$issue_id = intval ( $post['issueId'] );
 	//--------------------------------------------------------------------------
 	$sql = 'SELECT
 				T00.*,
@@ -682,8 +682,7 @@ public function csi_create_issue_event(){
 	$insertArray['creation_user_email']		= $current_user->user_email;
 	$insertArray['creation_date']			= $current_datetime->format('Y-m-d');
 	$insertArray['creation_time']			= $current_datetime->format('H:i:s');
-	//	self::write_log ( $post );
-	//	self::write_log ( $insertArray );
+
 	if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
 		$response['id']=$wpdb->insert_id;
 		$plan_id = $wpdb->insert_id;

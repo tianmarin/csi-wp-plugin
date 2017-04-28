@@ -53,6 +53,7 @@ $novis_csi_vars = array(
 	'ewa_alert'						."_network_class"	=> TRUE,
 	'ewa_rating'					."_network_class"	=> TRUE,
 	'ewa_status'					."_network_class"	=> TRUE,
+	'ewa_upload'					."_network_class"	=> TRUE,
 	'ewa'							."_network_class"	=> TRUE,
 	##Project Management Module
 	'project_request_status'		."_network_class"	=> TRUE,
@@ -95,6 +96,7 @@ $novis_csi_vars = array(
 	'ewa_alert'						."_menu_slug"	=> 'csi_'		.'ewa_alert',
 	'ewa_rating'					."_menu_slug"	=> 'csi_'		.'ewa_rating',
 	'ewa_status'					."_menu_slug"	=> 'csi_'		.'ewa_status',
+	'ewa_upload'					."_menu_slug"	=> 'csi_'		.'ewa_upload',
 	'ewa'							."_menu_slug"	=> 'csi_'		.'ewa',
 	##Project Management Module
 	'project_request_status'		."_menu_slug"	=> 'csi_'		.'project_request_status',
@@ -137,6 +139,7 @@ $novis_csi_vars = array(
 	'ewa_alert'						."_menu_cap"		=> 'manage_options',
 	'ewa_rating'					."_menu_cap"		=> 'manage_options',
 	'ewa_status'					."_menu_cap"		=> 'manage_options',
+	'ewa_upload'					."_menu_cap"		=> 'manage_options',
 	'ewa'							."_menu_cap"		=> 'manage_options',
 	##Project Management Module
 	'project_request_status'		."_menu_cap"		=> 'manage_options',
@@ -372,6 +375,7 @@ require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-alert-rating.php"
 require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-alert.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-rating.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-status.php");
+require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa-upload.php");
 require_once(CSI_PLUGIN_DIR."/classes/ewa-management/class-ewa.php");
 ## Change Management Module Classes
 require_once(CSI_PLUGIN_DIR."/classes/change-management/class-cmp-change-type.php");

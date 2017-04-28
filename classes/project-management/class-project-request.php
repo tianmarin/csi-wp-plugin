@@ -85,6 +85,8 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_pm_build_page_show_project_request', array( $this, 'csi_pm_build_page_show_project_request' ) );
 	add_action( 'wp_ajax_csi_pm_build_page_edit_project_request_form', array( $this, 'csi_pm_build_page_edit_project_request_form' ) );
 	add_action( 'wp_ajax_csi_pm_build_page_edit_project_request', array( $this, 'csi_pm_build_page_edit_project_request' ) );
+	add_action( 'wp_ajax_csi_pm_build_page_list_project_requests', array( $this, 'csi_pm_build_page_list_project_requests' ) );
+
 }
 public function csi_define_capabilities(){
 	global $csi_capabilities;
@@ -637,8 +639,13 @@ public function csi_pm_build_page_show_project_request(){
 	//Execution
 	$o.='
 	<div class="container">
-		<div class="page-header row">
-			<a href="#!ownprojectrequest" class="clearfix"><i class="fa fa-fw fa-angle-left"></i>Mis Solicitudes de Proyecto</a>
+		<div class="page-header row">';
+	if ( current_user_can_for_blog ( 1, 'csi_edit_project_request_restricted_fields') ){
+		$o.='<a href="#!listprojectrequests" class="clearfix"><i class="fa fa-fw fa-angle-left"></i>Solicitudes de Proyecto</a>';
+	}else{
+		$o.='<a href="#!ownprojectrequest" class="clearfix"><i class="fa fa-fw fa-angle-left"></i>Mis Solicitudes de Proyecto</a>';
+	}
+	$o.='
 			<h3 class="col-sm-10">Solicitud de Proyecto</h3>';
 	if ( $pr->requested_user_id == get_current_user_id() || current_user_can_for_blog ( 1, 'csi_edit_others_project_request' ) ){
 		$o.='
@@ -782,7 +789,79 @@ public function csi_pm_new_pr(){
 	}
 	echo json_encode($response);
 	wp_die();
+}
+public function csi_pm_build_page_list_project_requests(){
+	//Global Variables
+	global $NOVIS_CSI_PROJECT_REQUEST_STATUS;
+	global $NOVIS_CSI_CUSTOMER;
+	//Local Variables
+	$o				= '';
+	$response		= array();
+	//Execution
+	$sql = '
+		SELECT
+			T00.id as id,
+			T00.short_name as short_name,
+			T00.requested_datetime as requested_date,
+			T00.project_id as project_id,
+			T01.short_name as status_name,
+			T01.icon as status_icon,
+			T01.css_class as status_class,
+			IF ( T00.registered_customer_flag , T02.short_name, T00.non_registered_customer_name ) as customer_short_name
+		FROM
+			' . $this->tbl_name . ' as T00
+			LEFT JOIN ' . $NOVIS_CSI_PROJECT_REQUEST_STATUS->tbl_name . ' as T01
+				ON T00.status_id = T01.id
+			LEFT JOIN ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' as T02
+				ON T00.registered_customer_id = T02.id
+		ORDER BY
+			T00.requested_datetime DESC
+		';
+	$preqs = $this->get_sql ( $sql );
+	//--------------------------------------------------------------------------
+	$o.='
+	<div class="container">
+		<div class="page-header row">
+			<h3>Solicitudes de Proyecto</h3>
+		</div>
+		<div class="row">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>Status <a href="#" class="csi-popup" data-action="csi_pm_popup_project_request_status_info"><i class="fa fa-fw fa-question-circle"></i></a></th>
+						<th>Solicitante</th>
+						<th><span class="hidden-xs">Fecha de </span>Solicitud</th>
+						<th>Cliente</th>
+						<th>Nombre<span class="hidden-xs"> del Proyecto</span></th>
+					</tr>
+				</thead>
+				<tbody>
+	';
+	foreach ( $preqs as $preq ){
+		$request_date = new DateTime ( $preq['requested_date'] );
+		$o.='
+					<tr class="' . $preq['status_class'] . '">
+						<td><i class="fa fa-fw fa-' . $preq['status_icon'] . '"></i><span class="hidden-xs">' . $preq['status_name'] . '</span></td>
+						<td>' . $request_date->format('d/m/Y') . '</td>
+						<td>Solicitante</td>
+						<td>' . $preq['customer_short_name'] . '</td>
+						<td>
+							<a href="#!showprojectrequest?r=' . $preq['id'] . '">
+								<i class="fa fa-fw fa-arrows-alt"></i>' . $preq['short_name'] . '
+							</a>
+						</td>
+					</tr>
+		';
+	}
 
+	$o.='
+				</tbody>
+			</table>
+		</div>
+	</div><!-- .container -->';
+	$response['message'] = $o;
+	echo json_encode($response);
+	wp_die();
 }
 
 //END OF CLASS

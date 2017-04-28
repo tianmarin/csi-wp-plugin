@@ -40,40 +40,39 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.6.1';
+	$this->db_version	= '0.6.4';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	$this->crt_tbl_sql_wt	="(
-								id bigint unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-								ewa_session_no bigint(13) unsigned not null COMMENT 'EWA session number',
-								alert_group varchar(40) not null COMMENT 'EWA alert group text',
-								alert_rating varchar(1) not null COMMENT 'EWA alert rating char',
-								alert_no tinyint unsigned not null COMMENT 'EWA alert number',
-								alert_text varchar(255) not null COMMENT 'EWA alert text',
-								auto_asign bool null default 0 COMMENT 'Indicates if record was modified by automated process',
-								hidden bool not null default 0 COMMENT 'Duplicate fields must be hidden by the system',
-								action_party_id tinyint(2) unsigned null COMMENT 'Specify which action party is to be used',
-								action_id varchar(50) null COMMENT 'Specify the identifier in the action party',
-								customer_flag bool null COMMENT 'Specify if the execution of the action in on the customer side',
-								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
-								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								creation_date date null COMMENT 'Date of the creation of this record',
-								creation_time time null COMMENT 'Time of the creation of this record',
-								creation_filename varchar(255) null COMMENT 'Name of the file used to create this record',
-								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
-								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								last_modified_date date null COMMENT 'Date of the last modification of this record',
-								last_modified_time time null COMMENT 'Time of the last modification of this record',
-								
-								UNIQUE KEY id (id)
-							) $charset_collate;";
+	$this->crt_tbl_sql_wt	="
+		(
+			id bigint(20) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
+			upload_id smallint(10) unsigned not null COMMENT 'Unique upload registry',
+			ewa_session_no bigint(13) unsigned not null COMMENT 'EWA session number',
+			alert_group varchar(40) not null COMMENT 'EWA alert group text',
+			alert_rating varchar(1) not null COMMENT 'EWA alert rating char',
+			alert_no tinyint unsigned not null COMMENT 'EWA alert number',
+			alert_text varchar(255) not null COMMENT 'EWA alert text',
+			auto_asign bool null default 0 COMMENT 'Indicates if record was modified by automated process',
+			hidden bool not null default 0 COMMENT 'Duplicate fields must be hidden by the system',
+			action_party_id tinyint(2) unsigned null COMMENT 'Specify which action party is to be used',
+			action_id varchar(50) null COMMENT 'Specify the identifier in the action party',
+			customer_flag bool null COMMENT 'Specify if the execution of the action in on the customer side',
+			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
+			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			creation_datetime datetime null COMMENT 'Date and time of the creation of this record',
+			last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
+			last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			last_modified_datetime datetime null COMMENT 'Date and Time of the last modification of this record',
+
+			UNIQUE KEY id (id)
+		) $charset_collate;";
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
-		/*	
+		/*
 		type					: Tipo de Dato para validacion
 									- id
 									- text
@@ -87,7 +86,7 @@ public function __construct(){
 									- radio
 									- select
 									- dual_id
-		backend_wp_in_table		: Flag de mostrar el campo en las tablas de 
+		backend_wp_in_table		: Flag de mostrar el campo en las tablas de
 									true|false
 		backend_wp_sp_table		: If true, 'sp_wp_table'+field_id function will be executed to show special content
 		backend_wp_table_lead	: If true, 'Edit'button will be shown below field values in backend table
@@ -498,13 +497,9 @@ public function __construct(){
 			'form_show_field'			=>false,
 		),
 	);
-	
-	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'					));
-	//in a new blog creation, create the db for new blog
-	//Applies only for non-network classes
-	if( true != $this->network_class ){
-		add_action( 'wpmu_new_blog',							array( $this , 'db_install'					));
-	}
+
+	add_action( 'plugins_loaded',		array( $this , 'db_install' ));
+
 	add_action( 'wp_ajax_csi_ajax_template_ewa_control_center_update_alerts',				array( $this , 'csi_ajax_template_ewa_control_center_update_alerts'	));
 	add_shortcode( 'csi_ewa_system_panel',				 		array( $this , 'shortcode_system_panel'		));
 }
@@ -515,7 +510,7 @@ public function shortcode_system_panel($atts){
 	$system		= isset($atts['system']) && is_numeric($atts['system']) ? $atts['system'] : null;
 	$weeks		= isset($atts['weeks']) && is_numeric($atts['weeks']) ? $atts['weeks'] : 8;
 	$graph		= isset($atts['weeks']) && true == $atts['weeks'] ? true : false;
-	
+
 	if ( $system > 0 ){
 		//Obtener información del Sistema
 		global $NOVIS_CSI_EWA_ALERT_RATING;
@@ -523,7 +518,7 @@ public function shortcode_system_panel($atts){
 		$output.='<div class="col-xs-12 col-sm-12 col-md-6">';
 		$output.='<header>';
 			$output.='<h3>CRP <small>CRM Productivo</small></h3>';
-		
+
 		$output.='</header>';
 
 		$sql="SELECT
@@ -535,7 +530,7 @@ public function shortcode_system_panel($atts){
 			WHERE system_id=$system
 			GROUP BY issued_date
 			LIMIT $weeks
-			";		
+			";
 		if ( $graph ) {
 			$dates = self::get_sql($sql);
 			$dataProvider = array();
@@ -660,7 +655,7 @@ public function csi_ajax_template_ewa_control_center_update_alerts(){
 		$response['message']="Ha ocurrido un error.";
 	}else{
 		$whereArray	= array(
-			'id'				=> $request['alert_id'],			
+			'id'				=> $request['alert_id'],
 		);
 		$current_user = wp_get_current_user();
 		$editArray	= array(
@@ -685,11 +680,11 @@ public function csi_ajax_template_ewa_control_center_update_alerts(){
 		}
 	}
 	echo json_encode($response);
-	wp_die();	
+	wp_die();
 }
 
 
-//END OF CLASS	
+//END OF CLASS
 }
 
 

@@ -2,7 +2,7 @@
 defined('ABSPATH') or die("No script kiddies please!");
 
 class NOVIS_CSI_EWA_CLASS extends NOVIS_CSI_CLASS{
-
+public $allowed_mime_types 		= array('text/csv','text/plain', '', 'application/vmd.ms-excel');
 /**
 * __construct
 *
@@ -40,31 +40,30 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.6.0';
+	$this->db_version	= '0.6.7';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	$this->crt_tbl_sql_wt	="(
-								id bigint unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-								system_no bigint(18) unsigned not null COMMENT 'SAP System Number',
-								ewa_session_no bigint(13) unsigned not null COMMENT 'EWA session number',
-								planned_date date not null COMMENT 'Planned date of EWA',
-								ewa_status varchar(1) not null COMMENT 'EWA Status char',
-								ewa_rating varchar(1) not null COMMENT 'EWA Rating char',
-								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
-								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								creation_date date null COMMENT 'Date of the creation of this record',
-								creation_time time null COMMENT 'Time of the creation of this record',
-								creation_filename varchar(255) null COMMENT 'Name of the file used to create this record',
-								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
-								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								last_modified_date date null COMMENT 'Date of the last modification of this record',
-								last_modified_time time null COMMENT 'Time of the last modification of this record',
+	$this->crt_tbl_sql_wt	="
+		(
+			id bigint(20) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
+			upload_id smallint(10) unsigned not null COMMENT 'Unique upload registry',
+			system_no bigint(18) unsigned not null COMMENT 'SAP System Number',
+			ewa_session_no bigint(13) unsigned not null COMMENT 'EWA session number',
+			planned_date date not null COMMENT 'Planned date of EWA',
+			ewa_status varchar(1) not null COMMENT 'EWA Status char',
+			ewa_rating varchar(1) not null COMMENT 'EWA Rating char',
+			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
+			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			creation_datetime datetime null COMMENT 'Date and time of the creation of this record',
+			last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
+			last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			last_modified_datetime datetime null COMMENT 'Date and time of the last modification of this record',
 
-								UNIQUE KEY id (id)
-							) $charset_collate;";
+			UNIQUE KEY id (id)
+		) $charset_collate;";
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
@@ -399,14 +398,17 @@ public function __construct(){
 		),
 	);
 
-	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'								));
-	//in a new blog creation, create the db for new blog
-	//Applies only for non-network classes
-	if( true != $this->network_class ){
-		add_action( 'wpmu_new_blog',							array( $this , 'db_install'								));
-	}
+	add_action( 'plugins_loaded',	array( $this , 'db_install' )	);
 	add_action( 'plugins_loaded',	array( $this , 'csi_define_capabilities' ) );
-	add_action( 'wp_ajax_csi_ajax_upload_ewa_file',				array( $this , 'csi_ajax_upload_ewa_file'				));
+
+	add_action( 'wp_ajax_csi_ewa_build_page_intro',			array( $this , 'csi_ewa_build_page_intro'));
+	add_action( 'wp_ajax_csi_ewa_build_page_ewa_analyzer',	array( $this , 'csi_ewa_build_page_ewa_analyzer'));
+	add_action( 'wp_ajax_csi_ewa_analyzer_filter_form',		array( $this , 'csi_ewa_analyzer_filter_form'));
+	add_action( 'wp_ajax_csi_ewa_build_page_ewa_uploader',	array( $this , 'csi_ewa_build_page_ewa_uploader'));
+	add_action( 'wp_ajax_csi_ewa_upload_file',				array( $this , 'csi_ewa_upload_file'));
+
+	add_action( 'wp_ajax_csi_ajax_upload_ewa_file',	array( $this , 'csi_ajax_upload_ewa_file'));
+
 	add_action( 'wp_ajax_csi_ajax_template_ewa_control_center_fetch_alerts',		array( $this , 'csi_ajax_template_ewa_control_center_fetch_alerts'				));
 	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_fetch_alerts',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_fetch_alerts'			));
 	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_alert_chart',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_alert_chart'			));
@@ -415,20 +417,18 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_alert_pies',			array( $this , 'csi_ajax_template_ewa_mgmt_control_center_alert_pies'		));
 	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_customer_ewas',		array( $this , 'csi_ajax_template_ewa_mgmt_control_center_customer_ewas'	));
 	add_action( 'wp_ajax_csi_ajax_template_ewa_mgmt_control_center_customer_alerts',	array( $this , 'csi_ajax_template_ewa_mgmt_control_center_customer_alerts'	));
-	add_action( 'wp_ajax_csi_ewa_build_page_intro',	array( $this , 'csi_ewa_build_page_intro'	));
-	add_action( 'wp_ajax_csi_ewa_build_page_ewa_analyzer',	array( $this , 'csi_ewa_build_page_ewa_analyzer'	));
 
 
 
 
 
 
-	add_shortcode( 'ewa_system_history',			 			array( $this , 'csi_shortcode_ewa_system_history'		));
-	add_shortcode( 'csi_ewa_status',					 		array( $this , 'csi_shortcode_ewa_status'				));
-	add_shortcode( 'csi_ewa_status_by_customer',		 		array( $this , 'csi_shortcode_ewa_status_by_customer'	));
-	add_shortcode( 'csi_ewa_system_dashboard',			 		array( $this , 'csi_shortcode_ewa_ssystem_dashboard'	));
-	add_shortcode( 'csi_ewa_customer_block',			 		array( $this , 'csi_shortcode_ewa_customer_block'		));
-	add_shortcode( 'csi_ewa_week_summary',				 		array( $this , 'csi_shortcode_ewa_week_summary'			));
+	add_shortcode( 'ewa_system_history',		array( $this , 'csi_shortcode_ewa_system_history'));
+	add_shortcode( 'csi_ewa_status',			array( $this , 'csi_shortcode_ewa_status'));
+	add_shortcode( 'csi_ewa_status_by_customer',array( $this , 'csi_shortcode_ewa_status_by_customer'));
+	add_shortcode( 'csi_ewa_system_dashboard',	array( $this , 'csi_shortcode_ewa_ssystem_dashboard'));
+	add_shortcode( 'csi_ewa_customer_block',	array( $this , 'csi_shortcode_ewa_customer_block'));
+	add_shortcode( 'csi_ewa_week_summary',		array( $this , 'csi_shortcode_ewa_week_summary'));
 
 
 }
@@ -447,6 +447,412 @@ public function get_ewa_session_no_col(){
 	global $wpdb;
 	$sql = "SELECT ewa_session_no FROM ".$this->tbl_name;
 	return $wpdb->get_col( $sql );
+}
+public function csi_ewa_upload_file(){
+	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_CUSTOMER_SYSTEM;
+	global $NOVIS_CSI_EWA_UPLOAD;
+	//Local Variables
+	$response 					= array();
+	$curr_system_no				= array();
+	$error_flag					= FALSE;
+	$error_msg					= '';
+	$EWA_insert_array			= array();
+	$EWA_insert_array_temp		= array();
+	$ALERT_insert_array			= array();
+	$ALERT_insert_array_temp	= array();
+	$non_reg_systno				= array();
+	$non_reg_output				= '';
+	$mime_type_error			= '';
+	$db_error					= '';
+	$rewind_error				= '';
+	$no_new_data				= '';
+	$prevent_dup_alert			= 0;
+	$skipped_ewa_reports		= 0;
+	$line_lenght				= 2000; //longest lenght of line
+	$current_user				= wp_get_current_user();
+	$curr_system_no				=$NOVIS_CSI_CUSTOMER_SYSTEM->get_system_no_col();
+	$curr_sessno				=$this->get_ewa_session_no_col();
+	$msg						= '';
+	$o							= '';
+	//Execution
+	set_time_limit(600);
+
+	$upload_id					= $NOVIS_CSI_EWA_UPLOAD->new_upload();
+	if ( $upload_id == FALSE ){
+		wp_die();
+	}
+
+	$o.='<div>
+		<div>
+			<h3>Resumen de carga de archivo</h3>
+			<table class="table table-condensed">
+				<thead>
+					<tr class="small">
+						<th>Caracter&iacute;stica</th>
+						<th>Valor</th>
+					</tr>
+				</thead>
+				<tbdoy>
+					<tr class="small">
+						<th>Usuario</th>
+						<td>' . get_userdata(get_current_user_id())->display_name . '</td>
+					</tr>
+					<tr class="small">
+						<th>Fecha y hora</th>
+						<td><samp>' . date( 'd/m/Y H:i:s P' ) . '</samp></td>
+					</tr>
+					<tr class="small">
+						<th>Nombre de Archivo</th>
+						<td><samp>' . $_FILES['csi-ewa-file']['name'] . ' (' . intval ( $_FILES['csi-ewa-file']['size'] / 1024 ) . ' KB)<samp></td>
+					</tr>
+					<tr class="small">
+						<th>Mensaje del Sistema</th>
+						<td>
+							<samp>
+								' . ( $_FILES['csi-ewa-file']['error'] == 'UPLOAD_ERR_OK'  ? 'Sin error de transferencia' : $_FILES['csi-ewa-file']['error'] ) . '
+							</samp>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	';
+	if ( FALSE == array_search( mime_content_type($_FILES['csi-ewa-file']['tmp_name']) , $this->allowed_mime_types ) ){
+		$error_flag=TRUE;
+		$o.='<div class="alert alert-danger" role="alert">
+				<h4><i class="fa fa-fw fa-exclamation-circle"></i>Tipo de archivo incorrecto</h4>
+				<p>El archivo <samp>' . $_FILES['csi-ewa-file']['name'] . '<samp> es del tipo <code>' . mime_content_type($_FILES['csi-ewa-file']['tmp_name']) . '</code></p>
+				<p>Para saber más visita la <a href="#" class="alert-link"> Guía de no e que</a>.<p>
+			</div>
+		';
+	}else{
+		$o.='<h3>Log de procesamiento del archivo</h3>';
+		$csv_filename = $_FILES['csi-ewa-file']['name'];
+		$csv_file = fopen($_FILES['csi-ewa-file']['tmp_name'], 'rb');
+		//CSV Structure
+		//SAPCUSTNO|SOLID|SOLDESC|DBID|INSTNO|SYSTNO|SESSNO|PLANNED_DATE|EWA_STATUS|EWA_RATING|ALERT_GROUP|ALERT_NUMBER|ALERT_RATING|TEXT
+		//Get CSV Headers
+		$line = fgetcsv($csv_file,$line_lenght);
+		foreach ( $line as $key => $field){
+			$line[$key] = htmlspecialchars ( trim ( $field ) );
+		}
+		$missing_fields = array();
+		if ( FALSE === ($csv_h_sapcustno	= array_search("SAPCUSTNO",		$line)) ) {
+			array_push ( $missing_fields, array ( 'icon' => 'info', 'name' => 'SAPCUSTNO' ) );
+			}
+		if ( FALSE === ($csv_h_solid		= array_search("SOLID"	,		$line)) ) {
+			array_push ( $missing_fields, array ( 'icon' => 'info', 'name' => 'SOLID' ) );
+			}
+		if ( FALSE === ($csv_h_soldesc		= array_search("SOLDESC",		$line)) ) {
+			array_push ( $missing_fields, array ( 'icon' => 'info', 'name' => 'SOLDESC' ) );
+			}
+		if ( FALSE === ($csv_h_dbid			= array_search("DBID",			$line)) ) {
+			array_push ( $missing_fields, array ( 'icon' => 'info', 'name' => 'DBID' ) );
+			}
+		if ( FALSE === ($csv_h_instno		= array_search("INSTNO",		$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'INSTNO' ) );
+			}
+		if ( FALSE === ($csv_h_systno		= array_search("SYSTNO",		$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'SYSTNO' ) );
+			}
+		if ( FALSE === ($csv_h_sessno		= array_search("SESSNO",		$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'SESSNO' ) );
+			}
+		if ( FALSE === ($csv_h_planned_date	= array_search("PLANNED_DATE",	$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'PLANNED_DATE' ) );
+			}
+		if ( FALSE === ($csv_h_ewa_status	= array_search("EWA_STATUS",	$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'EWA_STATUS' ) );
+			}
+		if ( FALSE === ($csv_h_ewa_rating	= array_search("EWA_RATING",	$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'EWA_RATING' ) );
+			}
+		if ( FALSE === ($csv_h_alert_group	= array_search("ALERT_GROUP",	$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'ALERT_GROUP' ) );
+			}
+		if ( FALSE === ($csv_h_alert_number	= array_search("ALERT_NUMBER",	$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'ALERT_NUMBER' ) );
+			}
+		if ( FALSE === ($csv_h_alert_rating	= array_search("ALERT_RATING",	$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'ALERT_RATIN' ) );
+			}
+		if ( FALSE === ($csv_h_alert_text	= array_search("TEXT",			$line)) ) {
+			$error_flag = TRUE;
+			array_push ( $missing_fields, array ( 'icon' => 'times', 'name' => 'TEXT' ) );
+			}
+		if ( FALSE == $error_flag ) {
+			while  ( FALSE !== ($line = fgetcsv($csv_file,$line_lenght) ) ){
+				foreach ( $line as $key => $field){
+						$line[$key] = htmlspecialchars ( trim ( $field ) ) ;
+				}
+				//Check if system is registered
+				if ( FALSE === array_search($line[$csv_h_systno], $curr_system_no)){
+					if ( FALSE === array_search( $line[$csv_h_systno], array_column( $non_reg_systno, 'systno' ) ) ) {
+						if ( 0 < intval ( $line[$csv_h_systno] ) ) {
+							$reg=array(
+								'sapcustno'		=> $line[$csv_h_sapcustno],
+								'solid'			=> $line[$csv_h_solid],
+								'soldesc'		=> $line[$csv_h_soldesc],
+								'dbid'			=> $line[$csv_h_dbid],
+								'systno'		=> $line[$csv_h_systno],
+							);
+							array_push($non_reg_systno, $reg);
+						}
+					}
+				}else{
+					//Validar si el ewa ya está registrado en el sistema
+					//Si el ewa ya fue ingresado al sistema, se guarda como EWAs Omitidos
+					//Check if ewa_session_no is registered
+					if ( FALSE === array_search( $line[$csv_h_sessno], $curr_sessno ) ) {
+						//Check if is not already registered to save
+						if ( FALSE === array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) ) ) {
+							$EWA = array(
+								'system_no'			=> $line[$csv_h_systno],
+								'ewa_session_no'	=> $line[$csv_h_sessno],
+								'planned_date'		=> $line[$csv_h_planned_date],
+								'ewa_status'		=> $line[$csv_h_ewa_status],
+								'ewa_rating'		=> $line[$csv_h_ewa_rating],
+								'creation_filename'	=> $csv_filename,
+							);
+							$count_ewas = array_push( $EWA_insert_array, $EWA );
+						}else{
+							// silence is golden
+						}
+					}else{
+						$skipped_ewa_reports++;
+				// 		Este ewa ya existe en el sistema.... por lo tanto se omite
+					}
+				}
+			}
+			//prepare the variables for insert
+
+			if ( FALSE != rewind($csv_file) ){
+				$line = fgetcsv($csv_file,$line_lenght);
+				while  ( FALSE !== ($line = fgetcsv($csv_file,$line_lenght) ) ){
+					foreach ( $line as $key => $field){
+						$line[$key] = htmlspecialchars ( trim ( $field ) ) ;
+					}
+					//Check if ewa_session_no is going to be inserted
+					if ( FALSE === array_search( $line[$csv_h_sessno], array_column( $EWA_insert_array, 'ewa_session_no' ) ) ) {
+						//silence is golden
+					}else{
+						if ( 'NULL' == $line[$csv_h_alert_number] || '' == $line[$csv_h_alert_rating] ){
+							if ( 'G' == $line[$csv_h_ewa_rating] ){
+								continue;
+							}
+							$line[$csv_h_alert_group]	= 'NOVIS_NO_ALERT';
+							$line[$csv_h_alert_rating]	= 'Z';
+							$line[$csv_h_alert_number]	= '1';
+							$line[$csv_h_alert_text]	= 'No alert has been generated [novis]';
+						}
+						$ALERT = array(
+	//							'system_no'				=> $line[$csv_h_systno],
+							'ewa_session_no'		=> $line[$csv_h_sessno],
+							'alert_group'			=> $line[$csv_h_alert_group],
+							'alert_rating'			=> $line[$csv_h_alert_rating],
+							'alert_no'				=> $line[$csv_h_alert_number],
+							'alert_text'			=> $line[$csv_h_alert_text],
+							'creation_filename'		=> $csv_filename,
+						);
+						$ALERT_exists = FALSE;
+						foreach ( $ALERT_insert_array as $ALERT_insert_array_serial ){
+							if ( serialize ( $ALERT_insert_array_serial )  == serialize ( $ALERT ) ) {
+								$ALERT_exists = TRUE;
+							}
+						}
+						if ( FALSE == $ALERT_exists ){
+							$count_alerts = array_push( $ALERT_insert_array, $ALERT );
+						}else{
+							$prevent_dup_alert++;
+						}
+					}
+				}
+				$ALERT_insert_array = array_unique($ALERT_insert_array, SORT_REGULAR);
+				if (0 < count ( $EWA_insert_array ) ) {
+					$sql = "
+						INSERT INTO
+							" . $this->tbl_name . "
+						(upload_id, system_no, ewa_session_no, planned_date, ewa_status, ewa_rating, creation_user_id, creation_user_email, creation_datetime)
+							VALUES ";
+					foreach ( $EWA_insert_array as $key => $row ){
+						$EWA_insert_array_temp[$key]=' ( "' . $upload_id . '", "'.$row['system_no'].'", "' . $row['ewa_session_no'] . '", "' . $row['planned_date'] . '", "' . $row['ewa_status'] . '", "' . $row['ewa_rating'] . '", "' . get_current_user_id() . '", "' . $current_user->user_email . '", "' . date("Y-m-d H:i:s") . '" ) ';
+					}
+					$sql.=implode(",", $EWA_insert_array_temp);
+					$ewa_inserts = $wpdb->query($sql);
+
+					if ( FALSE === $ewa_inserts ){
+						$error_flag=TRUE;
+						$o.='
+						<div class="alert alert-danger" role="alert">
+							<p>Ha ocurrido un error al insertr los registros de EWA en la Base de Datos.</p>
+							<p><code>' . $sql . '</code>.</p>
+							<p>Solicita apoyo al administrador del sistema.</p>
+						</div>';
+					}else{
+						global $NOVIS_CSI_EWA_ALERT;
+						$sql = "INSERT INTO ".$NOVIS_CSI_EWA_ALERT->tbl_name. " ( upload_id, ewa_session_no, alert_group, alert_rating, alert_no, alert_text, creation_user_id, creation_user_email, creation_datetime )
+								VALUES ";
+						foreach ( $ALERT_insert_array as $key => $row ){
+							$ALERT_insert_array_temp[$key] =' ( "' . $upload_id . '", "' . $row['ewa_session_no'] . '", "' . $row['alert_group'] . '", "' . $row['alert_rating'] . '", "' . $row['alert_no'] . '", "' . $row['alert_text'] . '", "' . get_current_user_id() . '", "' . $current_user->user_email . '", "' . date("Y-m-d H:i:s") . '" ) ';
+						}
+						$sql.=implode(",", $ALERT_insert_array_temp);
+						// Normally @@global.max_allowed_packet = 1048576
+						$check_max_allowed_packet= $wpdb->get_row('SELECT @@global.max_allowed_packet as max_allowed_packet','ARRAY_A')['max_allowed_packet'];
+						$query_size = strlen( $sql ) + 1024 * 4;
+						self::write_log( $query_size );
+						self::write_log($check_max_allowed_packet);
+						if ( $query_size >= $check_max_allowed_packet ){
+							self::write_log("WARNING! To prevent DB Error for getting packet bigger than 'max_allowed_packet' bytes, global.max_allowed_packet will be temporarily modified. QUERY_SIZE : ".$query_size." max_allowed_packet : ".$check_max_allowed_packet);
+							//In order to this fix to work, you need to grant the database user the "SUPER" privilege
+							/*
+							REVOKE ALL PRIVILEGES ON *.* FROM 'user'@'localhost';
+							REVOKE GRANT OPTION ON *.* FROM 'user'@'localhost';
+							GRANT SUPER ON *.* TO 'user'@'localhost' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
+							*/
+							$query_size = ( $query_size < 33554432 )? 33554432 : 67108864 ;
+							self::write_log( $wpdb->query( 'SET @@global.max_allowed_packet = ' . $query_size ) );
+							self::write_log ( "WARNING! max_allowed_packet changed to ".$query_size );
+							$alert_inserts = $wpdb->query($sql);
+							self::write_log( $wpdb->query( 'SET @@global.max_allowed_packet = ' . $check_max_allowed_packet ) );
+							self::write_log ( "WARNING! max_allowed_packet changed back to " . $check_max_allowed_packet );
+						}else{
+							$alert_inserts = $wpdb->query($sql);
+						}
+						if ( FALSE === $alert_inserts ){
+							$error_flag=TRUE;
+							$o.='
+							<div class="alert alert-danger" role="alert">
+								<p>Ha ocurrido un error al insertr los registros de Alertas de EWA en la Base de Datos.</p>
+								<p><code>' . $sql . '</code>.</p>
+								<p>Solicita apoyo al administrador del sistema.</p>
+							</div>';
+						}
+					}
+
+				}else{
+					$error_flag=TRUE;
+					$o.='
+					<div class="alert alert-danger" role="alert">
+						<p>Ninguno de los registros en este archivo son v&aacute;lidos.</p>
+						<p>Puede que estés cargando el archivo por segunda vez o los sistemas no est&eacute;n registrados</p>
+					</div>';
+				}
+			}else{
+				$error_flag=TRUE;
+				$o.='
+				<div class="alert alert-danger" role="alert">
+					<p>Ha ocurrido un error al procesar el archivo (<code>Rewind CSV File <small>' . $_FILES['file']['tmp_name'] . '</small></code>).</p>
+					<p>Solicita apoyo al administrador del sistema</p>
+				</div>';
+			}
+		}else{
+			$error_flag=TRUE;
+			$o.='
+			<div class="">
+				<p>Un archivo CSV se compone de columnas separadas por comas.La primera fila del archivo define el nombre de la columna.</p>
+				<p>Las siguientes columnas no han sido identificadas en el archivo:</p>
+				<ul>
+			';
+			foreach ($missing_fields as $field ){
+				$o.='<li><i class="fa fa-fw fa-' . $field['icon'] . '"></i>' . $field['name'] . '</li>';
+			}
+			$o.='
+				</ul>
+				<p>La falta de columnas prioritarias (marcadas con <i class="fa fa-times"></i>) cancela el procesamiento del archivo para evitar corrupci&oacute;n de la informaci&oacute;n. Valida que el archivo cargado cumpla con las características descriptas en <a href="#" target="_blank">Flujo de Administraci&oacute;n de Alertas EWA<i class="fa fa-fw fa-external-link"></i></a>.</p>
+			</div>
+			';
+
+
+		}
+			// -----
+	}
+	if ( FALSE === $error_flag ){
+		if ( 0 < count( $prevent_dup_alert ) ){
+			$o.='
+			<div class="alert alert-info" role="alert">
+				<p>Se han omitido ' . intval ( $prevent_dup_alert ) .' alertas duplicadas</p>
+			</div>';
+		}
+		if ( 0 < count( $non_reg_systno ) ) {
+			$o.='
+			<div>
+				<h4>Sistemas no registrados</h4>
+					<p>En el archivo existen sistemas que no están registrados en la herramienta. Para realizar la carga de los EWAs los sistemas deben estar registrados con las mismas caracteristicas (SID, SYSTNO). Debes registrar el sistema y posteriormente puedes volver a cargar este archivo para registrar los Reportes EWAs y sus alertas..</p>
+					<table class="table table-condensed table-hover">
+						<thead>
+							<tr>
+								<th>SAP Customer Number</th>
+								<th>Solution ID</th>
+								<th>Solution Desc</th>
+								<th>DBID</th>
+								<th>System Number</th>
+							</tr>
+						</thead>
+						<tbody>
+			';
+			foreach ( $non_reg_systno as $sys){
+				$o.='
+							<tr>
+								<td>'.$sys['sapcustno'].'</td>
+								<td>'.$sys['solid'].'</td>
+								<td>'.$sys['soldesc'].'</td>
+								<td>'.$sys['dbid'].'</td>
+								<td>'.$sys['systno'].'</td>
+							</tr>
+				';
+			}
+			$o.='
+						</tbody>
+					</table>
+				</div>
+			</div>
+			';
+		}
+		$o.='
+		<div class="alert alert-info">
+			<p>Se han insertado ' . count ( $EWA_insert_array ) . ' EWAs.</p>
+			<p>Se han insertado ' . count ( $ALERT_insert_array ) . ' alertas.</p>
+		</div>
+		';
+	}
+	$random = rand (5000,6000);
+	$editArray								= array();
+	$whereArray								= array();
+	$whereArray['id']						= $upload_id;
+
+	$editArray['error_flag']				= intval ( $error_flag );
+	$editArray['ewas_no']					= count ( $EWA_insert_array );
+	$editArray['alerts_no']					= count ( $ALERT_insert_array );
+	$editArray['text']						= $o . '</div>';
+	$editArray['filename']					= $_FILES['csi-ewa-file']['name'];
+
+	$editArray['last_modified_user_id']		= $current_user->ID;
+	$editArray['last_modified_user_email']	= $current_user->user_email;
+	$editArray['last_modified_datetime']	= date('Y-m-d H:i:s');
+	$wpdb->update ( $NOVIS_CSI_EWA_UPLOAD->tbl_name, $editArray, $whereArray );
+	$o.='
+		<div>
+			<div class="row text-center">
+				<a href="#" class="btn btn-default"><i class="fa fa-fw fa-calendar-o"></i>Ver resumen Semanal</a>
+				<a href="#!ewauploader?new_file=' . $random . '" class="btn btn-default"><i class="fa fa-fw fa-upload"></i>Realizar otra carga</a>
+		</div>
+	';
+	$o.='</div>';
+
+	$response['message']	=$o;
+	echo json_encode($response);
+	wp_die();
 }
 
 public function csi_ajax_upload_ewa_file(){
@@ -1475,8 +1881,7 @@ public function csi_shortcode_ewa_ssystem_dashboard($atts){
 						T00.alert_text,
 						T00.last_modified_user_id,
 						T00.last_modified_user_email,
-						T00.last_modified_date,
-						T00.last_modified_time,
+						T00.last_modified_datetime,
 						T00.action_party_id,
 						T00.action_id,
 						T02.icon,
@@ -1589,7 +1994,7 @@ public function csi_shortcode_ewa_ssystem_dashboard($atts){
 				}
 				$o.='<td class="text-center">
 						<p class=""><a href="mailto:' . $alert['last_modified_user_email'] . '">' . $user_name . '</a></p>
-						<p class="text-muted"><small>' . $alert['last_modified_date'] . ' - ' . $alert['last_modified_time'] . '</small></p>
+						<p class="text-muted"><small>' . $alert['last_modified_datetime'] . ' - ' . $alert['last_modified_time'] . '</small></p>
 					</td>';
 				$o.='<td class="text-center"><a href="#" class="btn btn-primary">Accion</a></td>';
 				$o.='</tr>';
@@ -2382,7 +2787,7 @@ public function csi_ajax_template_ewa_control_center_fetch_alerts(){
 	wp_die();
 }
 
-public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
+public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts ( $internal = FALSE ) {
 	//variables globales
 	global $wpdb;
 	global $NOVIS_CSI_CUSTOMER;
@@ -2393,9 +2798,13 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 	global $NOVIS_CSI_EWA_ALERT_RATING;
 	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
 	//variables locales
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$dates				= explode ( ' - ', $post['dates'] );
+	$post['filter_start_date']	= $dates[0];
+	$post['filter_end_date']	= $dates[1];
+
 	$page_size				= 20;
 	$pagination				= '';
-	$request				= $_REQUEST;
 	$tbody					= '';
 	$graphs_container		='';
 	$graphs					= array();
@@ -2403,14 +2812,14 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 	$now					= NULL;
 	$alerts					= array();
 
-	$page_no				= isset ( $request['page_no'] ) ? intval ( $request['page_no'] ) : 0 ;
+	$page_no				= isset ( $post['page_no'] ) ? intval ( $post['page_no'] ) : 0 ;
 	$count_sql = " SELECT COUNT(DISTINCT T00.ewa_session_no) as total ";
-	$count_sql.= self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql ( $request, FALSE );
+	$count_sql.= self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql ( $post, FALSE );
 	$total_ewas = $wpdb->get_var ( $count_sql );
 	$page_count = ceil ( $total_ewas / $page_size );
 //	self::write_log ( $count_sql );
 
-	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($request);
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($post);
 	$ewa_sql = $sql . '
 			GROUP BY
 				T00.ewa_session_no
@@ -2481,8 +2890,10 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 			</tr>
 		';
 	}
-	$start_date		= self::csi_date_adjust( $request['filter_start_date'], 'monday' );
-	$end_date		= self::csi_date_adjust( $request['filter_end_date'], 'sunday' );
+	$start_date		= self::csi_date_adjust( $post
+['filter_start_date'], 'monday' );
+	$end_date		= self::csi_date_adjust( $post
+['filter_end_date'], 'sunday' );
 	$response['panelTitleDates'] = '
 	<div class="form-group">
 		<div class="input-group">
@@ -2522,6 +2933,9 @@ public function csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(){
 		</ul>
 	</nav>';
 	$response['pagination'] = $pagination;
+	if ( $internal ){
+		return $response;
+	}
 	echo json_encode($response);
 	wp_die();
 }
@@ -2575,18 +2989,23 @@ public function csi_ajax_template_ewa_mgmt_control_center_alert_chart(){
 	global $NOVIS_CSI_EWA_ALERT;
 	global $NOVIS_CSI_EWA_ALERT_RATING;
 	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$dates = explode ( ' - ', $post['dates'] );
+	$post['filter_start_date']	= $dates[0];
+	$post['filter_end_date']	= $dates[1];
+
 	//variables localse
 	$graphs					= array();
 	$dataProvider			= array();
 	$response				= array();
 
-	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($post);
 	$sql.='
 		ORDER BY
 			T00.planned_date ASC
 	';
 	$alerts = $this->get_sql ( $sql );
-	self::write_log ( $sql );
+	//self::write_log ( $sql );
 	foreach ( $alerts as $alert ){
 		$alert['ewa_planned_date']		= self::findMonday($alert['ewa_planned_date'])->format('Y-m-d');
 		$index = array_search( $alert['ewa_planned_date'], array_column( $dataProvider, 'date' ) );
@@ -2770,6 +3189,7 @@ protected function csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($
 	//parámetros de función
 	$filter_start_date		= self::csi_date_adjust( $request['filter_start_date'], 'monday' );
 	$filter_end_date		= self::csi_date_adjust( $request['filter_end_date'], 'sunday' );
+	/*
 	$filter_customer		= isset ( $request['filter_customer'] )			&& '' != $request['filter_customer']		? $request['filter_customer']		: FALSE ;
 	$filter_sid				= isset ( $request['filter_sid'] )				&& '' != $request['filter_sid']				? $request['filter_sid']			: FALSE ;
 	$filter_ewa_rating		= isset ( $request['filter_ewa_rating'] )		&&  0 != $request['filter_ewa_rating']		? $request['filter_ewa_rating']		: FALSE ;
@@ -2778,7 +3198,7 @@ protected function csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($
 	$filter_alert_rating	= isset ( $request['filter_alert_rating'] )		&&  0 != $request['filter_alert_rating']	? $request['filter_alert_rating']	: FALSE ;
 	$filter_action			= isset ( $request['filter_action'] )			&&  0 != $request['filter_action']			? $request['filter_action']			: FALSE ;
 	$filter_customer_flag	= isset ( $request['filter_customer_flag'] )	&&  0 != $request['filter_customer_flag']	? $request['filter_customer_flag']	: FALSE ;
-
+	*/
 	if ( TRUE == $select ){
 		$sql.= '
 			SELECT
@@ -2826,15 +3246,33 @@ protected function csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($
 				T00.planned_date BETWEEN "' . $filter_start_date['date'] . '" AND "' . $filter_end_date['date'] . '"
 				AND T01.environment_id IN (' . implode ( ',', $environment ) .')
 	';
-	if ( FALSE != $filter_customer ){
-		$sql.=' AND ( UPPER(T03.code) LIKE "%' . strtoupper($filter_customer) . '%" OR UPPER(T03.short_name) LIKE "%' . strtoupper($filter_customer) . '%" ) ';
+	if ( 'null' != $request['customer'] && '' != $request['customer'] ){
+		$sql.='			AND T03.id IN (' . $request['customer'] . ') ';
 	}
-	if ( FALSE != $filter_sid ){
-		$sql.=' AND UPPER(T01.sid) LIKE "%' . strtoupper($filter_sid) . '%" ';
+	if ( 'null' != $request['ewa-rating'] && '' != $request['ewa-rating'] ){
+		$sql.='			AND T04.id IN (' . $request['ewa-rating'] . ') ';
 	}
-	if ( FALSE != $filter_ewa_rating ){
-		$sql.=' AND T04.id = "' . intval($filter_ewa_rating) . '" ';
+	if ( 'null' != $request['alert-group'] && '' != $request['alert-group'] ){
+		$groups = explode ( ',', $request['alert-group'] );
+		$groups_sql = array();
+		foreach ( $groups as $group ){
+			array_push ( $groups_sql, ' UPPER(T05.alert_group) = "' . strtoupper($group) . '" ');
+		}
+
+		$sql.=' AND ( ' . implode ( ' OR ', $groups_sql ) . ' )';
 	}
+	if ( '' != $request['alert-text'] ){
+		$sql.=' AND UPPER(T05.alert_text) LIKE "%' . strtoupper($request['alert-text']) . '%" ';
+	}
+	if ( '' != $request['sid'] ){
+		$sql.=' AND UPPER(T01.sid) LIKE "%' . strtoupper($request['sid']) . '%" ';
+	}
+	/*
+	if ( 'null' != $request['alert-rating'] && '' != $request['alert-rating'] ){
+		$sql.='			AND T06.id IN (' . $request['alert-rating'] . ') ';
+	}
+	*/
+	/*
 	if ( FALSE != $filter_alert_group ){
 		$sql.=' AND UPPER(T05.alert_group) LIKE "%' . strtoupper($filter_alert_group) . '%" ';
 	}
@@ -2862,6 +3300,7 @@ protected function csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($
 			break;
 		default:
 	}
+	*/
 	return $sql;
 }
 
@@ -2876,11 +3315,16 @@ public function csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart(){
 	global $NOVIS_CSI_EWA_ALERT_RATING;
 	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
 	//variables localse
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$dates = explode ( ' - ', $post['dates'] );
+	$post['filter_start_date']	= $dates[0];
+	$post['filter_end_date']	= $dates[1];
+
 	$graphs					= array();
 	$dataProvider			= array();
 	$response				= array();
 
-	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($post);
 	$sql.='
 		GROUP BY
 			T00.ewa_session_no
@@ -3059,11 +3503,15 @@ public function csi_ajax_template_ewa_mgmt_control_center_customer_ewas(){
 	global $NOVIS_CSI_EWA_ALERT_RATING;
 	global $NOVIS_CSI_EWA_ALERT_ACTION_PARTY;
 	//variables localse
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$dates = explode ( ' - ', $post['dates'] );
+	$post['filter_start_date']	= $dates[0];
+	$post['filter_end_date']	= $dates[1];
 	$graphs					= array();
 	$dataProvider			= array();
 	$response				= array();
 
-	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($_REQUEST);
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql($post);
 	$sql.='
 		GROUP BY
 			T00.ewa_session_no
@@ -3259,22 +3707,22 @@ public function csi_ewa_build_page_intro(){
 	<nav class="container">
 		<div class="row">
 			<div class="list-group col-sm-6 col-md-4">
-				<a href="#!ewauploads" class="list-group-item list-group-item-info">
+				<a href="#!ewaloads" class="list-group-item list-group-item-info">
 					<h3><i class="fa fa-fw fa-file-text-o"></i>Cargas de EWA</h3>
 					<p class="text-justify">Informaci&oacute;n de cargas de archivos CSV-EWA.</p>
 				</a>
 			</div>
 	';
-	//if ( current_user_can_for_blog ( 1, 'csi_upload_ewa_file' ) ){
+	if ( current_user_can_for_blog ( 1, 'csi_upload_ewa_file' ) ){
 		$o.='
 			<div class="list-group col-sm-6 col-md-4">
-				<a href="#!newproject" class="list-group-item active">
+				<a href="#!ewauploader" class="list-group-item active">
 					<h3><i class="fa fa-fw fa-upload"></i>EWA Uploader</h3>
 					<p class="text-justify">Carga de nuevos archivos CSV-EWA.</p>
 				</a>
 			</div>
 	';
-	//}
+	}
 	$o.='
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!pm_dashboard" class="list-group-item list-group-item-success">
@@ -3309,153 +3757,211 @@ public function csi_ewa_build_page_intro(){
 }
 public function csi_ewa_build_page_ewa_analyzer(){
 	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_EWA_RATING;
+	global $NOVIS_CSI_EWA_ALERT;
+	global $NOVIS_CSI_EWA_ALERT_RATING;
+	global $NOVIS_CSI_CUSTOMER;
+	global $NOVIS_CSI_COUNTRY;
 	//Local Variables
+	$customer_opts			= '';
+	$ewa_rating_opts		= '';
+	$alert_group_opts		= '';
+	$alert_rating_opts		= '';
+	$o						= '';
+	$response				= array();
+	$post = isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id,code,short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' ORDER BY code ASC';
+	$countries = $this->get_sql ( $sql );
+	foreach ( $countries as $country ){
+		$customer_opts .= '<optgroup label="' . $country['short_name'] . '">';
+		$sql = 'SELECT id,code,short_name FROM ' . $NOVIS_CSI_CUSTOMER->tbl_name . ' WHERE country_id="' . $country['id'] . '" ORDER BY code ASC';
+		$customers = $this->get_sql($sql);
+		foreach ( $customers as $customer ){
+			$customer_opts .= '<option value="' . $customer['id'] . '">' . $customer['short_name'] . ' (' . $customer['code'] . ')</option>';
+		}
+		$customer_opts .= '</optgroup>';
+	}
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_EWA_RATING->tbl_name . ' ORDER BY short_name';
+	$ewa_ratings = $this->get_sql ( $sql );
+	foreach ( $ewa_ratings as $ewa_rating ){
+		$ewa_rating_opts .= '<option value="' . $ewa_rating['id'] . '">' . $ewa_rating['short_name'] . ' </option>';
+	}
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT id, short_name FROM ' . $NOVIS_CSI_EWA_ALERT_RATING->tbl_name . ' ORDER BY short_name';
+	$alert_ratings = $this->get_sql ( $sql );
+	foreach ( $alert_ratings as $alert_rating ){
+		$alert_rating_opts .= '<option value="' . $alert_rating['id'] . '">' . $alert_rating['short_name'] . ' </option>';
+	}
+	//--------------------------------------------------------------------------
+	$sql = 'SELECT alert_group FROM ' . $NOVIS_CSI_EWA_ALERT->tbl_name . ' GROUP BY alert_group ORDER BY alert_group';
+	$alert_groups = $this->get_sql ( $sql );
+	foreach ( $alert_groups as $alert_group ){
+		$alert_group_opts .= '<option value="' . $alert_group['alert_group'] . '">' . $alert_group['alert_group'] . ' </option>';
+	}
+	//--------------------------------------------------------------------------
+	$current_date = new DateTime();
+	//--------------------------------------------------------------------------
+	$start_date = new DateTime();
+	$start_date->modify('-4 months');
+	$end_date = new DateTime();
+	//$end_date->modify('+3 months');
+
 	//Execution
 	//--------------------------------------------------------------------------
 	$o='
 	<div class="container">
 		<div class="page-header row">
 			<h2 class="h3">Panel de Gestión de Reportes y Alertas Early Watch</h2>
-			<p class="text-muted text-justify lead">El sistema <i>EWA Analyzer&trade;</i> empodera al equipo técnico y de gestión, dotando inteligencia al Proceso de Gestión de EWAs para la toma de decisiones informadas.</p>
-			<div class="panel panel-default ">
-				<div class="panel-heading">
-					<a data-toggle="collapse" href="#csi-ewa-infographics" role="button">
-						<i class="fa fa-fw fa-pie-chart"></i>Gr&aacute;ficas
-					</a>
-					<div class="pull-right">
+			<p class="text-muted text-justify lead">El sistema <i>EWA Analyzer&trade;</i> empodera al equipo t&eacute;cnico y de gesti&oacute;n, dotando inteligencia al Proceso de Gesti&oacute;n de EWAs para la toma de decisiones informadas.</p>
+			<form id="csi-ewa-analyzer-filter" data-target="#csi-ewa-analyzer-table, #csi-ewa-infographic-1-chart, #csi-ewa-infographic-2-chart" class="csi-refreshable-filter-form">
+				<div class="panel panel-default" id="csi-ewa-analyzer-infographics-panel">
+					<div class="panel-heading">
 						<a data-toggle="collapse" href="#csi-ewa-infographics" role="button">
-							<i class="fa fa-fw fa-caret-down"></i>
+							<i class="fa fa-fw fa-pie-chart"></i>Gr&aacute;ficas
 						</a>
-					</div>
-				</div>
-				<div class="collapse" id="csi-ewa-infographics">
-					<div class="panel-body row">
-						<div class="col-sm-4 hidden-xs">
-							<h3>Gráficos de EWAs</h3>
-						</div>
-						<div class="col-sm-4">
-							<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-1-checkbox" name="csi-ewa-infographic-1-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-1" >
-							<label for="csi-ewa-infographic-1-checkbox">
-								<h4><i class="fa fa-fw fa-line-chart"></i>EWAs por status</h4>
-								<p class="text-left">Información de ewas por status, por semana</p>
-							</label>
-						</div>
-						<div class="col-sm-4">
-						<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-2-checkbox" name="csi-ewa-infographic-2-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-2" >
-							<label for="csi-ewa-infographic-2-checkbox">
-								<h4><i class="fa fa-fw fa-bar-chart"></i>EWAs por cliente</h4>
-								<p class="text-left">Información sumarizada de reportes EWA y sus status por cliente</p>
-							</label>
+						<div class="pull-right">
+							<a data-toggle="collapse" href="#csi-ewa-infographics" role="button">
+								<i class="fa fa-fw fa-caret-down"></i>
+							</a>
 						</div>
 					</div>
-					<div class="panel-body row">
-						<div class="col-sm-4 hidden-xs">
-							<h3>Gráficos de Alertas</h3>
+					<div class="collapse" id="csi-ewa-infographics">
+						<div class="panel-body row">
+							<div class="col-sm-4 hidden-xs">
+								<h3>Gráficos de EWAs</h3>
+							</div>
+							<div class="col-sm-4">
+								<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-1-checkbox" name="csi-ewa-infographic-1-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-1" checked>
+								<label for="csi-ewa-infographic-1-checkbox">
+									<h4><i class="fa fa-fw fa-bar-chart"></i>EWAs por status</h4>
+									<p class="text-left">Información de ewas por status, por semana</p>
+								</label>
+							</div>
+							<div class="col-sm-4">
+							<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-2-checkbox" name="csi-ewa-infographic-2-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-2" >
+								<label for="csi-ewa-infographic-2-checkbox">
+									<h4><i class="fa fa-fw fa-bar-chart"></i>EWAs por cliente</h4>
+									<p class="text-left">Información sumarizada de reportes EWA y sus status por cliente</p>
+								</label>
+							</div>
 						</div>
-						<div class="col-sm-4">
-							<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-3-checkbox" name="csi-ewa-infographic-3-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-3" >
-							<label for="csi-ewa-infographic-3-checkbox">
-								<h4><i class="fa fa-fw fa-line-chart"></i>Alertas por status</h4>
-								<p class="text-left">Información de alertas por status, por semana</p>
-							</label>
+						<div class="panel-body row">
+							<div class="col-sm-4 hidden-xs">
+								<h3>Gráficos de Alertas</h3>
+							</div>
+							<div class="col-sm-4">
+								<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-3-checkbox" name="csi-ewa-infographic-3-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-3" >
+								<label for="csi-ewa-infographic-3-checkbox">
+									<h4><i class="fa fa-fw fa-line-chart"></i>Alertas por status</h4>
+									<p class="text-left">Información de alertas por status, por semana</p>
+								</label>
+							</div>
+							<div class="col-sm-4">
+								<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-4-checkbox" name="csi-ewa-infographic-4-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-4" >
+								<label for="csi-ewa-infographic-4-checkbox">
+									<h4><i class="fa fa-fw fa-bar-chart"></i>Alertas por cliente</h4>
+									<p class="text-left">Información sumarizada de alertas por cliente</p>
+								</label>
+							</div>
 						</div>
-						<div class="col-sm-4">
-							<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-4-checkbox" name="csi-ewa-infographic-4-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-4" >
-							<label for="csi-ewa-infographic-4-checkbox">
-								<h4><i class="fa fa-fw fa-bar-chart"></i>Alertas por cliente</h4>
-								<p class="text-left">Información sumarizada de alertas por cliente</p>
-							</label>
+						<div class="panel-body row">
+							<div class="col-sm-4 hidden-xs">
+								<h3>Distribuci&oacute;n de Alertas</h3>
+							</div>
+							<div class="col-sm-4">
+								<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-5-checkbox" name="csi-ewa-infographic-5-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-5" >
+								<label for="csi-ewa-infographic-5-checkbox">
+									<h4><i class="fa fa-fw fa-pie-chart"></i>Grupos de Alertas</h4>
+									<p class="text-left">Distribución de grupos de alertas</p>
+								</label>
+							</div>
+							<div class="col-sm-4">
+								<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-6-checkbox" name="csi-ewa-infographic-6-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-6" >
+								<label for="csi-ewa-infographic-6-checkbox">
+									<h4><i class="fa fa-fw fa-bar-chart"></i>Alertas</h4>
+									<p class="text-left">Información sumarizada de alertas por cliente</p>
+								</label>
+							</div>
 						</div>
 					</div>
-					<div class="panel-body row">
-						<div class="col-sm-4 hidden-xs">
-							<h3>Distribuci&oacute;n de Alertas</h3>
-						</div>
-						<div class="col-sm-4">
-							<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-5-checkbox" name="csi-ewa-infographic-5-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-5" >
-							<label for="csi-ewa-infographic-5-checkbox">
-								<h4><i class="fa fa-fw fa-pie-chart"></i>Grupos de Alertas</h4>
-								<p class="text-left">Distribución de grupos de alertas</p>
-							</label>
-						</div>
-						<div class="col-sm-4">
-							<input type="checkbox" class="form-control csi-cool-checkbox" id="csi-ewa-infographic-6-checkbox" name="csi-ewa-infographic-6-checkbox" value="1" data-toggle="collapse" data-target="#csi-ewa-infographic-6" >
-							<label for="csi-ewa-infographic-6-checkbox">
-								<h4><i class="fa fa-fw fa-bar-chart"></i>Alertas</h4>
-								<p class="text-left">Información sumarizada de alertas por cliente</p>
-							</label>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="panel panel-default ">
-				<div class="panel-heading">
-					<a data-toggle="collapse" href="#csi-ewa-filter" role="button">
-						<i class="fa fa-fw fa-filter"></i>Filtros
-					</a>
-					<div class="pull-right">
+				</div><!-- #csi-ewa-analyzer-infographics-panel -->
+				<div class="panel panel-default" id="csi-ewa-analyzer-filter-panel">
+					<div class="panel-heading">
 						<a data-toggle="collapse" href="#csi-ewa-filter" role="button">
-							<i class="fa fa-fw fa-caret-down"></i>
+							<i class="fa fa-fw fa-filter"></i>Filtros
 						</a>
-					</div>
-				</div>
-				<div class="collapse" id="csi-ewa-filter">
-					<div class="panel-body">
-						<p class="help-block">La información mostrada en la tabla de EWAs y en los gr&aacute;ficos relacionados, son el resultado de los filtros seleccionados por el usuario.</p>
-					</div>
-					<div class="panel-body row">
-						<div class="form-group col-sm-4">
-							<label class="">Cliente</label>
-							<select class="form-control select2" data-placeholder="Todos" multiple="multiple" data-allow-clear="true" style="width:100%;"/>
-								<option></option>
-							</select>
-						</div>
-						<div class="form-group col-sm-4">
-							<label class="">Rango de Fechas</label>
-							<input type="text" class="form-control csi-datetime-range-input"/>
-						</div>
-						<div class="form-group col-sm-4">
-							<label class="">Status de EWA</label>
-							<select class="form-control select2" data-placeholder="Todos" multiple="multiple" data-allow-clear="true" style="width:100%;"/>
-								<option></option>
-							</select>
+						<div class="pull-right">
+							<a data-toggle="collapse" href="#csi-ewa-filter" role="button">
+								<i class="fa fa-fw fa-caret-down"></i>
+							</a>
 						</div>
 					</div>
-					<div class="panel-body row">
-						<div class="form-group col-sm-4">
-							<label class="">Grupos de Alerta</label>
-							<select class="form-control select2" data-placeholder="Todos" multiple="multiple" data-allow-clear="true" style="width:100%;"/>
-								<option></option>
-							</select>
+					<div class="collapse" id="csi-ewa-filter">
+						<div class="panel-body">
+							<p class="help-block">La información mostrada en la tabla de EWAs y en los gr&aacute;ficos relacionados, son el resultado de los filtros seleccionados por el usuario.</p>
 						</div>
-						<div class="form-group col-sm-4">
-							<label class="">Texto de alerta</label>
-							<input type="text" class="form-control" placeholder="Sin filtro"/>
+						<div class="panel-body row">
+							<div class="form-group col-sm-4">
+								<label class="">Cliente</label>
+								<select name="customer" class="form-control select2" data-placeholder="Todos" multiple="multiple" style="width:100%;">
+									<option></option>
+									' . $customer_opts . '
+								</select>
+							</div>
+							<div class="form-group col-sm-4">
+								<label class="">Rango de Fechas</label>
+								<input name="dates" type="text" class="form-control csi-date-range-input" data-show-dropdowns="true" value="' . $start_date->format('Y-m') . '-01 - ' . $end_date->format('Y-m-d') . '"" data-ranges="true" />
+							</div>
+							<div class="form-group col-sm-4">
+								<label class="">Status de EWA</label>
+								<select name="ewa-rating" class="form-control select2" data-placeholder="Todos" multiple="multiple" style="width:100%;">
+									<option></option>
+									' . $ewa_rating_opts . '
+								</select>
+							</div>
 						</div>
-						<div class="form-group col-sm-4">
-							<label class="">Status de Alerta</label>
-							<select class="form-control select2" data-placeholder="Todos" multiple="multiple" data-allow-clear="true" style="width:100%;"/>
-								<option></option>
-							</select>
+						<div class="panel-body row">
+							<div class="form-group col-sm-4">
+								<label class="">Grupos de Alerta</label>
+								<select name="alert-group" class="form-control select2" data-placeholder="Todos" multiple="multiple" style="width:100%;">
+									<option></option>
+									' . $alert_group_opts . '
+								</select>
+							</div>
+							<div class="form-group col-sm-4">
+								<label class="">Texto de alerta</label>
+								<input name="alert-text" type="text" class="form-control" placeholder="Sin filtro"/>
+							</div>
+							<div class="form-group col-sm-4">
+								<label class="">System ID (SAP SID)</label>
+								<input name="sid" type="text" class="form-control" placeholder="Sin filtro"/>
+							</div>
+						</div>
+						<div class="panel-body row">
+							<button type="submit" class="btn btn-primary btn-block" data-toggle="collapse" data-target="#csi-ewa-filter">
+								<i class="fa fa-fw fa-filter"></i>Filtrar
+							</button>
 						</div>
 					</div>
-				</div>
-			</div>
-		</div>
+				</div><!-- #csi-ewa-analyzer-filter-panel -->
+			</form>
+		</div><!-- .page-header -->
 		<div class="csi-ewa-infographics-charts row">
-			<div class="col-sm-12 collapse" id="csi-ewa-infographic-1">
+			<div class="col-sm-12 collapse in" id="csi-ewa-infographic-1">
 				<div class="">
-					<strong><i class="fa fa-fw fa-line-chart"></i>EWAs por status</strong>
+					<strong><i class="fa fa-fw fa-bar-chart"></i>EWAs por status</strong>
 					<div class="pull-right hidden-xs">
 						<a data-toggle="width" href="#csi-ewa-filter" role="button">
 							<i class="fa fa-fw fa-arrows-h"></i>
 						</a>
 					</div>
-					<div class="well" style="height:25vh;">
-					</div>
+					<div id="csi-ewa-infographic-1-chart" class="refreshable " style="height:35vh;" data-action="csi_ajax_template_ewa_mgmt_control_center_ewa_status_chart" data-filter-form="#csi-ewa-analyzer-filter"></div>
 				</div>
-			</div>
-			<div class="col-sm-6 collapse" id="csi-ewa-infographic-2">
+			</div><!-- #csi-ewa-infographic-1 -->
+			<div class="col-sm-6 collapse in" id="csi-ewa-infographic-2">
 				<div class="">
 					<strong><i class="fa fa-fw fa-bar-chart"></i>EWAs por Cliente</strong>
 					<div class="pull-right hidden-xs">
@@ -3463,10 +3969,9 @@ public function csi_ewa_build_page_ewa_analyzer(){
 							<i class="fa fa-fw fa-arrows-h"></i>
 						</a>
 					</div>
-					<div class="well" style="height:25vh;">
-					</div>
+					<div id="csi-ewa-infographic-2-chart" class="refreshable " style="height:35vh;" data-action="csi_ajax_template_ewa_mgmt_control_center_customer_ewas" data-filter-form="#csi-ewa-analyzer-filter"></div>
 				</div>
-			</div>
+			</div><!-- #csi-ewa-infographic-2 -->
 			<div class="col-sm-6 collapse" id="csi-ewa-infographic-3">
 				<div class="">
 					<strong><i class="fa fa-fw fa-line-chart"></i>Alertas por status</strong>
@@ -3475,10 +3980,9 @@ public function csi_ewa_build_page_ewa_analyzer(){
 							<i class="fa fa-fw fa-arrows-h"></i>
 						</a>
 					</div>
-					<div class="well" style="height:25vh;">
-					</div>
+					<div id="csi-ewa-infographic-3-chart" class="refreshable " style="height:35vh;" data-action="csi_ajax_template_ewa_mgmt_control_center_alert_chart" data-filter-form="#csi-ewa-analyzer-filter"></div>
 				</div>
-			</div>
+			</div><!-- #csi-ewa-infographic-3 -->
 			<div class="col-sm-12 collapse" id="csi-ewa-infographic-4">
 				<div class="">
 					<strong><i class="fa fa-fw fa-line-chart"></i>Alertas por cliente</strong>
@@ -3490,7 +3994,7 @@ public function csi_ewa_build_page_ewa_analyzer(){
 					<div class="well" style="height:25vh;">
 					</div>
 				</div>
-			</div>
+			</div><!-- #csi-ewa-infographic-4 -->
 			<div class="col-sm-6 collapse" id="csi-ewa-infographic-5">
 				<div class="">
 					<strong><i class="fa fa-fw fa-pie-chart"></i>Grupos de Alertas</strong>
@@ -3502,7 +4006,7 @@ public function csi_ewa_build_page_ewa_analyzer(){
 					<div class="well" style="height:25vh;">
 					</div>
 				</div>
-			</div>
+			</div><!-- #csi-ewa-infographic-5 -->
 			<div class="col-sm-6 collapse" id="csi-ewa-infographic-6">
 				<div class="">
 					<strong><i class="fa fa-fw fa-pie-chart"></i>Alertas</strong>
@@ -3514,17 +4018,15 @@ public function csi_ewa_build_page_ewa_analyzer(){
 					<div class="well" style="height:25vh;">
 					</div>
 				</div>
-			</div>
+			</div><!-- #csi-ewa-infographic-6 -->
 		</div>
 		<div class="row">
-			<table class="table table-condensed">
+			<table class="refreshable table table-condensed" data-action="csi_ewa_analyzer_filter_form" id="csi-ewa-analyzer-table" data-filter-form="#csi-ewa-analyzer-filter" style="position:relative;">
 				<thead>
 					<tr>
-						<th>Cliente<i class="fa fa-fw fa-sort-asc text-primary"></i></th>
-						<th>Fecha<i class="fa fa-fw text-muted fa-sort"></i></th>
-						<th>Sistema<i class="fa fa-fw text-muted fa-sort"></i></th>
-						<th>Grupo<i class="fa fa-fw text-muted fa-sort"></i></th>
-						<th>Alerta<i class="fa fa-fw text-muted fa-sort"></i></th>
+						<th>Cliente</th>
+						<th>Fecha</th>
+						<th>Sistema</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -3534,6 +4036,185 @@ public function csi_ewa_build_page_ewa_analyzer(){
 	</div>
 	';
 	$response['message']=$o;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_ewa_analyzer_filter_form(){
+	//Global Variables
+	global $wpdb;
+	//Local Variables
+	$tbody				= '';
+	$f_customer			= '';
+	$f_dates			= '';
+	$f_ewa_rating		= '';
+	$f_alert_group		= '';
+	$f_alert_text		= '';
+	$f_alert_rating		= '';
+	$f_sort_field		= 'date';
+	$f_sort_dir			= 'asc';
+	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
+	$dates				= explode ( ' - ', $post['dates'] );
+	$post['filter_start_date']	= $dates[0];
+	$post['filter_end_date']	= $dates[1];
+	$page_size			= 20;
+	$pagination			= '';
+
+
+
+	$page_no	= isset ( $post['page_no'] ) ? intval ( $post['page_no'] ) : 0 ;
+	$count_sql	= "SELECT COUNT(DISTINCT T00.ewa_session_no) as total ";
+	$count_sql	.= self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql ( $post, FALSE );
+	$total_ewas	= $wpdb->get_var ( $count_sql );
+	$page_count	= ceil ( $total_ewas / $page_size );
+
+	$sql = self::csi_ajax_template_ewa_mgmt_control_center_generate_base_sql ( $post );
+	$ewa_sql = $sql . '
+			GROUP BY
+				T00.ewa_session_no
+			ORDER BY
+				T00.planned_date, T03.code, T01.sid,T00.ewa_session_no
+			LIMIT ' . $page_no * $page_size . ',' . $page_size . '
+	';
+	$ewas = $this->get_sql ( $ewa_sql );
+	foreach ( $ewas as $ewa ){
+		$tbody.='
+			<tr>
+				<td>' . $ewa['customer_short_name'] . ' <small class="text-muted">(' . $ewa['customer_code'] . ')</small></td>
+				<td>' . $ewa['ewa_planned_date'] . '</td>
+				<td class="' . $ewa['ewa_class'] . '">
+					<a href="#alerts_ewa_' . $ewa['ewa_session_no'] . '" data-toggle="collapse" title="Alarmas del EWA: ' . $ewa['ewa_session_no'] . '">
+						<span class="text-' . $ewa['ewa_class'] . '" >
+							<i class="fa fa-' . $ewa['ewa_icon'] . ' text-' . $ewa['ewa_class'] . '"></i> ' . $ewa['sid'] . '
+						</span>
+					</a>
+				</td>
+			</tr>
+		';
+		if (
+				( $post['alert-group'] != 'null' )
+			||	( $post['alert-text'] != '' )
+//			||	( isset ( $_GET['sid'] ) && $_GET['sid'] != '' )
+//			||	( isset ( $_REQUEST['filter_ewa_rating'] ) && $_REQUEST['filter_ewa_rating'] != 0 )
+//			||	( isset ( $_REQUEST['filter_alert_rating'] ) && $_REQUEST['filter_alert_rating'] != 0 )
+//			||	( isset ( $_REQUEST['filter_action'] ) && $_REQUEST['filter_action'] != 0 )
+//			||	( isset ( $_REQUEST['filter_customer_flag']) && $_REQUEST['filter_customer_flag'] != 0 )
+			) {
+			$display_alerts = 'in';
+		}else{
+			$display_alerts = '';
+		}
+		$tbody.='
+			<tr class="collapse ' . $display_alerts . '" id="alerts_ewa_' . $ewa['ewa_session_no'] . '">
+				<td class="text-muted"><small>session number<br/>' . $ewa['ewa_session_no'] . '</small></td>
+				<td colspan="2">
+					<table class="table table-condensed table-hover">
+						<thead>
+							<tr><th>Grupo</th><th>Alerta</th></tr>
+						</thead>
+						<tbody>';
+		$alert_sql = $sql . ' AND T00.ewa_session_no = "' . $ewa['ewa_session_no'] . '" ';
+		$alerts = $this->get_sql ( $alert_sql );
+		foreach ( $alerts as $alert ){
+			$tbody.='
+					<tr>
+						<td><samp><small>' . $alert['alert_group'] . '</small></samp></td>
+						<td class="small"><i class="fa fa-' . $alert['alert_icon'] . ' text-' . $alert['alert_class'] . '"></i> ' . $alert['alert_text'] . '</td>
+					</tr>
+			';
+		}
+		$tbody.='
+						</tbody>
+					</table>
+				</td>
+			</tr>
+		';
+	}
+	$tbody.='
+			<tr>
+				<td colspan="999">
+					' . $this->csi_ajax_template_ewa_mgmt_control_center_fetch_alerts(TRUE)['pagination'] . '
+				</td>
+			</tr>
+	';
+	//Execution
+	$response['tbody'] = $tbody;
+	echo json_encode($response);
+	wp_die();
+}
+public function csi_ewa_build_page_ewa_uploader(){
+	//Global Variables
+	global $wpdb;
+	//Local Variables
+	$o					= '';
+	//Execution
+	if ( current_user_can_for_blog ( 1, 'csi_upload_ewa_file' ) ){
+		$o.='
+		<div class="container">
+			<div class="page-header row">
+				<h2 class="">EWA Uploader</h2>
+				<p class="text-muted text-justify lead">La herramienta <i>EWA Uploader&trade;</i> permite realizar la carga de informaci&oacute;n.</p>
+			</div>
+			<div class="row">
+				<p>La herramienta</p>
+			</div>
+			<div class="row">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">
+							<i class="fa fa-fw fa-upload"></i> Carga de archivo CSV-EWA
+						</h3>
+					</div>
+					<div class="panel-body">
+							<form class="form-horizontal" id="csi-ewa-upload-form" data-function="csi_ewa_upload_file" data-upload-msg="#csi-ewa-upload-form-msg" data-progress="#csi-ewa-upload-progress-msg" style="position:relative;" data-auto-hide="true">
+							<div class="form-group">
+								<label class="col-sm-2 control-label">T&eacute;rminos y Condiciones</label>
+								<div class="col-sm-10">
+									<p class="text-justify">Al subir informaci&oacute;n de los reportes EWA de los sistemas de nuestros clientes, los datos son almacenados y transformados para la adminsitraci&oacute;n de los sistemas de los clientes de <strong>NOVIS</strong> por lo que la <i>Toma de Decisiones</i> del equipo técnico, de servicio y comercial se puede realizar en base a esta información.</p>
+									<p class="text-justify">Esta informaci&oacute;n es confidencial, y el usuario que realiza la carga de los archivos <strong>CSV-EWA</strong> asume la responsabilidad del contenido y calidad de los datos cargados en el sistema.</p>
+									<input type="checkbox" required="true" id="csi-ewa-file-terms" class="csi-cool-checkbox"/>
+									<label for="csi-ewa-file-terms">
+										<i class="fa fa-fw fa-check-square-o"></i>Acepto los T&eacute;rminos y Condiciones
+									</label>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="csi-ewa-file" class="col-sm-2 control-label">Archivo CSV-EWA</label>
+								<div class="col-sm-10">
+									<div class="input-group">
+										<label class="input-group-btn">
+											<span class="btn btn-default">
+												Buscar archivo
+												<input name="csi-ewa-file" id="csi-ewa-file" type="file" class="hidden" required="true" data-label="#csi-ewa-file-label">
+											</span>
+										</label>
+										<p id="csi-ewa-file-label" type="text" class="form-control"></p>
+									</div>
+									<p class="help-block">El archivo CSV debe haber sido generado acorde al <a href="#">Flujo de Administración de Alertas EWA.</a></p>
+								</div>
+							</div>
+							<div class="form-group">
+								<div class="col-sm-offset-2 col-sm-10 text-right">
+								<button type="reset" class="btn btn-default">
+									<i class="fa fa-fw fa-history"></i> Cancelar
+								</button>
+									<button type="submit" class="btn btn-primary">
+										<i class="fa fa-fw fa-lg fa-upload"></i> Subir archivo
+									</button>
+								</div>
+							</div>
+						</form>
+					</div><!-- .panel-body -->
+					<div class="" id="csi-ewa-upload-progress-msg"></div>
+					<div class="panel-body" id="csi-ewa-upload-form-msg"></div>
+				</div>
+			</div>
+		</div>
+		';
+	}else{
+		$o.=self::no_permissions_msg();
+	}
+
+	$response['message'] = $o;
 	echo json_encode($response);
 	wp_die();
 }

@@ -40,7 +40,7 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.6.0';
+	$this->db_version	= '0.0.8';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
@@ -50,29 +50,28 @@ public function __construct(){
 		(
 			id bigint(20) unsigned not null auto_increment,
 			registered_customer_flag tinyint(1) unsigned null COMMENT 'Indicates if customer is already registered',
-			registered_customer_id bigint unsigned not null COMMENT 'Customer Id',
-			non_registered_customer_name varchar(50) not null COMMENT 'Name of unregistered customer',
+			registered_customer_id bigint unsigned null COMMENT 'Customer Id',
+			non_registered_customer_name varchar(50) null COMMENT 'Name of unregistered customer',
 			short_name varchar(100) not null,
-			description text not null,
-			requested_user_id bigint(20) unsigned not null,
-			requested_datetime datetime not null,
-			status_id tinyint(2) unsigned not null,
+			description text null,
+			scope text null,
+			capacity text null,
 			planned_start_date date null,
 			planned_end_date date null,
+			status_id tinyint(2) unsigned not null,
+			phase_id tinyint(2) unsigned not null,
 			plan_percentage tinyint(2) unsigned not null DEFAULT '0',
 			real_percentage tinyint(2) unsigned not null DEFAULT '0',
-			doc_link varchar(255) null,
-			task_link varchar(255) null,
 			pm_user_id bigint(20) unsigned null COMMENT 'Id of user for Project Manager',
 			tl_user_id bigint(20) unsigned null COMMENT 'Id of user for Technical Leader',
+			doc_link varchar(255) null,
+			plan_link varchar(255) null,
 			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of each record',
 			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-			creation_date date null COMMENT 'Date of the creation of this record',
-			creation_time time null COMMENT 'Time of the creation of this record',
+			creation_datetime datetime null COMMENT 'Date of the creation of this record',
 			last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
 			last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-			last_modified_date date null COMMENT 'Date of the last modification of this record',
-			last_modified_time time null COMMENT 'Time of the last modification of this record',
+			last_modified_datetime datetime null COMMENT 'Date and Time of the last modification of this record',
 
 			UNIQUE KEY id (id)
 		) $charset_collate;";
@@ -503,7 +502,7 @@ public function __construct(){
 			'form_show_field'			=>true,
 			'user_input'				=>true,
 		),
-		'task_link' => array(
+		'plan_link' => array(
 			'type'						=>'text',
 			'backend_wp_in_table'		=>false,
 			'backend_wp_sp_table'		=>false,
@@ -524,27 +523,15 @@ public function __construct(){
 			'user_input'				=>true,
 		),
 	);
-	register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'							));
-	self::db_install();
+	add_action( 'plugins_loaded',	array( $this , 'db_install' ) );
 	add_action( 'plugins_loaded',	array( $this , 'csi_define_capabilities' ) );
-	//in a new blog creation, create the db for new blog
-	//Applies only for non-network classes
-	if( true != $this->network_class ){
-		add_action( 'wpmu_new_blog',							array( $this , 'db_install'							));
-		add_action( 'wpmu_new_blog',							array( $this , 'db_install_data'					));
-	}
-	if ( !is_multisite() ) {
-		add_action( 'admin_menu',		 						array( $this , "register_submenu_page"				));
-	}else{
-		add_action( 'network_admin_menu', 						array( $this , "register_submenu_page"				));
-	}
 	add_shortcode( 'csi_project_list_panel',			 		array( $this , 'shortcode_project_panel'			));
 	//Add Ajax actions
 	add_action( 'wp_ajax_csi_new_project_request', 				array( $this , 'csi_new_project_request'			));
 	add_action( 'wp_ajax_csi_user_project_request_status', 		array( $this , 'csi_user_project_request_status'	));
 	add_action( 'wp_ajax_csi_pm_build_page_intro', 				array( $this , 'csi_pm_build_page_intro'			));
-	add_action( 'wp_ajax_csi_pm_new_project_request', 			array( $this , 'csi_pm_new_project_request'			));
-	add_action( 'wp_ajax_csi_add_project', 						array( $this , 'csi_add_project'					));
+	add_action( 'wp_ajax_csi_pm_new_project_form', 				array( $this , 'csi_pm_new_project_form'			));
+	add_action( 'wp_ajax_csi_pm_new_project', 					array( $this , 'csi_pm_new_project'					));
 	add_action( 'wp_ajax_csi_pm_build_page_list_projects', 		array( $this , 'csi_pm_build_page_list_projects'	));
 	add_action( 'wp_ajax_csi_pm_filtered_panel', 				array( $this , 'csi_pm_filtered_panel'				));
 	add_action( 'wp_ajax_csi_pm_build_page_show_project', 		array( $this , 'csi_pm_build_page_show_project'		));
@@ -666,8 +653,8 @@ public function shortcode_project_panel($atts){
 		<div class="csi-project-panel">
 		';
 		if ( !$silent ){
-//			$output.='
-//			<div class="hidden-xs col-md-2">&nbsp;</div>';
+			//$output.='
+			//<div class="hidden-xs col-md-2">&nbsp;</div>';
 		}
 		$output.='<div class="col-xs-12 timeline-header">';
 		for ( $i = 0 ; $i < $duration ; $i++ ){
@@ -716,7 +703,7 @@ public function shortcode_project_panel($atts){
 					$month_diff = date_diff ( $planned_start_date,$tl_start_date);
 					//add months
 					$proj_prev = floatval ( intval( $month_diff->format('%m') ) * $month_width );
-//					self::write_log($month_diff);
+					//self::write_log($month_diff);
 					//add days
 					$proj_prev = $proj_prev + intval( $month_diff->format('%d') ) / DAYS_PER_MONTH * $month_width;
 				}else{
@@ -824,7 +811,7 @@ public function csi_new_project_request(){
 	echo json_encode($response);
 	wp_die();
 }
-public function csi_add_project(){
+public function csi_pm_new_project(){
 	//Global Variables
 	global $wpdb;
 	global $NOVIS_CSI_PROJECT_STATUS;
@@ -833,35 +820,31 @@ public function csi_add_project(){
 	$post= isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	$current_user			= get_userdata ( get_current_user_id() );
 	$current_datetime		= new DateTime();
-	if ( isset ( $post['planned_start_date'] ) ){
-		$start_date = new DateTime ( $post['planned_start_date'] );
-		$planned_start_date = $start_date->format('Y-m-d');
-	}else{
-		$planned_start_date = NULL;
-	}
-	if ( isset ( $post['planned_end_date'] ) ){
-		$end_date = new DateTime ( $post['planned_end_date'] );
-		$planned_end_date = $end_date->format('Y-m-d');
-	}else{
-		$planned_end_date = NULL;
-	}
-	$default_status_code = 'revision';
-	$status_id = $wpdb->get_var ( 'SELECT id FROM ' . $NOVIS_CSI_PROJECT_STATUS->tbl_name . ' WHERE code ="' . $default_status_code . '"');
+	$planned_dates			= explode ( ' - ', $post['planned_dates'] );
+	//Execution
+	self::write_log ( $post );
 
-//	self::write_log ( $post );
-
-	$insertArray['registered_customer_flag']	= isset ( $post['registered_customer_flag'] ) && 1 != $post['registered_customer_flag'] ? 1 : NULL ;
-	$insertArray['registered_customer_id']		= isset ( $post['registered_customer_id'] ) ? intval ( $post['registered_customer_id'] ) : NULL;
-	$insertArray['non_registered_customer_name']= isset ( $post['non_registered_customer_name'] ) ? strip_tags(stripslashes( $post['non_registered_customer_name'] ) ) : NULL;
-	$insertArray['short_name']					= strip_tags(stripslashes( $post['short_name'] ) );
-	$insertArray['description']					= strip_tags(stripslashes( $post['description'] ) );
-	$insertArray['status_id']					= intval ( $status_id );
-	$insertArray['planned_start_date']			= $planned_start_date;
-	$insertArray['planned_end_date']			= $planned_end_date;
+	$insertArray['registered_customer_flag']	= isset ( $post['registered_customer_flag'] ) && 1 == $post['registered_customer_flag'] ? 1 : NULL ;
+	$insertArray['registered_customer_id']		= $insertArray['registered_customer_flag'] ? intval ( $post['registered_customer_id'] ) : NULL;
+	$insertArray['non_registered_customer_name']= !$insertArray['registered_customer_flag'] ? htmlentities( $post['non_registered_customer_name'] ) : NULL;
+	$insertArray['short_name']					= htmlentities ( $post['short_name'] );
+	$insertArray['description']					= htmlentities ( $post['description'] );
+	$insertArray['scope']						= htmlentities ( $post['scope'] );
+	$insertArray['capacity']					= htmlentities ( $post['capacity'] );
+	$insertArray['planned_start_date']			= $planned_dates[0];
+	$insertArray['planned_end_date']			= $planned_dates[1];
+	$insertArray['status_id']					= intval ( $post['status_id'] );
+	$insertArray['phase_id']					= intval ( $post['phase_id'] );
+	$insertArray['plan_percentage']				= intval ( $post['plan_percentage'] );
+	$insertArray['real_percentage']				= intval ( $post['real_percentage'] );
+	$insertArray['pm_user_id']					= intval ( $post['pm_user_id'] );
+	$insertArray['tl_user_id']					= intval ( $post['tl_user_id'] );
+	$insertArray['doc_link']					= htmlentities ( $post['doc_link'] );
+	$insertArray['plan_link']					= htmlentities ( $post['plan_link'] );
 	$insertArray['creation_user_id']			= $current_user->ID;
 	$insertArray['creation_user_email']			= $current_user->user_email;
-	$insertArray['creation_date']				= $current_datetime->format('Y-m-d');
-	$insertArray['creation_time']				= $current_datetime->format('H:i:s');
+	$insertArray['creation_datetime']			= $current_datetime->format('Y-m-d H:i:s');
+
 	//self::write_log ( $post );
 	//self::write_log ( $editArray );
 	if ( $wpdb->insert( $this->tbl_name, $insertArray ) ){
@@ -1200,7 +1183,7 @@ public function csi_pm_build_page_edit_project_form(){
 	echo json_encode($response);
 	wp_die();
 }
-public function csi_pm_new_project_request(){
+public function csi_pm_new_project_form(){
 	//Global Variables
 	global $wpdb;
 	global $NOVIS_CSI_CUSTOMER;
@@ -1266,7 +1249,7 @@ public function csi_pm_new_project_request(){
 					<h1 class="panel-title">Crear Proyecto</h1>
 				</div>
 				<div class="panel-body">
-					<form class="form-horizontal" data-function="csi_add_project" data-next-page="listprojects" style="position:relative;">
+					<form class="form-horizontal" data-function="csi_pm_new_project" data-next-page="listprojects" style="position:relative;">
 						<h4>Definición del Proyecto</h4>
 						<div class="form-group">
 							<label for="customer_id" class="col-sm-2 control-label">Cliente</label>
@@ -1399,7 +1382,7 @@ public function csi_pm_new_project_request(){
 						<div class="form-group">
 							<label for="planned_dates" class="col-sm-2 control-label">Duraci&oacute;n</label>
 							<div class="col-sm-10">
-								<input type="text" class="form-control csi-date-range-input" id="planned_dates" name="planned_dates" required="true"/>
+								<input type="text" class="form-control csi-date-range-input" id="planned_dates" name="planned_dates" required="true" data-auto-apply="true" data-show-dropdowns="true"/>
 								<span class="help-block">
 									<small class="text-warning pull-right">(requerido)</small>
 								</span>
@@ -1410,7 +1393,7 @@ public function csi_pm_new_project_request(){
 							<div class="form-group">
 								<label for="status_id" class="col-sm-2 control-label">Status del Proyecto</label>
 								<div class="col-sm-10">
-									<select id="status_id" name="status_id" class="form-control select2" data-placeholder="Selecciona el Status" style="width:100%;">
+									<select id="status_id" name="status_id" class="form-control select2" data-placeholder="Selecciona el Status" style="width:100%;" required="true">
 										<option></option>
 										' . $status_opts . '
 									</select>
@@ -1451,7 +1434,7 @@ public function csi_pm_new_project_request(){
 						<div class="form-group">
 							<label for="pm_user_id" class="col-sm-2 control-label">Project Manager</label>
 							<div class="col-sm-10">
-								<select id="pm_user_id" name="pm_user_id" class="form-control select2" data-placeholder="Selecciona el Project Manager" style="width:100%;">
+								<select id="pm_user_id" name="pm_user_id" class="form-control select2" data-placeholder="Selecciona el Project Manager" style="width:100%;" data-allow-clear="true">
 									<option></option>
 									' . $pm_user_opts . '
 								</select>
@@ -1462,7 +1445,7 @@ public function csi_pm_new_project_request(){
 						<div class="form-group">
 							<label for="tl_user_id" class="col-sm-2 control-label">L&iacute;der T&eacute;cnico</label>
 							<div class="col-sm-10">
-								<select id="tl_user_id" name="tl_user_id" class="form-control select2" data-placeholder="Selecciona el L&iacute;der T&eacute;cnico" style="width:100%;">
+								<select id="tl_user_id" name="tl_user_id" class="form-control select2" data-placeholder="Selecciona el L&iacute;der T&eacute;cnico" style="width:100%;" data-allow-clear="true">
 									<option></option>
 									' . $tl_user_opts . '
 								</select>
@@ -1494,9 +1477,8 @@ public function csi_pm_new_project_request(){
 						</div>
 						<div class="form-group">
 							<div class="col-sm-offset-2 col-sm-10 text-right">
-								<kbd>Javier, antes de implementar la función, quiero saber si los campos están OK</kbd><br/>
 								<button type="reset" class="btn btn-default"><i class="fa fa-fw fa-history"></i>Cancelar</button>
-								<button type="submit" class="btn btn-primary disabled" disabled><i class="fa fa-fw fa-plus"></i>Crear Proyecto</button>
+								<button type="submit" class="btn btn-primary " ><i class="fa fa-fw fa-plus"></i>Crear Proyecto</button>
 							</div>
 						</div>
 					</form>
@@ -1630,11 +1612,11 @@ public function csi_pm_build_page_list_projects(){
 	$o='
 	<div class="container">
 		<div class="page-header row">
-			<h3 class="col-sm-10">Planes de Corrección o Mantenimiento</h3>';
+			<h3 class="col-sm-10">Proyectos</h3>';
 	if ( current_user_can_for_blog ( 1, 'csi_create_projects' ) ){
 		$o.='
 			<h3 class="col-sm-2">
-				<a href="#!addproject" class="btn btn-success">
+				<a href="#!newproject" class="btn btn-success">
 					<i class="fa fa-plus"></i> Nuevo Proyecto
 				</a>
 			</h3>
@@ -1653,7 +1635,7 @@ public function csi_pm_build_page_list_projects(){
 					</a>
 				</div>
 			</div>
-			<div class="panel-body collapse" id="csi-pm-panel-filter">
+			<div class="panel-body collapse in" id="csi-pm-panel-filter">
 				<form class="form-horizontal" id="csi-pm-filtered-pm-panel-form" data-target="#csi-pm-filtered-pm-panel">
 					<div class="form-group">
 						<label for="status" class="col-sm-2 control-label">Status</label>
@@ -1667,7 +1649,7 @@ public function csi_pm_build_page_list_projects(){
 					<div class="form-group">
 						<label class="col-sm-2 control-label">Rango de Fechas</label>
 						<div class="col-sm-10">
-							<input type="text" class="form-control csi-date-range-input" name="date_range" id="date_range" value="' . $start_date->format('Y-m') . '-01 - ' . $end_date->format('Y-m-t') . '"" data-show-dropdowns="true" data-linked-calendars="false"/>
+							<input type="text" class="form-control csi-date-range-input" name="date_range" id="date_range" value="' . $start_date->format('Y-m') . '-01 - ' . $end_date->format('Y-m-t') . '"" data-show-dropdowns="true" data-auto-apply="true" data-show-dropdowns="true"/>
 							<span class="help-block"></span>
 						</div>
 					</div>
@@ -1946,6 +1928,9 @@ public function csi_pm_build_page_show_project(){
 }
 public function csi_pm_build_page_intro(){
 	//Global Variables
+	global $wpdb;
+	global $NOVIS_CSI_PROJECT_REQUEST_STATUS;
+	global $NOVIS_CSI_PROJECT_REQUEST;
 	//Local Variables
 	$o					= '';
 	//--------------------------------------------------------------------------
@@ -1961,15 +1946,15 @@ public function csi_pm_build_page_intro(){
 		<div class="row">
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!listprojects" class="list-group-item list-group-item-info">
-					<h3><i class="fa fa-tasks"></i> Proyectos</h3>
+					<h3><i class="fa fa-fw fa-tasks"></i>Proyectos</h3>
 					<p class="text-justify">Proyectos Novis.</p>
 				</a>
 			</div>';
 	if ( current_user_can_for_blog ( 1, 'csi_create_projects' ) ){
 		$o.='
 			<div class="list-group col-sm-6 col-md-4">
-				<a href="#!addproject" class="list-group-item active">
-					<h3><i class="fa fa-plus"></i> Nuevo Proyecto</h3>
+				<a href="#!newproject" class="list-group-item active">
+					<h3><i class="fa fa-fw fa-plus"></i>Nuevo Proyecto</h3>
 					<p class="text-justify">Aqui puedes solicitar o proponer un nuevo Proyecto.</p>
 				</a>
 			</div>
@@ -1978,16 +1963,43 @@ public function csi_pm_build_page_intro(){
 	$o.='
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!pm_dashboard" class="list-group-item list-group-item-success">
-					<h3><i class="fa fa-dashboard"></i> Dashboards</h3>
+					<h3><i class="fa fa-fw fa-dashboard"></i>Dashboards</h3>
 					<p class="text-justify">Vsitas pre-fabricadas para la gestión de Proyectos.</p>
 				</a>
 			</div>
+			';
+	$o.='
 			<div class="list-group col-sm-6 col-md-4">
-				<a href="#!pm_dashboard" class="list-group-item list-group-item-danger">
-					<h3><i class="fa fa-certificate"></i> Nuevas Solicitudes de Proyecto</h3>
-					<p class="text-justify">Nuevas Solicitudes de PRoyecto.</p>
+				<a href="#!pm_dashboard" class="list-group-item list-group-item-warning">
+					<h3><i class="fa fa-fw fa-bolt"></i>Línea de Tiempo</h3>
+					<p class="text-justify">Vsitas pre-fabricadas para la gestión de Proyectos.</p>
 				</a>
 			</div>
+	';
+	if ( current_user_can_for_blog ( 1, 'csi_edit_project_request_restricted_fields' ) ){
+		$status_code = array ('"new"');
+
+		$sql = 'SELECT T01.code, T01.short_name, T01.css_class, COUNT(T01.code) as sum FROM ' . $NOVIS_CSI_PROJECT_REQUEST->tbl_name . ' as T00 LEFT JOIN ' . $NOVIS_CSI_PROJECT_REQUEST_STATUS->tbl_name . ' as T01 ON T00.status_id = T01.id GROUP BY T01.code';
+		$status = $this->get_sql ( $sql );
+		$text = '';
+		foreach ($status as $stat){
+			if ( $stat['code'] == 'new' ){
+				$class= 'label-info';
+			}else{
+				$class= 'label-default';
+			}
+			$text .= '<li><span class="label ' . $class . '">' . $stat['sum'] . '</span> ' . $stat['short_name'] . '</li>';
+		}
+		$o.='
+			<div class="list-group col-sm-6 col-md-4">
+				<a href="#!listprojectrequests" class="list-group-item">
+					<h3><i class="fa fa-fw fa-folder"></i>Solicitudes de Proyecto</h3>
+					<ul class="list-unstyled">' . $text . '</ul>
+				</a>
+			</div>
+		';
+	}
+	$o.='
 		</div>
 	</nav><!-- .container -->
 	';

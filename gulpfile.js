@@ -89,6 +89,7 @@ gulp.task('uglifyVendor', function() {
         './bower_components/select2/dist/js/select2.js',
         './bower_components/moment/moment.js',
         './bower_components/bootstrap-daterangepicker/daterangepicker.js',
+		'./bower_components/jurlp/jurlp.js',
 		'./bower_components/amcharts3/amcharts/amcharts.js',
 		'./bower_components/amcharts3/amcharts/serial.js',
 		'./bower_components/amcharts3/amcharts/funnel.js',

@@ -1650,7 +1650,7 @@ public function csi_issue_edit_issue_form(){
 	wp_die();
 }
 public function csi_issue_request_approval(){
-	//Globa Variables
+	//Global Variables
 	global $wpdb;
 	global $NOVIS_CSI_ISSUE_STATUS;
 	//Local Variables

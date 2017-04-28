@@ -50,6 +50,8 @@ var ajaxPages={
 	'issueiab'		:	'csi_issue_iab_list',
 
 	'ewaanalyzer'	:	'csi_ewa_build_page_ewa_analyzer',
+	'ewauploader'	:	'csi_ewa_build_page_ewa_uploader',
+	'ewaloads'		:	'csi_ewa_build_page_ewa_loads',
 };
 ajaxPages.intro		=	cmpMainContent.data('default-action');
 
@@ -260,7 +262,7 @@ function csiTemplateCmpFetchTableContent( tableSelector ){
 				console.log ( 'No se recibó respuesta válida de : ' + table.data('action') );
 			}else{
 				if ( undefined !== response.chart){
-					//console.log ( JSON.stringify ( response.chart ) );
+					console.log ( response );
 					var allCharts = AmCharts.charts;
 					var chartIndex = null;
 					$.each(allCharts,function(i,val){
@@ -366,9 +368,6 @@ function csiLoadPopUpPage ( triggerElement ) {
 		buttons:{
 			ok:{
 
-			},
-			cancel:{
-
 			}
 		},
 		content: function(){
@@ -423,13 +422,29 @@ function csiSoftRefreshEventListener(pageResponse){
 			cancelLabel: 'Cancelar',
 		}
 	});
-	$('input.csi-date-range-input').daterangepicker({
-		cancelClass: 'btn-danger',
-		opens: 'center',
-		locale: {
-			format: 'YYYY-MM-DD',
-			applyLabel: 'Aceptar',
-			cancelLabel: 'Cancelar',
+	$('input.csi-date-range-input').each(function(){
+		if ( undefined === $(this).data('hasdatepicker') ){
+			$(this).data( 'hasdatepicker', true );
+			var options = {
+				cancelClass: 'btn-danger',
+				opens: 'center',
+				locale: {
+					format: 'YYYY-MM-DD',
+					applyLabel: 'Aceptar',
+					cancelLabel: 'Cancelar',
+				},
+			};
+			if ( true === $(this).data('ranges') ){
+				options.ranges			= {
+					'Semana actual'		: [moment().startOf('week').add(1, 'days'), moment().endOf('week').add(1, 'days')],
+					'Semana anterior'	: [moment().subtract(1, 'week').startOf('week').add(1, 'days'), moment().subtract(1, 'week').endOf('week').add(1, 'days')],
+					'Ultimos 30 Days'	: [moment().subtract(29, 'days'), moment().endOf('week')],
+					'Ultimos 2 meses'	: [moment().subtract(2, 'month').startOf('month'), moment().endOf('week')],
+					'Ultimos 4 meses'	: [moment().subtract(4, 'month').startOf('month'), moment().endOf('week')],
+					'Ultimos 6 meses'	: [moment().subtract(6, 'month').startOf('month'), moment().endOf('week')],
+				};
+			}
+			$(this).daterangepicker( options );
 		}
 	});
 	$('.front-end-editable').each(function(){
@@ -536,6 +551,15 @@ function csiSoftRefreshEventListener(pageResponse){
 		});
 	});
 	//Event Handlers
+	$('.csi-get-variable').off('change').change(function(event){
+
+		//var name = $(this).prop('name');
+		//var value = $(this).val();
+		//var query = { [name] : value };
+		//var uri = $.jurlp ( window.location.href );
+		//uri.query ( query );
+		//history.pushState({}, null, uri.fragment() + uri.query() );
+	});
 	$('[type="reset"]').off('click').click(function(event){
 		event.preventDefault();
 		window.history.back();
@@ -570,7 +594,6 @@ function csiSoftRefreshEventListener(pageResponse){
 				error: aaAjaxError,
 			});
 		}
-		console.log( $(this).data('function') );
 	});
 	$('.csi-form-additional-fields').off('hidden.bs.collapse').on('hidden.bs.collapse', function () {
 		$(this).find('input, select').each(function(){
@@ -772,20 +795,54 @@ function csiSoftRefreshEventListener(pageResponse){
 			error: aaAjaxError,
 		});
 	});
-	$('form').off('submit').submit(function(){
+	$(':file').off('change').change(function(event){
+		var file = this.files[0];
+		var target = $( $(this).data('label') );
+		console.log ( target );
+		if ( undefined === file ){
+			target.html( '' );
+		}else{
+			target.html( file.name );
+		}
+	});
+	$('.csi-refreshable-filter-form').off('submit').submit(function(event){
+		event.preventDefault();
+		if ( undefined !== $(this).data('target') ){
+			$( $(this).data('target') ).each(function(){
+				csiTemplateCmpFetchTableContent ( $( this ) );
+			});
+			//console.log ( $( $(this).data('target') ) );
+		}
+	});
+	$('form').not('.csi-refreshable-filter-form').off('submit').submit(function(event){
+		event.preventDefault();
 		var form = $(this);
+		var submit = form.find(':submit').attr('disabled', true).addClass('disabled');
+		console.log ( submit );
 		var data = new FormData();
 		data.append('action', form.data('function'));
-//		console.log( $(this).find('input, select, textarea, checkbox') );
-		$(this).find('input, select, textarea, checkbox').each(function(){
+		$(this).find('input, select, textarea, checkbox, file').each(function(){
 			if ( $(this).is(':checkbox, :radio') ) {
 				if ( $(this).prop('checked') ) {
 					data.append($(this).attr('name'),$(this).val());
 				}
 			}else{
-				data.append($(this).attr('name'),$(this).val());
+				if ( $(this).is(':file') ) {
+					var file = this.files[0];
+					data.append ( $(this).attr('name'), file );
+				}else{
+					data.append ( $(this).attr('name'), $(this).val() );
+				}
 			}
 		});
+		if ( undefined !== $( form.data('progress') ) ){
+			var progress = $('<div></div>').addClass( 'progress' );
+			var progressBar = $( '<div></div>' ).addClass( 'progress-bar' ).css( 'min-width', '2em').append( '0%' );
+			progress.append ( progressBar );
+			console.log ( $( form.data('progress') ) );
+			$( form.data('progress') ).append ( progress );
+			var progressMsg = $('<div><i class="fa fa-fw fa-lg fa-circle-o-notch fa-spin"></i>Posterior a la carga de informaci&oacute;n al servidor, debes esperar el procesamiento de la carga.</div>').addClass('alert alert-info');
+		}
 		$.ajax({
 			url: csiTemplateScript.ajaxUrl,
 			type: 'POST',
@@ -797,17 +854,66 @@ function csiSoftRefreshEventListener(pageResponse){
 			beforeSend: function () {
 				form.addClass('ajax-loading');
 			},
+			xhr: function () {
+				if ( undefined !== form.data('progress') ){
+					var xhr = new window.XMLHttpRequest();
+					//Upload progress
+					xhr.upload.addEventListener("progress", function(evt){
+						if (evt.lengthComputable) {
+							var percentComplete = Math.round(evt.loaded / evt.total * 100);
+							window.console.log('Porcentaje: '+percentComplete);
+							progressBar.css( 'width', percentComplete + '%' ).html( percentComplete + '%');
+						}
+					}, false);
+					//success upload
+					xhr.upload.addEventListener("load", function(evt){
+						if (evt.lengthComputable) {
+						//	statusMsg.html(processing+" "+inputDay+'/'+inputMonth+'/'+inputYear+' Procesando la informaci&oacute;n cargada');
+						setTimeout(function(){
+							progress.after( progressMsg );
+							progress.fadeOut( 'slow' );
+						}, 1000);
+
+
+						}
+					}, false);
+					//Download progress
+					//If this is removed, the process is dead
+					xhr.addEventListener("progress", function(evt){
+						if (evt.lengthComputable) {
+							window.console.log("Respuesta descargada: "+Math.round(evt.loaded / evt.total * 100)+'%');
+						}else{
+							window.console.log("Respuesta descargada: "+Math.round(evt.loaded / evt.total * 100)+'%');
+						}
+					}, false);
+					return xhr;
+
+				}
+			},
 			success: function(response){
 				form.removeClass('ajax-loading');
 				console.log ( response );
 				if ( 0 === response ){
 				}else{
 					if ( undefined !== response.error){
-						//error al crear plan
+						submit.attr('disabled', false).removeClass('disabled');
 					}else{
 						//plan creado correctamente
 					}
-
+					if ( undefined != progressMsg ) {
+						setTimeout(function(){
+							progressMsg.fadeOut( 'slow' );
+						}, 5000);
+					}
+					if ( form.data('auto-hide') ){
+						form.fadeOut();
+					}
+					if ( undefined !== $( form.data( 'upload-msg' ) ) ){
+						var uploadMsg = $( form.data( 'upload-msg' ) );
+						if ( undefined !== response.message ){
+							uploadMsg.html( response.message );
+						}
+					}
 					if ( undefined !== response.notification ) {
 						switch ( response.postSubmitAction ){
 							case 'changeHash':
@@ -878,7 +984,7 @@ function csiSwitchableRadioButton ( radio ) {
 }
 function csiHardRefreshEventListener(pageResponse){
 	var response = pageResponse;
-	$.each ( $('.refreshable'), function(){
+	$('.refreshable').each(function(){
 		csiTemplateCmpFetchTableContent ( $(this) );
 	});
 	$.each ( $('.auto-refreshable'), function(){
