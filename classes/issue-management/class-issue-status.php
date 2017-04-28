@@ -81,13 +81,21 @@ public function db_install_data(){
 	//Global Variables
 	global $wpdb;
 	//Local Variables
-	$current_data_db_version = get_option( $this->tbl_name."_data_db_version");
+	if ( is_multisite() ){
+		$current_data_db_version = get_blog_option ( 1, $this->tbl_name."_data_db_version");
+	}else{
+		$current_data_db_version = get_option ( $this->tbl_name."_data_db_version");
+	}
 	//Execuion
 	if( $current_data_db_version == false || $current_data_db_version != $this->data_db_version ){
 		$sql = 'DELETE FROM ' . $this->tbl_name;
 		self::write_log ('Contenido de tabla ' . $this->tbl_name . ' eliminado.');
 		self::write_log ( $this->get_sql ( $sql ) );
-		update_option( $this->tbl_name."_data_db_version" , $this->data_db_version );
+		if ( is_multisite() ){
+			update_blog_option ( 1, $this->tbl_name."_data_db_version" , $this->data_db_version );
+		}else{
+			update_option ( $this->tbl_name."_data_db_version" , $this->data_db_version );
+		}
 		$current_user = get_userdata ( get_current_user_id() );
 		$i=1;
 		$wpdb->insert(

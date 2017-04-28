@@ -61,11 +61,19 @@ public function db_install(){
 			}
 		}
     } else {
-		$current_db_version = get_option( $this->tbl_name."_db_version");
+		if ( is_multisite() ){
+			$current_db_version = get_blog_option ( 1, $this->tbl_name."_db_version");
+		}else{
+			$current_db_version = get_option ( $this->tbl_name."_db_version");
+		}
 		if( $current_db_version == false || $current_db_version != $this->db_version ){
 			$delta = dbDelta($this->crt_tbl_sql);
 			self::write_log($delta);
-			update_option( $this->tbl_name."_db_version" , $this->db_version );
+			if ( is_multisite() ){
+				update_blog_option ( 1, $this->tbl_name."_db_version" , $this->db_version );
+			}else{
+				update_option ( 1, $this->tbl_name."_db_version" , $this->db_version );
+			}
 		}
 	}
 	return true;
