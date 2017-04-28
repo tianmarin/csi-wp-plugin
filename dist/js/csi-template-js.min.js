@@ -818,7 +818,6 @@ function csiSoftRefreshEventListener(pageResponse){
 		event.preventDefault();
 		var form = $(this);
 		var submit = form.find(':submit').attr('disabled', true).addClass('disabled');
-		console.log ( submit );
 		var data = new FormData();
 		data.append('action', form.data('function'));
 		$(this).find('input, select, textarea, checkbox, file').each(function(){
@@ -835,7 +834,7 @@ function csiSoftRefreshEventListener(pageResponse){
 				}
 			}
 		});
-		if ( undefined !== $( form.data('progress') ) ){
+		if ( undefined !== form.data('progress') ){
 			var progress = $('<div></div>').addClass( 'progress' );
 			var progressBar = $( '<div></div>' ).addClass( 'progress-bar' ).css( 'min-width', '2em').append( '0%' );
 			progress.append ( progressBar );
@@ -855,8 +854,8 @@ function csiSoftRefreshEventListener(pageResponse){
 				form.addClass('ajax-loading');
 			},
 			xhr: function () {
+				var xhr = new window.XMLHttpRequest();
 				if ( undefined !== form.data('progress') ){
-					var xhr = new window.XMLHttpRequest();
 					//Upload progress
 					xhr.upload.addEventListener("progress", function(evt){
 						if (evt.lengthComputable) {
@@ -886,9 +885,8 @@ function csiSoftRefreshEventListener(pageResponse){
 							window.console.log("Respuesta descargada: "+Math.round(evt.loaded / evt.total * 100)+'%');
 						}
 					}, false);
-					return xhr;
-
 				}
+				return xhr;
 			},
 			success: function(response){
 				form.removeClass('ajax-loading');
