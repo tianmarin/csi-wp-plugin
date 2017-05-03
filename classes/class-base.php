@@ -72,7 +72,7 @@ public function db_install(){
 			if ( is_multisite() ){
 				update_blog_option ( 1, $this->tbl_name."_db_version" , $this->db_version );
 			}else{
-				update_option ( 1, $this->tbl_name."_db_version" , $this->db_version );
+				update_option ( $this->tbl_name."_db_version" , $this->db_version );
 			}
 		}
 	}
