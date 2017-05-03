@@ -1122,7 +1122,27 @@ public function csi_issue_build_page_preview_issue_rev(){
 					</div><!-- #csi-issue-documentation -->
 				</div>
 			</div>
-		</div><!-- .tab-content -->';
+		</div><!-- .tab-content -->
+		<div id="csi-issue-event">
+			<div class="page-header">
+				<h3 class=""><strong><samp>Eventos</samp></strong></h3>
+				<p class="help-block collapse in">Los <strong>eventos</strong> permiten registrar en que contexto se utilizó la Nota Novis, para futuras búsquedas de errores relacionados con clientes.</p>
+				<p>Los eventos presentados a continuación son los eventos actuales de la <strong>Nota NOVIS</strong>, no se guardan eventos por revisi&oacute;n.</p>
+			</div>
+			<table class="refreshable table table-condensed" data-action="csi_fetch_issue_event_list_info" data-issue-id="' . $issue_id . '" id="csi-fetch-issue-event-list-info">
+				<thead>
+					<tr>
+						<th class="col-xs-3">Cliente</th>
+						<th class="col-xs-3">Sistema</th>
+						<th class="col-xs-3">Ticket</th>
+						<th class="col-xs-3">Fecha</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div><!-- #csi-issue-event -->
+';
 	}
 	if ( $issue->author_id == get_current_user_id() && !$issue->prevent_edition_flag ){
 		$o.='
@@ -1442,24 +1462,32 @@ public function csi_issue_build_page_intro(){
 					<p class="text-justify">Nuevo</p>
 				</a>
 			</div>
+			<!--
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!pm_dashboard" class="list-group-item list-group-item-success">
 					<h3><i class="fa fa-dashboard"></i> Dashboards</h3>
 					<p class="text-justify">Vsitas pre-fabricadas para la gestión de Proyectos.</p>
 				</a>
 			</div>
+			-->
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!ownissues" class="list-group-item list-group-item-warning">
 					<h3><i class="fa fa-plus"></i> Mis notas</h3>
 					<p class="text-justify">visualiza las notas que has escrito</p>
 				</a>
 			</div>
+	';
+	if ( current_user_can_for_blog( 1, 'csi_issue_approve_revision') ){
+		$o.='
 			<div class="list-group col-sm-6 col-md-4">
 				<a href="#!issueiab" class="list-group-item list-group-item-danger">
 					<h3><i class="fa fa-users"></i> Comité de Aprobadores</h3>
 					<p class="text-justify">Acciones para el Issue Advisory Board</p>
 				</a>
 			</div>
+		';
+	}
+	$o.='
 		</div>
 	</nav><!-- .container -->
 	';
@@ -1610,6 +1638,25 @@ public function csi_issue_edit_issue_form(){
 							</div>
 						</div>
 						-->
+						<div id="csi-issue-event">
+							<div class="page-header">
+								<h3 class=""><strong><samp>Eventos</samp></strong></h3>
+								<p class="help-block collapse in">Los <strong>eventos</strong> permiten registrar en que contexto se utilizó la Nota Novis, para futuras búsquedas de errores relacionados con clientes.</p>
+								<p>Los eventos presentados a continuación son los eventos actuales de la <strong>Nota NOVIS</strong>, no se guardan eventos por revisi&oacute;n.</p>
+							</div>
+							<table class="refreshable table table-condensed" data-action="csi_fetch_issue_event_list_info" data-issue-id="' . $issue_id . '" id="csi-fetch-issue-event-list-info">
+								<thead>
+									<tr>
+										<th class="col-xs-3">Cliente</th>
+										<th class="col-xs-3">Sistema</th>
+										<th class="col-xs-3">Ticket</th>
+										<th class="col-xs-3">Fecha</th>
+									</tr>
+								</thead>
+								<tbody>
+								</tbody>
+							</table>
+						</div><!-- #csi-issue-event -->
 						<div class="form-group">
 							<div class="col-sm-offset-2 col-sm-10 text-right">
 								<button type="reset" class="btn btn-default"><i class="fa fa-fw fa-history"></i>Cancelar</button>
@@ -2085,76 +2132,81 @@ public function csi_issue_iab_list(){
 	$response			= array();
 	$o					= '';
 	//Execution
-	$sql = '
-		SELECT
-			T00.issue_id,
-			T00.author_id,
-			T00.title,
-			T00.last_modified_date,
-			T00.last_modified_time,
-			COUNT(T00.revision_id) as revisions,
-			SUM(IF(T01.code="pending", 1, 0)) as pending,
-			SUM(IF(T01.released_flag = 1,1,0)) as released,
-			SUM(IF(NOT(T01.prevent_edition_flag) = 1,1,0)) as editable,
-			T03.display_name as author_name
-		FROM
-			' . $this->tbl_name . ' as T00
-			LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
-				ON T00.status_id = T01.id
-			LEFT JOIN ' . $NOVIS_CSI_USER->tbl_name . ' as T02
-				ON T00.author_id = T02.id
-			LEFT JOIN ' . $wpdb->base_prefix . 'users as T03
-				ON T02.id = T03.ID
-		GROUP BY
-			T00.issue_id
-		ORDER BY
-			T00.last_modified_date ASC,
-			T00.last_modified_time ASC
-	';
-	$requests = $this->get_sql ( $sql );
-	$o.='
-	<div class="container">
-		<div class="page-header row">
-			<h2 class="">Lista de revisiones en espera de aprobaci&oacute;n</h2>
-			<p class="text-muted text-justify">El siguiente listado permite que el <i>Comit&eacute; de Notas NOVIS</i> eval&uacute;e y autorice/rechace solicitudes de aprobaci&oacute;n.</p>
-		</div>
-		<div class="row">
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Nota Novis</th>
-						<th>Autor</th>
-						<th>Liberada</th>
-						<th class="hidden-xs">Revisiones</th>
-						<th>Fecha de Solicitud</th>
-					</tr>
-				</thead>
-				<tbody>';
-	foreach ( $requests as $request ){
-		if ( $request['pending'] ){
-			$last_modified = new DateTime ( $request['last_modified_date'] . ' ' . $request['last_modified_time']);
-			$last_modified->setTimezone ( new DateTimeZone('America/Mexico_City') );
-			$o.='
+	if ( current_user_can_for_blog ( 1, 'csi_issue_approve_revision' ) ) {
+		$sql = '
+			SELECT
+				T00.issue_id,
+				T00.author_id,
+				T00.title,
+				T00.last_modified_date,
+				T00.last_modified_time,
+				COUNT(T00.revision_id) as revisions,
+				SUM(IF(T01.code="pending", 1, 0)) as pending,
+				SUM(IF(T01.released_flag = 1,1,0)) as released,
+				SUM(IF(NOT(T01.prevent_edition_flag) = 1,1,0)) as editable,
+				T03.display_name as author_name
+			FROM
+				' . $this->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
+					ON T00.status_id = T01.id
+				LEFT JOIN ' . $NOVIS_CSI_USER->tbl_name . ' as T02
+					ON T00.author_id = T02.id
+				LEFT JOIN ' . $wpdb->base_prefix . 'users as T03
+					ON T02.id = T03.ID
+			GROUP BY
+				T00.issue_id
+			ORDER BY
+				T00.last_modified_date ASC,
+				T00.last_modified_time ASC
+		';
+		$requests = $this->get_sql ( $sql );
+		$o.='
+		<div class="container">
+			<div class="page-header row">
+				<h2 class="">Lista de revisiones en espera de aprobaci&oacute;n</h2>
+				<p class="text-muted text-justify">El siguiente listado permite que el <i>Comit&eacute; de Notas NOVIS</i> eval&uacute;e y autorice/rechace solicitudes de aprobaci&oacute;n.</p>
+			</div>
+			<div class="row">
+				<table class="table">
+					<thead>
 						<tr>
-							<td>
-								<a href="#!issuerevprev?i=' . $this->nov_id ( $request['issue_id'] ) . '">
-									' . $this->nov_id ( $request['issue_id'] ) . '<br/>
-									' . $request['title'] . '
-								</a>
-							</td>
-							<td>' . $request['author_name'] . '</td>
-							<td><i class="fa fa-fw fa-' . ( $request['released'] ? 'check-square-o' : 'square-o' ) .'"></i></td>
-							<td class="hidden-xs">' . $request['revisions'] . '</td>
-							<td class="small">' . $last_modified->format('d/m/Y H:i:s') . '</td>
+							<th>Nota Novis</th>
+							<th>Autor</th>
+							<th>Liberada</th>
+							<th class="hidden-xs">Revisiones</th>
+							<th>Fecha de Solicitud</th>
 						</tr>
-			';
+					</thead>
+					<tbody>';
+		foreach ( $requests as $request ){
+			if ( $request['pending'] ){
+				$last_modified = new DateTime ( $request['last_modified_date'] . ' ' . $request['last_modified_time']);
+				$last_modified->setTimezone ( new DateTimeZone('America/Mexico_City') );
+				$o.='
+							<tr>
+								<td>
+									<a href="#!issuerevprev?i=' . $this->nov_id ( $request['issue_id'] ) . '">
+										' . $this->nov_id ( $request['issue_id'] ) . '<br/>
+										' . $request['title'] . '
+									</a>
+								</td>
+								<td>' . $request['author_name'] . '</td>
+								<td><i class="fa fa-fw fa-' . ( $request['released'] ? 'check-square-o' : 'square-o' ) .'"></i></td>
+								<td class="hidden-xs">' . $request['revisions'] . '</td>
+								<td class="small">' . $last_modified->format('d/m/Y H:i:s') . '</td>
+							</tr>
+				';
+			}
 		}
+		$o.='
+					</tbody>
+				</table>
+			</div>
+		</div>';
+	}else{
+		$o.=self::no_permissions_msg();
 	}
-	$o.='
-				</tbody>
-			</table>
-		</div>
-	</div>';
+
 	$response['message'] = $o;
 	echo json_encode($response);
 	wp_die();
