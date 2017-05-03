@@ -1175,7 +1175,6 @@ public function csi_pm_build_page_edit_project_form(){
 									</select>
 									<span class="help-block">
 										<small class="text-warning pull-right">(requerido)</small>
-										<i class="fa fa-fw fa-info"></i>La fase de un Proyecto, solo aplica para proyectos <i>En curso</i>.
 									</span>
 								</div>
 							</div>
@@ -1494,7 +1493,6 @@ public function csi_pm_new_project_form(){
 									</select>
 									<span class="help-block">
 										<small class="text-warning pull-right">(requerido)</small>
-										<i class="fa fa-fw fa-info"></i>La fase de un Proyecto, solo aplica para proyectos <i>En curso</i>.
 									</span>
 								</div>
 							</div>
@@ -1719,7 +1717,7 @@ public function csi_pm_build_page_list_projects(){
 					</a>
 				</div>
 			</div>
-			<div class="panel-body collapse in" id="csi-pm-panel-filter">
+			<div class="panel-body collapse" id="csi-pm-panel-filter">
 				<form class="form-horizontal" id="csi-pm-filtered-pm-panel-form" data-target="#csi-pm-filtered-pm-panel">
 					<div class="form-group">
 						<label for="status" class="col-sm-2 control-label">Status</label>
@@ -1832,9 +1830,15 @@ public function csi_pm_build_page_show_project(){
 	//--------------------------------------------------------------------------
 	$sql = '
 		SELECT
+			T00.pm_user_id,
+			T00.tl_user_id,
 			T00.short_name as short_name,
 			T00.description as description,
 			T00.id as project_id,
+			T00.real_percentage,
+			T00.plan_percentage,
+			T00.planned_start_date,
+			T00.planned_end_date,
 			T01.id as customer_id,
 			T01.code as customer_code,
 			T02.id as status_id,
@@ -1891,25 +1895,22 @@ public function csi_pm_build_page_show_project(){
 						</tr>
 						<tr>
 							<th class="small text-muted">Status</th>
+							<td>' . $project->status_short_name . '</td>
+						</tr>
+						<tr>
+							<th class="small text-muted">Fechas del Proyecto</th>
 							<td>
-								<span class="csi-2ble-click" style="position:relative;">
-									<span class="csi-2ble-click-front">' . $project->status_short_name . '</span>
-									<form class="csi-2ble-click-back" style="display:none;" data-function="csi_cmp_edit_project_status">
-										<input type="hidden" name="task_id" id="task_id" value="65">
-										<select class="form-control input-sm" name="status_id" id="status_id">
-											' . $status_inline_options . '
-										</select>
-									</form>
-								</span>
-
+								' . $project->planned_start_date .
+								'<i class="fa fa-fw fa-angle-right"></i>' .
+								$project->planned_end_date . '
 							</td>
 						</tr>
 						<tr>
 							<th class="small text-muted">Avance Planificado</th>
 							<td>
 								<div class="progress" style="margin-bottom:0px;">
-  									<div class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;width: 40%;">
-										40%
+  									<div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;width: ' . $project->plan_percentage . '%;">
+										' . $project->plan_percentage . '%
 									</div>
 								</div>
 							</td>
@@ -1918,23 +1919,19 @@ public function csi_pm_build_page_show_project(){
 							<th class="small text-muted">Avance Real</th>
 							<td>
 								<div class="progress" style="margin-bottom:0px;">
-  									<div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;width: 50%;">
-										50%
+  									<div class="progress-bar progress-bar-' . ( $project->plan_percentage <= $project->real_percentage ? 'success' : 'warning' ) . ' " role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;width: ' . $project->real_percentage . '%;">
+										' . $project->real_percentage . '%
 									</div>
 								</div>
 							</td>
 						</tr>
 						<tr>
 							<th class="small text-muted">Project Manager</th>
-							<td>Javier Caballero</td>
+							<td>' . get_userdata ( $project->pm_user_id )->display_name . '</td>
 						</tr>
 						<tr>
 							<th class="small text-muted">Líder Técnico</th>
-							<td>Javier Caballero</td>
-						</tr>
-						<tr>
-							<th class="small text-muted">Project Request</th>
-							<td>Solicitado por <a href="#" class="user-data" data-user-id="1" title="Más información"><i class="fa fa-id-card-o"></i> cmarin</a> el 23/07/2017 <small class="text-muted">23:56hrs</small></td>
+							<td>' . get_userdata ( $project->tl_user_id )->display_name . '</td>
 						</tr>
 						<tr>
 							<th class="small text-muted">Planificación</th>
