@@ -58,7 +58,7 @@
 			wp_register_script(
 				'csiVendorScripts',
 				CSI_PLUGIN_URL.'/dist/js/vendor.min.js',
-				array('jquery', 'jquery-ui-sortable'),
+				array('jquery', 'jquery-ui-sortable', 'jquery-effects-core'),
 				'0.1.0',
 				true
 			);
