@@ -3,7 +3,7 @@ defined('ABSPATH') or die("No script kiddies please!");
 
 class NOVIS_CSI_ISSUE_CLASS extends NOVIS_CSI_CLASS{
 public $default_status_code			= 'draft';
-public $more_info_link				= 'http://intranetmx.noviscorp.com/novis/kb/issues-mgmt/more-info/';
+public $more_info_link				= '/novismx/csi/documentation-mgmt/notas-novis/';
 /**
 * __construct
 *
