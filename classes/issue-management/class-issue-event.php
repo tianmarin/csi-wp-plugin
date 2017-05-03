@@ -581,7 +581,12 @@ public function csi_fetch_issue_event_list_info(){
 		//----------------------------------------------------------------------
 		$o.='
 			<tr class="small">
-				<td>' . $issue_event['customer_short_name'] . '</td>
+				<td>
+					<!--
+					<a href="#" class="in-table-form-button hidden-print" data-action="csi_edit_issue_event_form" data-event-id="' . $issue_event['id'] . '"><i class="fa fa-fw fa-edit"></i></a>
+					-->
+					' . $issue_event['customer_short_name'] . '
+				</td>
 				<td>' . $issue_event['system'] . '</td>
 				<td>' . $issue_event['ticket_no'] . '</td>
 				<td>' . $reg_date->format('d-m-Y') . '</td>
@@ -639,7 +644,7 @@ public function csi_create_issue_event_form(){
 								<span class="help-block small">Indica el cliente de Operación que tuvo la afectación</span>
 							</td>
 							<td class="col-xs-3">
-								<input type="text" name="reg_date" id="reg_date" class="form-control input-sm csi-date-range-input" required="true" data-single-date-picker="true" value="' . $current_date->format('Y-m-d') . '"/>
+								<input type="text" name="reg_date" id="reg_date" class="form-control input-sm csi-date-range-input" required="true" data-single-date-picker="true" value="' . $current_date->format('Y-m-d') . '" data-drops="up"/>
 							</td>
 						</tr>
 						<tr>

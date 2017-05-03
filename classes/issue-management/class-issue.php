@@ -398,7 +398,7 @@ public function csi_issue_new_issue_form_md_preview(){
 		<div class="panel panel-default">
 			<div class="panel-body" style="min-height:100px;">
 				<samp>
-					' . $pd->text( $post['dataInput'] ) . '
+					' . stripslashes ( $pd->text( $post['dataInput'] ) ). '
 				</samp>
 			</div>
 		</div>
@@ -987,11 +987,11 @@ public function csi_issue_build_page_preview_issue_rev(){
 					$new_text = $issue->$key;
 					$opcodes = FineDiff::getDiffOpcodes($old_text, $new_text,   FineDiff::$wordGranularity );
 					$old_issue->$key = FineDiff::renderDiffToHTMLFromOpcodes($old_text, $opcodes);
-					$old_issue->$key = $pd->text( $old_issue->$key );
+					$old_issue->$key = stripslashes ( $pd->text( $old_issue->$key ) );
 					$old_issue->$key = str_replace ( '<table>', '<table class="table">', $old_issue->$key);
 
 				}
-				$issue->$key = $pd->text( $issue->$key );
+				$issue->$key = stripslashes ( $pd->text( $issue->$key ) );
 				$issue->$key = str_replace ( '<table>', '<table class="table">', $issue->$key);
 		}
 	}
@@ -1366,7 +1366,7 @@ public function csi_issue_build_page_show_issue(){
 					</thead>
 					<tbody>
 						<tr>
-							<td><i class="fa fa-fw fa-angle-right"></i>Cristian Marin</td>
+							<td><i class="fa fa-fw fa-angle-right"></i>' . get_userdata ( $issue->author_id )->display_name . '</td>
 							<td><i class="fa fa-fw fa-angle-right"></i>' . $issue->revision_id . '</td>
 							<td><i class="fa fa-fw fa-angle-right"></i>' . $issue->last_modified_date . '</td>
 						</tr>
