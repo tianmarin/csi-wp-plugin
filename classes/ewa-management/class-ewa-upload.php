@@ -97,9 +97,10 @@ public function csi_ewa_popup_ewa_upload_log(){
 	$post = isset( $_POST[$this->plugin_post] ) &&  $_POST[$this->plugin_post]!=null ? $_POST[$this->plugin_post] : $_POST;
 	$load_id = $post['ewaUpload'];
 	$load = $this->get_single ( $load_id );
+	$date = new DateTime ( $load['last_modified_datetime'] );
 
 	$response['content']='<div class="clearfix">' . $load['text'] . '</div>';
-	$response['title']='Mensaje de Carga realizada en : ' . $load['last_modified_datetime'];
+	$response['title']='<span class="text-muted">Registro de carga de archivo <i>CSV-EWA</i> <samp>[id: ' . $load['id'] . ']</samp></span>';
 	echo json_encode($response);
 	wp_die();
 }
@@ -115,14 +116,14 @@ public function csi_ewa_build_page_ewa_loads(){
 	$o='
 	<div class="container">
 		<div class="page-header row">
-			<h2 class="h3">BLA</h2>
-			<p class="text-muted text-justify lead">Hola.</p>
+			<h2 class="h3">Registro de Cargas de EWAs</h2>
+			<p class="text-muted text-justify">La siguiente tabla muestra el detalle de las cargas de información realizadas sobre el sistema.</p>
 		</div>
 		<div class="panel panel-default row">
 			<div class="panel-heading">
 				<i class="fa fa-fw fa-pie-chart"></i>Cargas
 			</div>
-			<table class="table table-condensed">
+			<table class="table table-hover">
 				<thead>
 					<tr>
 						<th class="text-center"><i class="fa fa-fw fa-hashtag"></i></th>
@@ -139,11 +140,13 @@ public function csi_ewa_build_page_ewa_loads(){
 	';
 	$loads = $this->get_all();
 	foreach ( $loads as $load){
+		$creation_datetime = new DateTime ( $load['creation_datetime'] );
+		$creation_datetime->setTimezone ( new DateTimeZone( get_option ( 'timezone_string' ) ) );
 		$o.='
 					<tr class="small">
 						<td class="text-center"><samp>' . $load['id'] . '</samp></td>
 						<td class="text-center"><i class="fa fa-fw fa-sm fa-' . ( $load['error_flag'] ? 'exclamation' : '' ) . '"></i></td>
-						<td>' . $load['creation_datetime'] . '</td>
+						<td>' . $creation_datetime->format ( 'd/m/Y H:i') . ' </td>
 						<td>' .get_userdata( $load['creation_user_id'] )->display_name . '</td>
 						<td class="hidden-xs">' . $load['filename'] . '</td>
 						<td>' . $load['ewas_no'] . '</td>
@@ -159,6 +162,11 @@ public function csi_ewa_build_page_ewa_loads(){
 	$o.='
 				</tbody>
 			</table>
+		</div>
+		<div class="well well-sm small row">
+			<p>
+				Las fechas y horas se muestran en la zona horaria <samp>' . get_option ( 'timezone_string' ) . '</samp> a menos que se especifique lo contrario.
+			</p>
 		</div>
 	</div>
 	';
