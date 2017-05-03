@@ -58,8 +58,11 @@ $novis_csi_vars = array(
 	##Project Management Module
 	'project_request_status'		."_network_class"	=> TRUE,
 	'project_request'				."_network_class"	=> TRUE,
+	'project_risk'					."_network_class"	=> TRUE,
+	'project_info'					."_network_class"	=> TRUE,
+	'project_invoice'				."_network_class"	=> TRUE,
 	'project_status'				."_network_class"	=> TRUE,
-	'project_entrance'				."_network_class"	=> TRUE,
+	'project_phase'					."_network_class"	=> TRUE,
 	'project'						."_network_class"	=> TRUE,
 	##Change MAnagement Module
 	'cmp'							."_network_class"	=> TRUE,
@@ -101,8 +104,11 @@ $novis_csi_vars = array(
 	##Project Management Module
 	'project_request_status'		."_menu_slug"	=> 'csi_'		.'project_request_status',
 	'project_request'				."_menu_slug"	=> 'csi_'		.'project_request',
+	'project_risk'					."_menu_slug"	=> 'csi_'		.'project_risk',
+	'project_info'					."_menu_slug"	=> 'csi_'		.'project_info',
+	'project_invoice'				."_menu_slug"	=> 'csi_'		.'project_invoice',
 	'project_status'				."_menu_slug"	=> 'csi_'		.'project_status',
-	'project_entrance'				."_menu_slug"	=> 'csi_'		.'project_entrance',
+	'project_phase'					."_menu_slug"	=> 'csi_'		.'project_phase',
 	'project'						."_menu_slug"	=> 'csi_'		.'project',
 	##Change Management Module
 	'cmp'							."_menu_slug"	=> 'csi_'		.'cmp',
@@ -144,8 +150,11 @@ $novis_csi_vars = array(
 	##Project Management Module
 	'project_request_status'		."_menu_cap"		=> 'manage_options',
 	'project_request'				."_menu_cap"		=> 'manage_options',
+	'project_risk'					."_menu_cap"		=> 'manage_options',
+	'project_info'					."_menu_cap"		=> 'manage_options',
+	'project_invoice'				."_menu_cap"		=> 'manage_options',
 	'project_status'				."_menu_cap"		=> 'manage_options',
-	'project_entrance'				."_menu_cap"		=> 'manage_options',
+	'project_phase'					."_menu_cap"		=> 'manage_options',
 	'project'						."_menu_cap"		=> 'manage_options',
 	##Change MAnagement Module
 	'cmp'							."_menu_cap"		=> 'manage_options',
@@ -396,8 +405,11 @@ require_once(CSI_PLUGIN_DIR."/classes/issue-management/class-issue.php");
 ## Project Management Module
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-request-status.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-request.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-risk.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-info.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-invoice.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-status.php");
-require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-entrance.php");
+require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project-phase.php");
 require_once(CSI_PLUGIN_DIR."/classes/project-management/class-project.php");
 
 ##External Classes

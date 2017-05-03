@@ -552,9 +552,9 @@ public function csi_pm_build_page_own_project_request(){
 				<thead>
 					<tr>
 						<th>Status <a href="#" class="csi-popup" data-action="csi_pm_popup_project_request_status_info"><i class="fa fa-fw fa-question-circle"></i></a></th>
+						<th>Nombre<span class="hidden-xs"> del Proyecto</span></th>
 						<th><span class="hidden-xs">Fecha de </span>Solicitud</th>
 						<th>Cliente</th>
-						<th>Nombre<span class="hidden-xs"> del Proyecto</span></th>
 					</tr>
 				</thead>
 				<tbody>';
@@ -563,13 +563,13 @@ public function csi_pm_build_page_own_project_request(){
 		$o.='
 					<tr class="' . $preq['status_class'] . '">
 						<td><i class="fa fa-fw fa-' . $preq['status_icon'] . '"></i><span class="hidden-xs">' . $preq['status_name'] . '</span></td>
-						<td>' . $request_date->format('d/m/Y') . '</td>
-						<td>' . $preq['customer_short_name'] . '</td>
 						<td>
 							<a href="#!showprojectrequest?r=' . $preq['id'] . '">
-								<i class="fa fa-fw fa-arrows-alt"></i>' . $preq['short_name'] . '
+								' . $preq['short_name'] . '
 							</a>
 						</td>
+						<td class="small">' . $request_date->format('d/m/Y') . '</td>
+						<td>' . $preq['customer_short_name'] . '</td>
 					</tr>
 		';
 	}

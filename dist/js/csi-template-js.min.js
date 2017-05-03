@@ -115,14 +115,6 @@ var aaAjaxError = function(jqXHR, textStatus, errorThrown){
 	});
 };
 
-//llamada Ajax para cargar contenido.
-	//si sale bien
-		//si hay error
-		//sino
-			//apagar lo actual
-	//si sale mal
-		//$.alert
-		//guardar log (sm21)
 var parseQueryString = function(url) {
 	var urlParams = {};
 	url.replace(
@@ -212,11 +204,6 @@ function loadPageContent ( hash, get ) {
 							$('html,body').animate({
 								scrollTop: $( '#' + GET.scrollTo ).offset().top
 							});
-							/*
-							$( '#' + GET.scrollTo ).addClass('animated ' + 'pulse').one(animationEnd, function() {
-								$(this).removeClass('animated ' + 'pulse');
-							});
-							*/
 						}
 					}
 				});
@@ -294,7 +281,6 @@ function csiTemplateCmpFetchTableContent( tableSelector ){
 		error: aaAjaxError,
 	});
 }
-
 function csiTemplateCmpFetchUserData ( userId ){
 	var user = userId;
 	var data = new FormData();
@@ -600,7 +586,6 @@ function csiSoftRefreshEventListener(pageResponse){
 			if ( $(this).hasClass('select2') ) {
 				$(this).select2('enable',false);
 				$(this).addClass('disabled').prop('disabled',true).val('');
-				//nextInput.select2('val', '');
 				$(this).val('').trigger('change');
 			}else{
 				$(this).addClass('disabled').prop('disabled',true).prop('checked',false).val('');
@@ -612,7 +597,6 @@ function csiSoftRefreshEventListener(pageResponse){
 			if ( $(this).hasClass('select2') ) {
 				$(this).select2('enable',true);
 				$(this).removeClass('disabled').prop('disabled',false);
-				//nextInput.select2('val', '');
 				$(this).val('').trigger('change');
 			}else{
 				$(this).removeClass('disabled').prop('disabled',false);
@@ -756,6 +740,50 @@ function csiSoftRefreshEventListener(pageResponse){
 			error: aaAjaxError,
 		});
 	});
+	$('a[data-toggle=\'width\']').off('click').click(function(event){
+		event.preventDefault();
+		var variableParent = $( this ).closest ('.col-variable');
+		console.log ( variableParent );
+		if ( variableParent.hasClass('col-sm-6') ){
+			variableParent.switchClass( 'col-sm-6', 'col-sm-4', 1000, 'easeInOutQuad' );
+		}else if ( variableParent.hasClass('col-sm-4') ){
+			variableParent.switchClass( 'col-sm-4', 'col-sm-12', 1000, 'easeInOutQuad' );
+		}else if ( variableParent.hasClass('col-sm-12') ){
+			variableParent.switchClass( 'col-sm-12', 'col-sm-6', 1000, 'easeInOutQuad' );
+		}
+	});
+	$('button.in-table-form-delete').off('click').click(function(event){
+		event.preventDefault();
+		var button = $(this);
+		$.confirm({
+			icon				: 'fa fa-exclamation-triangle',
+			title				: 'Cuidado',
+			content				: button.data('content'),
+			type				: button.data('type'),
+			columnClass			: button.data('column-class'),
+			backgroundDismiss	: true,
+			closeIcon			: true,
+			buttons				: {
+				ok				: {
+					text		: 'Si',
+					btnClass	: 'btn-danger',
+					action		: function(){
+						var form = button.closest('form');
+						form.data('function', button.data('action'));
+
+						form.submit();
+					},
+				},
+				cancel			: {
+					text		: 'Cancelar',
+					action		: function(){
+					},
+				},
+			},
+		});
+		//csiTemplateCmpFetchTableContent( $(this).closest('.refreshable') );
+	});
+
 	$('.in-table-form-button').off('click').click(function(event){
 		event.preventDefault();
 		var button = $(this);
@@ -805,13 +833,27 @@ function csiSoftRefreshEventListener(pageResponse){
 			target.html( file.name );
 		}
 	});
+	$('.pagination a').off('click').click(function(event){
+		event.preventDefault();
+		var form = $(this).closest('form');
+		var table = $(this).closest('.refreshable');
+		var pageInput = form.find('input[name=page-no]');
+		var pageNo = $(this).data('page-no');
+		console.log (form);
+		if ( pageInput.length ){
+			pageInput.val(pageNo);
+			//console.log(pageInput);
+		}else{
+			table.data('page-no', $(this).data('page-no') );
+		}
+		csiTemplateCmpFetchTableContent ( table );
+	});
 	$('.csi-refreshable-filter-form').off('submit').submit(function(event){
 		event.preventDefault();
 		if ( undefined !== $(this).data('target') ){
 			$( $(this).data('target') ).each(function(){
 				csiTemplateCmpFetchTableContent ( $( this ) );
 			});
-			//console.log ( $( $(this).data('target') ) );
 		}
 	});
 	$('form').not('.csi-refreshable-filter-form').off('submit').submit(function(event){
@@ -857,7 +899,7 @@ function csiSoftRefreshEventListener(pageResponse){
 				var xhr = new window.XMLHttpRequest();
 				if ( undefined !== form.data('progress') ){
 					//Upload progress
-					xhr.upload.addEventListener("progress", function(evt){
+					xhr.upload.addEventListener ( 'progress', function ( evt ){
 						if (evt.lengthComputable) {
 							var percentComplete = Math.round(evt.loaded / evt.total * 100);
 							window.console.log('Porcentaje: '+percentComplete);
@@ -865,88 +907,84 @@ function csiSoftRefreshEventListener(pageResponse){
 						}
 					}, false);
 					//success upload
-					xhr.upload.addEventListener("load", function(evt){
+					xhr.upload.addEventListener ( 'load', function ( evt ){
 						if (evt.lengthComputable) {
-						//	statusMsg.html(processing+" "+inputDay+'/'+inputMonth+'/'+inputYear+' Procesando la informaci&oacute;n cargada');
-						setTimeout(function(){
-							progress.after( progressMsg );
-							progress.fadeOut( 'slow' );
-						}, 1000);
-
-
+							setTimeout(function(){
+								progress.after( progressMsg );
+								progress.fadeOut( 'slow' );
+							}, 1000);
 						}
 					}, false);
 					//Download progress
 					//If this is removed, the process is dead
-					xhr.addEventListener("progress", function(evt){
+					xhr.addEventListener('progress', function ( evt ){
 						if (evt.lengthComputable) {
-							window.console.log("Respuesta descargada: "+Math.round(evt.loaded / evt.total * 100)+'%');
+							console.log ( 'Respuesta descargada: ' + Math.round(evt.loaded / evt.total * 100) +'%' );
 						}else{
-							window.console.log("Respuesta descargada: "+Math.round(evt.loaded / evt.total * 100)+'%');
+							console.log ( 'Respuesta descargada: ' + Math.round(evt.loaded / evt.total * 100) +'%' );
 						}
 					}, false);
 				}
 				return xhr;
 			},
 			success: function(response){
-				form.removeClass('ajax-loading');
+				form.removeClass ( 'ajax-loading' );
 				console.log ( response );
 				if ( 0 === response ){
 				}else{
 					if ( undefined !== response.error){
 						submit.attr('disabled', false).removeClass('disabled');
 					}else{
-						//plan creado correctamente
-					}
-					if ( undefined != progressMsg ) {
-						setTimeout(function(){
-							progressMsg.fadeOut( 'slow' );
-						}, 5000);
-					}
-					if ( form.data('auto-hide') ){
-						form.fadeOut();
-					}
-					if ( undefined !== $( form.data( 'upload-msg' ) ) ){
-						var uploadMsg = $( form.data( 'upload-msg' ) );
-						if ( undefined !== response.message ){
-							uploadMsg.html( response.message );
+						if ( undefined !== progressMsg ) {
+							setTimeout(function(){
+								progressMsg.fadeOut( 'slow' );
+							}, 5000);
 						}
-					}
-					if ( undefined !== response.notification ) {
-						switch ( response.postSubmitAction ){
-							case 'changeHash':
-								if ( undefined === response.notifStopNextPage ){
-									//http://stackoverflow.com/a/34567019/5129222
-									if ( undefined !== response.newId){
-										response.notification.onClose = changeHash.bind(null,response.newId );
-									}else{
-										response.notification.onClose = changeHash.bind(null,form.data('next-page') );
-									}
-
-								}
-								break;
-							case 'refreshParent':
-								response.notification.onClose = csiTemplateCmpFetchTableContent.bind(null,form.closest('.refreshable'));
-								break;
-							case 'changeURL':
-								response.notification.onClose = function() {window.location.href = response.newUrl;};
-								break;
-							default:
-								response.notification.onClose = function(){};
+						if ( form.data('auto-hide') ){
+							form.fadeOut();
 						}
-						jconfirm ( response.notification );
-					}else{
-						if ( undefined !== response.postSubmitAction ){
+						if ( undefined !== $( form.data( 'upload-msg' ) ) ){
+							var uploadMsg = $( form.data( 'upload-msg' ) );
+							if ( undefined !== response.message ){
+								uploadMsg.html( response.message );
+							}
+						}
+						if ( undefined !== response.notification ) {
 							switch ( response.postSubmitAction ){
 								case 'changeHash':
-									changeHash( form.data('next-page') );
+									if ( undefined === response.notifStopNextPage ){
+										//http://stackoverflow.com/a/34567019/5129222
+										if ( undefined !== response.newId){
+											response.notification.onClose = changeHash.bind(null,response.newId );
+										}else{
+											response.notification.onClose = changeHash.bind(null,form.data('next-page') );
+										}
+
+									}
 									break;
 								case 'refreshParent':
-									csiTemplateCmpFetchTableContent( form.closest('.refreshable') );
+									response.notification.onClose = csiTemplateCmpFetchTableContent.bind(null,form.closest('.refreshable'));
 									break;
 								case 'changeURL':
-									window.location(response.newUrl);
+									response.notification.onClose = function() {window.location.href = response.newUrl;};
 									break;
+								default:
+									response.notification.onClose = function(){};
+							}
+							jconfirm ( response.notification );
+						}else{
+							if ( undefined !== response.postSubmitAction ){
+								switch ( response.postSubmitAction ){
+									case 'changeHash':
+										changeHash( form.data('next-page') );
+										break;
+									case 'refreshParent':
+										csiTemplateCmpFetchTableContent( form.closest('.refreshable') );
+										break;
+									case 'changeURL':
+										window.location(response.newUrl);
+										break;
+								}
 							}
 						}
 					}
@@ -1016,7 +1054,7 @@ function csiCmpKeynoteOption( trigger ){
 function csiSelect2Format(option) {
     var opt = option.element;
 	var response=$('<span class="csi-cmp-online-form-select"></span>');
-	if ( undefined === $(opt).data('icon') ) {
+	if ( undefined === $(opt).data('icon') ){
 		return option.text;
 	}
 	if ( undefined !== $(opt).data('icon') ) {
@@ -1030,7 +1068,6 @@ function csiSelect2Format(option) {
 	}
 	response.append ( option.text );
 	return response;
-    //return '<span style="color:' + $(originalOption).data('color') + '"><i class="fa ' + $(originalOption).data('icon') + '"></i> ' + icon.text + '</span>';
 }
 
 });
