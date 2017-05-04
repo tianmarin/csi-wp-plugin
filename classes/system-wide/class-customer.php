@@ -40,28 +40,31 @@ public function __construct(){
 		$this->tbl_name = $wpdb->prefix			.$this->table_prefix	.$this->class_name;
 	}
 	//Versión de DB (para registro y actualización automática)
-	$this->db_version	= '0.6.0';
+	$this->db_version	= '0.6.1';
 	//Reglas actuales de caracteres a nivel de DB.
 	//Dado que esto sólo se usa en la cración de la tabla
 	//no se guarda como variable de clase.
 	$charset_collate	= $wpdb->get_charset_collate();
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
-	$this->crt_tbl_sql_wt	="(
-								id int unsigned not null auto_increment COMMENT 'Unique ID for each entry',
-								code varchar(3) not null COMMENT 'Three letter ID',
-								short_name varchar(50) null COMMENT 'Short name of customer',
-								blog_id bigint(20) unsigned null  COMMENT 'Blog id of customer',
-								creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
-								creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								creation_date date null COMMENT 'Date of the creation of this record',
-								creation_time time null COMMENT 'Time of the creation of this record',
-								last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
-								last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
-								last_modified_date date null COMMENT 'Date of the last modification of this record',
-								last_modified_time time null COMMENT 'Time of the last modification of this record',
+	$this->crt_tbl_sql_wt	="
+		(
+			id tinyint(3) unsigned not null auto_increment COMMENT 'Unique ID for each entry',
+			code varchar(3) not null COMMENT 'Three letter ID',
+			short_name varchar(50) null COMMENT 'Short name of customer',
+			blog_id bigint(20) unsigned null  COMMENT 'Blog id of customer',
+			country_id tinyint(1) unsigned null COMMENT 'Country of customer',
+			timezone_id tinyint(3) unsigned null COMMENT 'Timezone of customer',
+			creation_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the creation of this record',
+			creation_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			creation_date date null COMMENT 'Date of the creation of this record',
+			creation_time time null COMMENT 'Time of the creation of this record',
+			last_modified_user_id bigint(20) unsigned null COMMENT 'Id of user responsible of the last modification of this record',
+			last_modified_user_email varchar(100) null COMMENT 'Email of user. Used to track user if user id is deleted',
+			last_modified_date date null COMMENT 'Date of the last modification of this record',
+			last_modified_time time null COMMENT 'Time of the last modification of this record',
 
-								UNIQUE KEY id (id)
-							) $charset_collate;";
+			UNIQUE KEY id (id)
+		) $charset_collate;";
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
@@ -127,6 +130,25 @@ public function __construct(){
 			'form_placeholder'			=>false,
 			'form_special_form'			=>false,
 			'form_show_field'			=>false,
+		),
+		'country_id' => array(
+			'type'						=>'select',
+			'backend_wp_in_table'		=>true,
+			'backend_wp_sp_table'		=>true,
+			'backend_wp_table_lead'		=>false,
+			'data_required'				=>true,
+			'data_validation'			=>true,
+			'data_validation_min'		=>1,
+			'data_validation_max'		=>false,
+			'data_validation_maxchar'	=>false,
+			'form_disabled'				=>false,
+			'form_help_text'			=>'Pa&iacute;s de origen del cliente',
+			'form_input_size'			=>false,
+			'form_label'				=>'Pa&iacute;s',
+			'form_options'				=>false,
+			'form_placeholder'			=>false,
+			'form_special_form'			=>true,
+			'form_show_field'			=>true,
 		),
 		'code' => array(
 			'type'						=>'text',
@@ -352,18 +374,21 @@ public function __construct(){
 	}
 
 }
-protected function backend_wp_sp_table_code($code){
-	return strtoupper($code);
+public function backend_wp_sp_table_country_id ( $country_id ){
+	global $NOVIS_CSI_COUNTRY;
+	global $wpdb;
+	$sql = 'SELECT short_name FROM ' . $NOVIS_CSI_COUNTRY->tbl_name . ' WHERE id = "' . $country_id . '"';
+	$country = $wpdb->get_var ( $sql );
+	return $country;
 }
-protected function backend_wp_sp_table_blog_id($blog_id){
-	if ( is_multisite() ){
-		return '<a href="/wp-admin/network/site-info.php?id='.$blog_id.'">'.$blog_id.'</a>';
-	}else{
-		return $blog_id;
+public function form_special_form_country_id ( ){
+	global $NOVIS_CSI_COUNTRY;
+	$response = array();
+	foreach ( $NOVIS_CSI_COUNTRY->get_all() as $key => $value){
+		$response [ $value['id'] ] = $value['short_name'];
 	}
+	return $response;
 }
-
-
 //END OF CLASS
 }
 

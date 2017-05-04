@@ -23,11 +23,12 @@ var gulpLoadPlugins = require('gulp-load-plugins'),
 // Styles
 gulp.task('templateStyle', function () {
     return gulp.src([
-            // additional packages
-//            './bower_components/jquery-ui-bootstrap/jquery.ui.theme.font-awesome.css',
-//            './bower_components/bootstrap-daterangepicker/daterangepicker.css',
             './assets/less/template/*.less',
+            // additional packages
             './bower_components/select2/dist/css/select2.css',
+			'./bower_components/select2-bootstrap-theme/src/select2-bootstrap.less',
+            './bower_components/jquery-ui-bootstrap/jquery.ui.theme.font-awesome.css',
+            './bower_components/bootstrap-daterangepicker/daterangepicker.css',
         ])
         .pipe($.sourcemaps.init())
         //.pipe(plugins.flatten())
@@ -86,6 +87,17 @@ gulp.task('uglifyVendor', function() {
         './bower_components/bootstrap/dist/js/bootstrap.js',
         './bower_components/jquery-confirm2/js/jquery-confirm.js',
         './bower_components/select2/dist/js/select2.js',
+        './bower_components/moment/moment.js',
+        './bower_components/bootstrap-daterangepicker/daterangepicker.js',
+		'./bower_components/jurlp/jurlp.js',
+		'./bower_components/amcharts3/amcharts/amcharts.js',
+		'./bower_components/amcharts3/amcharts/serial.js',
+		'./bower_components/amcharts3/amcharts/funnel.js',
+		'./bower_components/amcharts3/amcharts/gantt.js',
+		'./bower_components/amcharts3/amcharts/gauge.js',
+		'./bower_components/amcharts3/amcharts/pie.js',
+		'./bower_components/amcharts3/amcharts/radar.js',
+		'./bower_components/amcharts3/amcharts/xy.js',
     ])
     .pipe($.sourcemaps.init())
     .pipe($.concat('vendor.js'))
@@ -97,6 +109,17 @@ gulp.task('uglifyVendor', function() {
     .pipe($.sourcemaps.write('./maps'))
     .pipe(gulp.dest('./dist/js'))
     .pipe($.notify('Template Script compilation done!'));
+});
+
+// Third Parties
+gulp.task('third-party-classes', function() {
+    return gulp.src(
+			[
+				config.bowerDir + '/parsedown/Parsedown.php',
+				config.bowerDir + '/PHP-FineDiff/finediff.php',
+			]
+		)
+        .pipe(gulp.dest('./dist/third-party-classes'));
 });
 
 // Fonts
@@ -143,8 +166,9 @@ gulp.task('watch', function () {
 });
 gulp.task('browser-sync', function() {
     browserSync.init({
-        files: "./**/*.*",
+        files: ["./**/*.php","./dist/**/*.js","./dist/**/*.css"],
         proxy: "localhost",
+		injectChanges: true,
     });
 });
 

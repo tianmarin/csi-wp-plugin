@@ -1,3 +1,4 @@
+
 .DS_Store
 .codekit-cache
 config.codekit
@@ -5,3 +6,4 @@ classes/readme.html
 external/
 bower_components/
 node_modules/
+wiki/

@@ -30,7 +30,7 @@ abstract class NOVIS_CSI_CLASS{
 public function db_install(){
 	global $wpdb;
 	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-	
+
 	if ( is_multisite() && FALSE == $this->network_class ) {
 		// Get all blogs in the network and create or update the table on each one
 		$args = array(
@@ -42,7 +42,7 @@ public function db_install(){
 			'deleted'   	=> null,
 			'limit'     	=> 200,
 			'offset'    	=> 1,
-		); 
+		);
 		$sites = wp_get_sites($args);
 		foreach ( $sites as $i => $site ) {
 			if ( true == switch_to_blog( $site['blog_id'] ) ) {
@@ -55,17 +55,25 @@ public function db_install(){
 					self::write_log($delta);
 					update_option( $this->tbl_name."_db_version" , $this->db_version );
 				}
-				restore_current_blog();				
+				restore_current_blog();
 			}else{
 				self::write_log('No hay blog con el ID: '.$site['blog_id']);
 			}
 		}
     } else {
-		$current_db_version = get_option( $this->tbl_name."_db_version");
+		if ( is_multisite() ){
+			$current_db_version = get_blog_option ( 1, $this->tbl_name."_db_version");
+		}else{
+			$current_db_version = get_option ( $this->tbl_name."_db_version");
+		}
 		if( $current_db_version == false || $current_db_version != $this->db_version ){
 			$delta = dbDelta($this->crt_tbl_sql);
 			self::write_log($delta);
-			update_option( $this->tbl_name."_db_version" , $this->db_version );
+			if ( is_multisite() ){
+				update_blog_option ( 1, $this->tbl_name."_db_version" , $this->db_version );
+			}else{
+				update_option ( $this->tbl_name."_db_version" , $this->db_version );
+			}
 		}
 	}
 	return true;
@@ -152,14 +160,14 @@ public function bluid_submenu_page(){
 	$item = ( isset( $_GET["item"] ) ) ? $_GET["item"] : "";
 	$actioncode = ( isset( $_GET["actioncode"] ) ) ? $_GET["actioncode"] : "";
 
-	
+
 	$output.=self::eval_post_vars('post');
 	switch($action){
 		case 'add':
 			$output.=$this->show_form("add");
 			break;
 		case 'edit':
-			$output.=$this->show_form("edit",$item );				
+			$output.=$this->show_form("edit",$item );
 			break;
 		case null:
 		case '':
@@ -226,7 +234,7 @@ protected function eval_post_vars($method = null){
 				$response = '<div class="alert alert-danger" role="alert">Error de validación de seguridad (wp_verify_nonce).</div>';
 			}
 		}else{
-			$response = '<div class="alert alert-danger" role="alert">Error de validación de variables post (action & actioncode).</div>';			
+			$response = '<div class="alert alert-danger" role="alert">Error de validación de variables post (action & actioncode).</div>';
 		}
 	}
 	return $response;
@@ -356,7 +364,7 @@ protected function update_class_row($action="edit", $postvs ){
 		$response['message'].=(($action=='add')?'un nuevo ':'editar un').$this->name_single."; intenta nuevamente. :)";
 	}
 	return $response;
-	
+
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------
 /**
@@ -376,7 +384,7 @@ protected function check_form_values( $postvs=null){
 					if ( !is_numeric( $postvs[$key] ) ) {
 						return false;
 					}elseif ( isset( $db_field['data-validation'] ) ) {
-						
+
 					}
 					break;
 				case 'nat_number':
@@ -466,7 +474,7 @@ protected function select_rows($elem_per_page = 10){
 		$response['pagination'] = '';
 		return $response;
 	}
-	$sql="SELECT ".implode(",", $sql_elements)." 
+	$sql="SELECT ".implode(",", $sql_elements)."
 			FROM ".$this->tbl_name."
 			LIMIT ".$elem_per_page*($current_page-1).",".$elem_per_page;
 	$elements=self::get_sql($sql);
@@ -491,7 +499,7 @@ protected function select_rows($elem_per_page = 10){
 			}else{
 				$tbody.=$value;
 			}
-			
+
 				if(isset($this->db_fields[$key]['backend_wp_table_lead']) && $this->db_fields[$key]['backend_wp_table_lead'] == true){
 				$tbody.='<div class="row-actions">';
 					$tbody.='<span class="edit">';
@@ -617,7 +625,7 @@ public function show_form(
 			$element=self::get_single( $item);
 			foreach ( $this->db_fields as $key => $field ) {
 				if ( $this->db_fields[$key]['type'] != 'display' ) {
-					$this->db_fields[$key]['value'] = $element[$key];					
+					$this->db_fields[$key]['value'] = $element[$key];
 				}
 			}
 			break;
@@ -643,10 +651,10 @@ public function show_form(
 	if(isset($item)){
 		$output.='<input type="hidden" name="'.$this->plugin_post.'[id]" value="'.$item.'" />';
 	}
-	
+
 //	wp_create_nonce($element['id']."edit")
 	foreach ( $this->db_fields as $key => $field ) {
-		
+
 		$id=$this->plugin_post.'['.$key.']';
 
 		$data_required = '';
@@ -684,7 +692,7 @@ public function show_form(
 				$data_validation_maxchar .= ' maxlength="'.$field['data_validation_maxchar'].'" ';
 			}
 		}
-		
+
 		$form_disabled = '';
 		if ( isset( $field['form_disabled'] ) ) {
 			if( 'disabled' === $field['form_disabled'] ) {
@@ -693,7 +701,7 @@ public function show_form(
 				$form_disabled = ' class="form-control-static" ';
 			}
 		}
-		
+
 		$form_help_text = '';
 		if ( isset( $field['form_help_text'] ) ) {
 			if( null != $field['form_help_text'] ) {
@@ -714,7 +722,7 @@ public function show_form(
 				$form_label = $field['form_label'];
 			}
 		}
-		
+
 		$form_placeholder = '';
 		if ( isset( $field['form_placeholder'] ) ) {
 			if( null !== $field['form_placeholder'] ) {
@@ -728,7 +736,7 @@ public function show_form(
 				$value = ' value="'.$field['value'].'" ';
 			}
 		}
-		
+
 		if ( isset($field['form_show_field']) && false == $field['form_show_field'] ) {
 //			$output.='<input type="hidden" id="'.$id.'" name="'.$id.'" value="'.$id.'" />';
 		}else{
@@ -883,7 +891,7 @@ public function show_form(
 						$output.='<option value="0" disabled>Seleccionar</option>';
 						foreach($field['options'] as $sel_key => $sel_opt){
 							$output.='<option value="'.$sel_key.'" ';
-							
+
 							$output.=isset($field['value']) ? ($sel_key == $field['value'] ? " selected " : '') : '';
 							$output.='>'.$sel_opt.'</option>';
 						}
@@ -893,7 +901,7 @@ public function show_form(
 					$output.='<p class="help-block">'.$form_help_text.'</p>';
 				$output.='</div>';
 			$output.='</div>';
-			
+
 		}
 	}
 //	if(method_exists($this, 'special_form')){
@@ -946,6 +954,30 @@ protected function findMonday($date = null){
 		return $date->modify('last monday');
 	}
 }
-//END OF CLASS	
+public function no_permissions_msg(){
+	$o='
+	<div class="container">
+		<div class="well">
+			<h3 class="text-danger"><i class="fa fa-fw fa-exclamation-circle"></i>Cuidado</h3>
+			<p>No tienes autorización para acceder a esta funci&oacute;n.</p>
+			<p>Si has llegado a esta p&aacute;gina mediante un enlace, por favor ponte en contacto con el administrador: <a href="mailto:' . get_bloginfo('admin_email') . '"><i class="fa fa-fw fa-envelope-o"></I>' . get_bloginfo('admin_email') . '</a> con la siguiente informaci&oacute;n:</p>
+			<h4>Información t&eacute;cnica</h4>
+			<p><pre>' .
+				date('Y/m/d H:i:s P') .
+				'<br/>' .
+				$_SERVER['HTTP_REFERER'] .
+				'<br/>' .
+				var_export ( get_userdata ( get_current_user_id() )->caps, true) .
+				'<br/>' .
+				var_export ( get_userdata ( get_current_user_id() )->data, true) .
+				'<br/>' .
+				var_export($_POST, true) .
+			'</pre></p>
+		</div>
+	</div>
+	';
+	return $o;
+}
+//END OF CLASS
 }
 ?>
