@@ -127,6 +127,7 @@ public function __construct(){
 	add_action( 'wp_ajax_csi_issue_create_revision',			array( $this , 'csi_issue_create_revision'		));
 	add_action( 'wp_ajax_csi_issue_request_approval',			array( $this , 'csi_issue_request_approval'		));
 
+	add_shortcode( 'notanovis',		array( $this , 'csi_issue_shortcode_issue'));
 }
 public function csi_define_capabilities(){
 	global $csi_capabilities;
@@ -144,7 +145,39 @@ public function csi_define_capabilities(){
 		array_push ( $csi_capabilities[$key]['caps'] ,'csi_issue_approve_revision' );
 	}
 }
-
+public function csi_issue_shortcode_issue ( $atts ){
+	global $NOVIS_CSI_ISSUE_STATUS;
+	global $wpdb;
+//	self::write_log ( $atts );
+	$issue_id = intval ( preg_replace ( '/[^0-9]/', '', $atts[0] ) );
+	if ( 0 == $issue_id ){
+		$o = 'Notas Novis';
+	}else{
+		$sql = '
+			SELECT
+				T00.id,
+				T00.title
+			FROM
+				' . $this->tbl_name . ' as T00
+				LEFT JOIN ' . $NOVIS_CSI_ISSUE_STATUS->tbl_name . ' as T01
+					ON T00.status_id = T01.id
+			WHERE
+				T00.issue_id ="' . $issue_id . '"
+				AND T01.released_flag
+			ORDER BY
+				T00.revision_id DESC
+			LIMIT
+				1
+		';
+		$issue = $wpdb->get_row ( $sql );
+		if ( NULL == $issue){
+			$o = 'No existe la Nota NOVIS <samp>' . $this->nov_id ( $issue_id ) . '</samp>';
+		}else{
+			$o = '<a href="/novismx/kb/novis-notes/#!showissue?i=' . $this->nov_id ( $issue->id ) . '" target="_blank"><strong>Nota NOVIS</strong> ' . $this->nov_id ( $issue->id ) . ' - <small>' . $issue->title . ' <i class="fa fa-fw fa-external-link"></i></small></a>';
+		}
+	}
+	return $o;
+}
 public function csi_issue_popup_markdown_info(){
 	//Global Variables
 	global $NOVIS_CSI_CUSTOMER;
@@ -1289,7 +1322,7 @@ public function csi_issue_build_page_intro(){
 	<div class="jumbotron">
 		<div class="container">
 			<h2>Gestión de Notas Novis</h2>
-			<p>:)</p>
+			<p>Módulo de registro y control de notas y errores conocidos.</p>
 			<p><a target="_blank" href="' . $this->more_info_link . '" class="btn btn-primary btn-lg" role="button">Aprender m&aacute;s</a></p>
 		</div>
 	</div><!-- .jumbotron -->

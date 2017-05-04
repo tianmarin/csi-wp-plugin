@@ -554,7 +554,6 @@ public function csi_define_capabilities(){
 		array_push ( $csi_capabilities[$key]['caps'] ,'csi_create_projects' );
 		array_push ( $csi_capabilities[$key]['caps'] ,'csi_edit_projects' );
 	}
-	self::write_log ( $csi_capabilities );
 }
 protected function backend_wp_sp_table_code($code){
 	return '<code>'.$code.'</code>';
