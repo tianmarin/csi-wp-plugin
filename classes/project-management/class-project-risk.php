@@ -79,14 +79,19 @@ public function __construct(){
 }
 public function csi_define_capabilities(){
 	global $csi_capabilities;
-	$class_cap = array(
-		'name'	=> 'Project Risk Capabilities',
-		'caps'	=> array(
-			'csi_pm_manage_project_risks',
-		),
-	);
-	array_push ( $csi_capabilities, $class_cap);
-
+	$cap_group = 'Project Capabilities';
+	$key = array_search( $cap_group, array_column( $csi_capabilities, 'name' ) );
+	if ( FALSE === $key ) {
+		$class_cap = array(
+			'name'	=> $cap_group,
+			'caps'	=> array(
+				'csi_pm_manage_project_risks',
+			),
+		);
+		array_push ( $csi_capabilities, $class_cap);
+	}else{
+		array_push ( $csi_capabilities[$key]['caps'] ,'csi_pm_manage_project_risks' );
+	}
 }
 public function csi_fetch_project_risk_list_info(){
 	//Globa Variables

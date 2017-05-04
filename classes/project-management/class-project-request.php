@@ -90,14 +90,21 @@ public function __construct(){
 }
 public function csi_define_capabilities(){
 	global $csi_capabilities;
-	$class_cap = array(
-		'name'	=> 'Project Request Capabilities',
-		'caps'	=> array(
-			'csi_edit_others_project_request',
-			'csi_edit_project_request_restricted_fields',
-		),
-	);
-	array_push ( $csi_capabilities, $class_cap);
+	$cap_group = 'Project Capabilities';
+	$key = array_search( $cap_group, array_column( $csi_capabilities, 'name' ) );
+	if ( FALSE === $key ) {
+		$class_cap = array(
+			'name'	=> $cap_group,
+			'caps'	=> array(
+				'csi_edit_others_project_request',
+				'csi_edit_project_request_restricted_fields',
+			),
+		);
+		array_push ( $csi_capabilities, $class_cap);
+	}else{
+		array_push ( $csi_capabilities[$key]['caps'] ,'csi_edit_others_project_request' );
+		array_push ( $csi_capabilities[$key]['caps'] ,'csi_edit_project_request_restricted_fields' );
+	}
 }
 public function csi_pm_project_request_build_page_intro(){
 	//Global Variables

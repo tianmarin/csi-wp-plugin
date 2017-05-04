@@ -539,14 +539,22 @@ public function __construct(){
 }
 public function csi_define_capabilities(){
 	global $csi_capabilities;
-	$class_cap = array(
-		'name'	=> 'Project Capabilities',
-		'caps'	=> array(
-			'csi_create_projects',
-			'csi_edit_projects',
-		),
-	);
-	array_push ( $csi_capabilities, $class_cap);
+	$cap_group = 'Project Capabilities';
+	$key = array_search( $cap_group, array_column( $csi_capabilities, 'name' ) );
+	if ( FALSE === $key ) {
+		$class_cap = array(
+			'name'	=> $cap_group,
+			'caps'	=> array(
+				'csi_create_projects',
+				'csi_edit_projects',
+			),
+		);
+		array_push ( $csi_capabilities, $class_cap);
+	}else{
+		array_push ( $csi_capabilities[$key]['caps'] ,'csi_create_projects' );
+		array_push ( $csi_capabilities[$key]['caps'] ,'csi_edit_projects' );
+	}
+	self::write_log ( $csi_capabilities );
 }
 protected function backend_wp_sp_table_code($code){
 	return '<code>'.$code.'</code>';

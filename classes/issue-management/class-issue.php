@@ -278,13 +278,19 @@ public function __construct(){
 }
 public function csi_define_capabilities(){
 	global $csi_capabilities;
-	$class_cap = array(
-		'name'	=> 'Issue MAnagement Capabilities',
-		'caps'	=> array(
-			'csi_issue_approve_revision',
-		),
-	);
-	array_push ( $csi_capabilities, $class_cap);
+	$cap_group = 'Issue Management Capabilities';
+	$key = array_search( $cap_group, array_column( $csi_capabilities, 'name' ) );
+	if ( FALSE === $key ) {
+		$class_cap = array(
+			'name'	=> $cap_group,
+			'caps'	=> array(
+				'csi_issue_approve_revision',
+			),
+		);
+		array_push ( $csi_capabilities, $class_cap);
+	}else{
+		array_push ( $csi_capabilities[$key]['caps'] ,'csi_issue_approve_revision' );
+	}
 }
 
 public function csi_issue_popup_markdown_info(){
