@@ -155,7 +155,7 @@ public function csi_issue_shortcode_issue ( $atts ){
 	}else{
 		$sql = '
 			SELECT
-				T00.id,
+				T00.issue_id,
 				T00.title
 			FROM
 				' . $this->tbl_name . ' as T00
@@ -173,7 +173,7 @@ public function csi_issue_shortcode_issue ( $atts ){
 		if ( NULL == $issue){
 			$o = 'No existe la Nota NOVIS <samp>' . $this->nov_id ( $issue_id ) . '</samp>';
 		}else{
-			$o = '<a href="/novismx/kb/novis-notes/#!showissue?i=' . $this->nov_id ( $issue->id ) . '" target="_blank"><strong>Nota NOVIS</strong> ' . $this->nov_id ( $issue->id ) . ' - <small>' . $issue->title . ' <i class="fa fa-fw fa-external-link"></i></small></a>';
+			$o = '<a href="/novismx/kb/novis-notes/#!showissue?i=' . $this->nov_id ( $issue->issue_id ) . '" target="_blank"><strong>Nota NOVIS</strong> ' . $this->nov_id ( $issue->issue_id ) . ' - <small>' . $issue->title . ' <i class="fa fa-fw fa-external-link"></i></small></a>';
 		}
 	}
 	return $o;
