@@ -77,70 +77,6 @@ public function __construct(){
 	//Sentencia SQL de creación (y ajuste) de la tabla de la clase
 	$this->crt_tbl_sql	=	"CREATE TABLE ".$this->tbl_name." ".$this->crt_tbl_sql_wt;
 	$this->db_fields	= array(
-		/*
-		type					: Tipo de Dato para validacion
-									- id
-									- text
-									- percentage
-									- number
-									- nat_number
-									- timestamp
-									- date
-									- time
-									- bool
-									- radio
-									- select
-									- dual_id
-		backend_wp_in_table		: Flag de mostrar el campo en las tablas de
-									true|false
-		backend_wp_sp_table		: If true, 'sp_wp_table'+field_id function will be executed to show special content
-		backend_wp_table_lead	: If true, 'Edit'button will be shown below field values in backend table
-		form_disabled			: Show the field as a disabled or static input
-									- false
-									- disabled
-									- static
-		form_help_text			: Text showing guide to users
-		form_input_size			: Form input size (bootstrap in form-group class)
-									form-group-lg
-									false
-									form-group-sm
-		form_label				: Label text
-		form_options			: Value for options
-									blank array()
-									key => array(val,disabled)
-		form_placeholder		: Placeholder for inputs
-		form_special_form		: If true validates and execute a special function for form display (usually for select fields)
-		form_show_field			: If false, field will be a 'hidden input'
-									true|false
-		data_required			: If true, form will not succed if field value is empty or 0
-								  If true, 'insert' or 'update' evaluation will not succeed if field value is empty or 0
-									true|false
-		data_validation			: Check for specific values (javascript and PHP)
-									true|alse
-		data_validation_min		: Minumum numeric value
-		data_validation_max		: Maximum numeric value
-		data_validation_maxchar	: Maximum charcount for text inputs
-		*/
-		'id' => array(
-			'type'						=>'id',
-			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>true,
-			'data_validation'			=>true,
-			'data_validation_min'		=>1,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>'static',
-			'form_help_text'			=>false,
-			'form_input_size'			=>false,
-			'form_label'				=>'ID',
-			'form_options'				=>false,
-			'form_placeholder'			=>false,
-			'form_special_form'			=>false,
-			'form_show_field'			=>false,
-			'user_input'				=>false,
-		),
 		'issue_id' => array(
 			'form_help_text'			=>'El <i>Nú&uacute;mero de Nota</i> es el identificador asignado por el sistema a la <strong>Nota NOVIS</strong>.',
 		),
@@ -148,111 +84,27 @@ public function __construct(){
 			'form_help_text'			=>'La <i>Revisi&oacute;n</i> es el identificador asignado por el sistema a la versi&oacute;n de la <strong>Nota NOVIS</strong>.',
 		),
 		'title' => array(
-			'form_help_text'			=>'<small class="text-warning pull-right">(requerido)</small>El T&iacute;tulo de una <strong>Nota NOVIS</strong>, regularmente describe en breve el mensaje de error corto reflejado en el sistema.<br/>Tama&ntilde;o m&aacute;ximo: 255 caracteres.',
+			'form_help_text'			=>'<small class="text-warning pull-right">(requerido)</small>El Título indica el código o mensaje de error reflejado en el sistema.<br/>Tama&ntilde;o m&aacute;ximo: 255 caracteres.',
 		),
-
-		'last_modified_user_id' => array(
-			'type'						=>'current_user_id',
-			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>true,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>"Identificador de usuario solicitante.",
-			'form_input_size'			=>false,
-			'form_label'				=>"Identificador de usuario solicitante.",
-			'form_options'				=>false,
-			'form_placeholder'			=>"Identificador de usuario solicitante.",
-			'form_special_form'			=>true,
-			'form_show_field'			=>false,
-			'user_input'				=>false,
+		'summary' => array(
+			'form_help_text'			=>'El Resumen describe brevemente el contenido de la nota.',
 		),
-		'last_modified_date' => array(
-			'type'						=>'date',
-			'backend_wp_in_table'		=>true,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>true,
-			'data_validation'			=>true,
-			'data_validation_min'		=>1,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>"Fecha de Solicitud.",
-			'form_input_size'			=>false,
-			'form_label'				=>"Fecha de Solicitud.",
-			'form_options'				=>false,
-			'form_placeholder'			=>"Fecha de Solicitud.",
-			'form_special_form'			=>false,
-			'form_show_field'			=>false,
-			'user_input'				=>false,
+		'symptom' => array(
+			'form_help_text'			=>'Los S&iacute;ntomas indican la percepción del operador o usuario frente al sistema. Muchas veces en para un error, es posible encontrar diferentes mensajes de error o afectaciones.',
 		),
-		'last_modified_time' => array(
-			'type'						=>'timestamp',
-			'backend_wp_in_table'		=>false,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>true,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>"Hora de Solicitud.",
-			'form_input_size'			=>false,
-			'form_label'				=>"Hora de Solicitud.",
-			'form_options'				=>false,
-			'form_placeholder'			=>"Hora de Solicitud.",
-			'form_special_form'			=>false,
-			'form_show_field'			=>true,
-			'user_input'				=>false,
+		'terms' => array(
+			'form_help_text'			=>'Los Otros t&eacute;rminos permiten al usuario encontrar la nota mediante diferentes nomenclaturas (SAP Solution Manager -> Solman).',
 		),
-		'doc_link' => array(
-			'type'						=>'text',
-			'backend_wp_in_table'		=>false,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>false,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>"Enlace a la documentaci&oacute;n.",
-			'form_input_size'			=>false,
-			'form_label'				=>"Enlace a la documentaci&oacute;n.",
-			'form_options'				=>false,
-			'form_placeholder'			=>"Enlace a la documentaci&oacute;n.",
-			'form_special_form'			=>false,
-			'form_show_field'			=>true,
-			'user_input'				=>true,
+		'reason' => array(
+			'form_help_text'			=>'Las Causas y Pre-Requisitos indican las condiciones en las cuales se presenta el error.',
 		),
-		'task_link' => array(
-			'type'						=>'text',
-			'backend_wp_in_table'		=>false,
-			'backend_wp_sp_table'		=>false,
-			'backend_wp_table_lead'		=>false,
-			'data_required'				=>false,
-			'data_validation'			=>false,
-			'data_validation_min'		=>false,
-			'data_validation_max'		=>false,
-			'data_validation_maxchar'	=>false,
-			'form_disabled'				=>false,
-			'form_help_text'			=>"Enlace al detalle de las tareas del Proyecto.",
-			'form_input_size'			=>false,
-			'form_label'				=>"Enlace al detalle de las tareas del Proyecto.",
-			'form_options'				=>false,
-			'form_placeholder'			=>"Enlace al detalle de las tareas del Proyecto.",
-			'form_special_form'			=>false,
-			'form_show_field'			=>true,
-			'user_input'				=>true,
+		'solution' => array(
+			'form_help_text'			=>'La Soluci&oacute;n indica como resolver el error de modo &aacute;gil (muchas veces solo se describe el <i>workaround</i> y no la resolución de la <i>Causa Ra&iacute;z</i>).',
+		),
+		'documentation' => array(
+			'form_help_text'			=>'La Documentaci&oacute;n provee de referencias externas (regularmente de fabricantes o desarrolladores) para el error identificado.',
 		),
 	);
-	//register_activation_hook(CSI_PLUGIN_DIR."/index.php",		array( $this , 'db_install'							));
 	add_action( 'plugins_loaded',								array( $this , 'db_install' )						);
 	add_action( 'plugins_loaded',								array( $this , 'csi_define_capabilities' )			);
 	//Add Ajax actions
@@ -470,7 +322,7 @@ public function csi_issue_create_issue_form(){
 			<div class="panel-body">
 				<div class="row">
 					<div class="">
-						<p class="text-justify">Para la publicar una <strong>Nota NOVIS</strong> debes seguir el <strong>flujo de aprobación de Notas NOVIS</strong>. Aqu&iacute; puedes comenzar a escribir una nueva nota y una vez que est&eacute; lista para publicar debes solicitar la aprobaci&oacute;n del Comit&eacute; de Notas NOVIS, desde la p&aacute;gina <a href="#!ownissues"><samp>Mis notas</samp></a>.</p>
+						<p class="text-justify">Para la publicar una <strong>Nota NOVIS</strong> debes solicitar la aprobación de <strong>Notas NOVIS</strong>. Aqu&iacute; puedes comenzar a escribir una nueva nota y una vez que est&eacute; lista para publicar debes solicitar la aprobaci&oacute;n del Comit&eacute; de <strong>Notas NOVIS</strong>, desde la p&aacute;gina <a href="#!ownissues"><samp>Mis notas</samp></a>.</p>
 						<p>Si tienes dudas o quieres aprender m&aacute;s puedes revisar la <a href="' . $this->more_info_link . '" target="_blank">documentaci&oacute;n de la Gesti&oacute;n de Base de Conocimiento - Notas NOVIS<i class="fa fa-fw fa-external-link"></i></a> en nuestra intranet.</p>
 					</div>
 				</div>
@@ -493,74 +345,61 @@ public function csi_issue_create_issue_form(){
 		'maxlength'		=> 1000,
 		'rows'			=> 6,
 		'required'		=> true,
-		'help'			=> 'El Resumen de una <strong>Nota NOVIS</strong> describe brevemente la situaci&oacute;n del error.',
+		'help'			=> $this->db_fields['summary']['form_help_text'],
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
 		'id'			=> 'symptom',
 		'title'			=> 'S&iacute;ntomas',
 		'placeholder'	=> 'S&iacute;ntomas',
-		'maxlength'		=> 1000,
-		'rows'			=> 6,
+		'maxlength'		=> 5000,
+		'rows'			=> 8,
 		'required'		=> true,
-		'help'			=> 'El S&iacute;ntoma de una <strong>Nota NOVIS</strong> describe las diferentes situaciones que generan el error identificado.',
+		'help'			=> $this->db_fields['symptom']['form_help_text'],
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
 		'id'			=> 'terms',
 		'title'			=> 'Otros t&eacute;rminos',
 		'placeholder'	=> 'Otros t&eacute;rminos',
-		'maxlength'		=> 500,
+		'maxlength'		=> 1000,
 		'rows'			=> 4,
 		'required'		=> true,
-		'help'			=> 'Otros T&eacute;rminos de una <strong>Nota NOVIS</strong> permite complementar la
-		umentación utilizando palabras clave alternativas para el contenido. (e.g. Solution Manager; Solman; ).',
+		'help'			=> $this->db_fields['terms']['form_help_text'],
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
 		'id'			=> 'reason',
 		'title'			=> 'Causa y Pre-Requisitos',
 		'placeholder'	=> 'Causa y Pre-Requisitos',
-		'maxlength'		=> 1000,
-		'rows'			=> 6,
+		'maxlength'		=> 5000,
+		'rows'			=> 8,
 		'required'		=> true,
-		'help'			=> 'Las Causas y Pre-Requisitos de una <strong>Nota NOVIS</strong> es la descripción detallada del entorno relacionado al error.',
+		'help'			=> $this->db_fields['reason']['form_help_text'],
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
 		'id'			=> 'solution',
 		'title'			=> 'Soluci&oacute;n',
 		'placeholder'	=> 'Soluci&oacute;n',
-		'maxlength'		=> 1000,
-		'rows'			=> 6,
+		'maxlength'		=> 5000,
+		'rows'			=> 8,
 		'required'		=> true,
-		'help'			=> 'La Soluci&oacute;n de una <strong>Nota NOVIS</strong> describe las acciones requeridas para solventar el error. Es v&aacute;lido que las acciones no resuelvan la causa raíz del error y pueden proporcionar un mecanismo de <i>workaround</i>.',
+		'help'			=> $this->db_fields['solution']['form_help_text'],
 		'value'			=> null,
 	)) ;
 	$o.=self::csi_issue_new_issue_form_textarea ( array(
 		'id'			=> 'documentation',
 		'title'			=> 'Documentaci&oacute;n',
 		'placeholder'	=> 'Documentaci&oacute;n',
-		'maxlength'		=> 1000,
-		'rows'			=> 6,
+		'maxlength'		=> 5000,
+		'rows'			=> 8,
 		'required'		=> true,
-		'help'			=> '<kbd>¿que ponemos aqui?</kbd>?',
+		'help'			=> $this->db_fields['documentation']['form_help_text'],
 		'value'			=> null,
 	)) ;
 
 	$o.='
-					<!--
-					<div class="form-group">
-						<label for="title" class="col-sm-2 control-label">Documentos Relacionados</label>
-						<div class="col-sm-10">
-							<div class="input-dynamic" data-dynamic-input="related-docs"></div>
-							<div class="text-center"></div>
-							<p class="help-block collapse in">
-								Los Documentos Relacionados, son enlaces a diferentes documentos, notas SAP, u otros que sirvan como referencia a una <strong>Nota NOVIS</strong>. En caso de utilizar un documento creado para esta nota importante seguir la <a href="#" target="_blank">gu&iacute;a de Documentos Relacionados de una <strong>Nota NOVIS</strong><i class="fa fa-fw fa-external-link"></i></a>.
-							</p>
-						</div>
-					</div>
-					-->
 					<div class="form-group">
 						<div class="col-sm-offset-1 col-sm-10 text-right">
 							<button type="reset" class="btn btn-default ">
@@ -1122,7 +961,7 @@ public function csi_issue_build_page_preview_issue_rev(){
 					</div><!-- #csi-issue-solution -->
 					<div id="csi-issue-documentation">
 						<div class="page-header">
-							<h3 class=""><strong><samp>documentation</samp></strong></h3>
+							<h3 class=""><strong><samp>Documentaci&oacute;n</samp></strong></h3>
 						</div>
 						<div class="text-justify"><samp>' . $old_issue->documentation . '</samp></div>
 					</div><!-- #csi-issue-documentation -->
@@ -1411,7 +1250,7 @@ public function csi_issue_build_page_show_issue(){
 			</div><!-- #csi-issue-solution -->
 			<div id="csi-issue-documentation">
 				<div class="page-header">
-					<h3 class=""><strong><samp>documentation</samp></strong></h3>
+					<h3 class=""><strong><samp>Documentaci&oacute;n</samp></strong></h3>
 				</div>
 				<div class="text-justify"><samp>' . $issue->documentation . '</samp></div>
 			</div><!-- #csi-issue-documentation -->
@@ -1578,17 +1417,17 @@ public function csi_issue_edit_issue_form(){
 			'maxlength'		=> 1000,
 			'rows'			=> 6,
 			'required'		=> true,
-			'help'			=> 'El Resumen de una <strong>Nota NOVIS</strong> describe brevemente la situaci&oacute;n del error.',
+			'help'			=> $this->db_fields['summary']['form_help_text'],
 			'value'			=> $issue->summary,
 		)) ;
 		$o.=self::csi_issue_new_issue_form_textarea ( array(
 			'id'			=> 'symptom',
 			'title'			=> 'S&iacute;ntomas',
 			'placeholder'	=> 'S&iacute;ntomas',
-			'maxlength'		=> 1000,
-			'rows'			=> 6,
+			'maxlength'		=> 5000,
+			'rows'			=> 8,
 			'required'		=> true,
-			'help'			=> 'hola',
+			'help'			=> $this->db_fields['symptom']['form_help_text'],
 			'value'			=> $issue->symptom,
 		)) ;
 		$o.=self::csi_issue_new_issue_form_textarea ( array(
@@ -1598,52 +1437,40 @@ public function csi_issue_edit_issue_form(){
 			'maxlength'		=> 500,
 			'rows'			=> 4,
 			'required'		=> true,
-			'help'			=> 'hola',
+			'help'			=> $this->db_fields['terms']['form_help_text'],
 			'value'			=> $issue->terms,
 		)) ;
 		$o.=self::csi_issue_new_issue_form_textarea ( array(
 			'id'			=> 'reason',
 			'title'			=> 'Causa y Pre-Requisitos',
 			'placeholder'	=> 'Soluci&oacute;n',
-			'maxlength'		=> 1000,
-			'rows'			=> 6,
+			'maxlength'		=> 5000,
+			'rows'			=> 8,
 			'required'		=> true,
-			'help'			=> 'hola',
+			'help'			=> $this->db_fields['reason']['form_help_text'],
 			'value'			=> $issue->reason,
 		)) ;
 		$o.=self::csi_issue_new_issue_form_textarea ( array(
 			'id'			=> 'solution',
 			'title'			=> 'Soluci&oacute;n',
 			'placeholder'	=> 'Soluci&oacute;n',
-			'maxlength'		=> 1000,
-			'rows'			=> 6,
+			'maxlength'		=> 5000,
+			'rows'			=> 8,
 			'required'		=> true,
-			'help'			=> 'La Soluci&oacute;n de una <strong>Nota NOVIS</strong> describe las acciones requeridas para solventar el error. Es v&aacute;lido que las acciones no resuelvan la causa raíz del error y pueden proporcionar un mecanismo de <i>workaround</i>.',
+			'help'			=> $this->db_fields['solution']['form_help_text'],
 			'value'			=> $issue->solution,
 		)) ;
 		$o.=self::csi_issue_new_issue_form_textarea ( array(
 			'id'			=> 'documentation',
-			'title'			=> 'documentation',
-			'placeholder'	=> 'documentation',
-			'maxlength'		=> 1000,
-			'rows'			=> 6,
+			'title'			=> 'Documentaci&oacute;n',
+			'placeholder'	=> 'Documentati&oacute;n',
+			'maxlength'		=> 5000,
+			'rows'			=> 8,
 			'required'		=> true,
-			'help'			=> '<kbd>fds</kbd>',
+			'help'			=> $this->db_fields['documentation']['form_help_text'],
 			'value'			=> $issue->documentation,
 		)) ;
 		$o.='
-						<!--
-						<div class="form-group">
-							<label for="title" class="col-sm-2 control-label">Documentos Relacionados</label>
-							<div class="col-sm-10">
-								<div class="input-dynamic" data-dynamic-input="related-docs"></div>
-								<div class="text-center"></div>
-								<p class="help-block collapse in">
-									Los Documentos Relacionados, son enlaces a diferentes documentos, notas SAP, u otros que sirvan como referencia a una <strong>Nota NOVIS</strong>. En caso de utilizar un documento creado para esta nota importante seguir la <a href="#" target="_blank">gu&iacute;a de Documentos Relacionados de una <strong>Nota NOVIS</strong><i class="fa fa-fw fa-external-link"></i></a>.
-								</p>
-							</div>
-						</div>
-						-->
 						<div id="csi-issue-event">
 							<div class="page-header">
 								<h3 class=""><strong><samp>Eventos</samp></strong></h3>
